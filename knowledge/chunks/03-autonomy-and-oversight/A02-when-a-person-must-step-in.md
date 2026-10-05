@@ -59,7 +59,7 @@ last_verified: 2026-10-05
   detail so approval gates are explained, not arbitrary.
 - Every design needs a visible **stop** and a **log** the owner can read. For
   EU-based high-risk uses this is a legal requirement, not just good practice.
-  The deployment chunks should flag which uses count as high-risk.
+  D04 lists which uses count as high-risk and when the rules apply.
 - Prefer human-in-the-loop for actions and human-on-the-loop (sampled review
   of logs) for routine outputs once trust is established. This is the
   difference between the guide's levels 2–3 and level 4.

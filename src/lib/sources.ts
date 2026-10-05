@@ -19,7 +19,8 @@ export type SourceId =
   | "n8nDocs"
   | "airflowDocs"
   | "hermesDocs"
-  | "epoch";
+  | "epoch"
+  | "costResearch";
 
 export type Source = {
   id: SourceId;
@@ -119,9 +120,9 @@ export const SOURCES: Record<SourceId, Source> = {
     origin: "added",
     short: "Anthropic documentation",
     citation:
-      "Anthropic. (n.d.). Claude Platform documentation and Claude Help Center: models overview, Agent Skills, data residency, API and data retention, and Claude Cowork articles. Retrieved October 5, 2026.",
+      "Anthropic. (n.d.). Claude Platform documentation and Claude Help Center: models overview, Agent Skills, data residency, API and data retention, rate and spend limits, the Messages API, and Claude Cowork articles. Retrieved October 5, 2026.",
     url: "https://platform.claude.com/docs",
-    usedFor: "The current Claude models, what Skills can and can't do, where Claude processes and keeps data, and how Cowork runs, schedules and remembers.",
+    usedFor: "The current Claude models, what Skills can and can't do, where Claude processes and keeps data, how to cap API spend, and how Cowork runs, schedules and remembers.",
   },
   mcp: {
     id: "mcp",
@@ -135,17 +136,17 @@ export const SOURCES: Record<SourceId, Source> = {
     id: "n8nDocs",
     origin: "added",
     short: "n8n documentation and licence",
-    citation: "n8n. (n.d.). AI Agent, MCP Client Tool and MCP Server Trigger node documentation; Sustainable Use License. Retrieved October 5, 2026.",
+    citation: "n8n. (n.d.). AI Agent, MCP Client Tool, MCP Server Trigger and Wait node documentation; Docker install guides; Sustainable Use License. Retrieved October 5, 2026.",
     url: "https://github.com/n8n-io/n8n/blob/master/LICENSE.md",
-    usedFor: "n8n's AI agent step, its MCP nodes, and the licence terms for internal and commercial use.",
+    usedFor: "n8n's AI agent step, its MCP nodes, how a workflow waits, what self-hosting needs, and the licence terms for internal and commercial use.",
   },
   airflowDocs: {
     id: "airflowDocs",
     origin: "added",
     short: "Apache Airflow documentation",
-    citation: "Apache Software Foundation. (n.d.). What is Airflow?; Asset-aware scheduling. Apache Airflow documentation. Retrieved October 5, 2026.",
+    citation: "Apache Software Foundation. (n.d.). What is Airflow?; Asset-aware scheduling; Installation and Running Airflow in Docker. Apache Airflow documentation. Retrieved October 5, 2026.",
     url: "https://airflow.apache.org/docs/apache-airflow/stable/",
-    usedFor: "Airflow as Python workflows that start when the data they depend on is ready.",
+    usedFor: "Airflow as Python workflows that start when the data they depend on is ready, and what running it yourself takes.",
   },
   hermesDocs: {
     id: "hermesDocs",
@@ -162,6 +163,15 @@ export const SOURCES: Record<SourceId, Source> = {
     citation: "Edwards, J., & Emberson, L. (2026, May 29). Open models lag state-of-the-art closed models by 4 months. Epoch AI.",
     url: "https://epoch.ai/data-insights/open-closed-eci-gap",
     usedFor: "How far open-weight models trail the best closed models, and which open models lead.",
+  },
+  costResearch: {
+    id: "costResearch",
+    origin: "added",
+    short: "Pan et al. (2025) and Patil (2026), on-premise vs API costs",
+    citation:
+      "Pan, G., Chodnekar, V., Roy, A., & Wang, H. (2025). A cost-benefit analysis of on-premise large language model deployment: Breaking even with commercial LLM services. arXiv:2509.18101. Patil, C. (2026). Beyond per-token pricing: A concurrency-aware methodology for LLM infrastructure cost estimation. arXiv:2606.11690.",
+    url: "https://arxiv.org/abs/2509.18101",
+    usedFor: "When owning hardware pays back against per-token APIs, and why it only does so when the hardware stays busy.",
   },
 };
 

@@ -35,7 +35,7 @@ function readSources(): Map<string, boolean> {
   const rows = readFileSync(join(ROOT, "sources.md"), "utf8")
     .split("\n")
     .filter((l) => /^\| [a-z0-9-]+ \|/.test(l));
-  return new Map(rows.map((l) => [l.split("|")[1].trim(), /\d{4}-\d{2}-\d{2}/.test(l.split("|").at(-2) ?? "")]));
+  return new Map(rows.map((l) => [l.split("|")[1].trim(), /^\d{4}-\d{2}-\d{2}/.test((l.split("|").at(-2) ?? "").trim())]));
 }
 
 describe("knowledge base", () => {

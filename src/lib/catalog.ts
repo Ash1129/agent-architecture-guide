@@ -157,7 +157,7 @@ export const TOPOLOGIES: Record<TopologyId, Topology> = {
       "Jobs arranged so each one starts only when the jobs it depends on have finished. Engineers call this a DAG.",
     goodFor: "Data work where many jobs feed each other and timing matters.",
     example: "Import sales and inventory overnight, then build the margin report once both imports have landed.",
-    sources: ["selfhosting"],
+    sources: ["selfhosting", "airflowDocs"],
   },
   chain: {
     id: "chain",

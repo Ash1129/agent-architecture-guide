@@ -14,11 +14,11 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | team-2026-assignment4 | AI Assignment 4, team research notes (Sasha and Ashwin). 4-page PDF, provided by the team. | E | 2026-10-05 |
 | enmgt-2026-slides | ENMGT 5405 lecture slides, Canvas course materials (Swart, D.), Cornell University, 2026. Not available to this knowledge base; known only through the team notes. | E | not read |
 | databricks-2026-harness | Databricks. (2026, June 17). What is an AI agent harness? https://www.databricks.com/blog/ai-harness | D | 2026-10-05 |
-| mindstudio-2026-local-cloud | Chavez-Mattos, L. (2026, May 27). Local AI vs cloud AI in 2026: When to run models on your own hardware. MindStudio. https://www.mindstudio.ai/blog/local-ai-vs-cloud-ai-2026 | D | |
-| selfhosting-2026-airflow-n8n | selfhosting.sh. (2026, February 21). Airflow vs n8n: Which should you self-host? DEV Community. https://dev.to/selfhostingsh/airflow-vs-n8n-which-should-you-self-host-gpg | D | |
-| nous-hermes-site | Nous Research. (n.d.). Hermes Agent: The agent that grows with you. https://hermes-agent.nousresearch.com/ | C | |
-| kumar-hermes-kb | Kumar, A. (n.d.). Hermes agent (Nous Research). Agentic AI Knowledge Base. https://agentic-ai.readthedocs.io/en/latest/AgentPlatforms/hermes-agent/ | D | |
-| pabani-2026-openclaw-hermes-cowork | Pabani, R. (2026, April 9). OpenClaw vs Hermes vs Cowork: Honest comparison. Dreams AI. https://dreamsaicanbuy.com/blog/openclaw-vs-hermes-vs-cowork | D | 2026-10-05 |
+| mindstudio-2026-local-cloud | Chavez-Mattos, L. (2026, May 27). Local AI vs cloud AI in 2026: When to run models on your own hardware. MindStudio. https://www.mindstudio.ai/blog/local-ai-vs-cloud-ai-2026 | D | not read (still blocked; see Notes) |
+| selfhosting-2026-airflow-n8n | selfhosting.sh. (2026, February 21). Airflow vs n8n: Which should you self-host? DEV Community. https://dev.to/selfhostingsh/airflow-vs-n8n-which-should-you-self-host-gpg | D | not read (still blocked; see Notes) |
+| nous-hermes-site | Nous Research. (n.d.). Hermes Agent: The agent that grows with you. https://hermes-agent.nousresearch.com/ | C | not read (still blocked; see Notes) |
+| kumar-hermes-kb | Kumar, A. (n.d.). Hermes agent (Nous Research). Agentic AI Knowledge Base. https://agentic-ai.readthedocs.io/en/latest/AgentPlatforms/hermes-agent/ Page dated 2026-07-17. Read from its source in https://github.com/ankurkumarz/agentic-ai-knowledge-base (docs/AgentPlatforms/hermes-agent.md, last changed 2026-09-13), as readthedocs.io was blocked. | D | 2026-10-05 |
+| pabani-2026-openclaw-hermes-cowork | Pabani, R. (2026, April 9). OpenClaw vs Hermes vs Cowork: Honest comparison. Dreams AI. https://dreamsaicanbuy.com/blog/openclaw-vs-hermes-vs-cowork | D | 2026-10-05 (re-check on 2026-10-05 blocked; see Notes) |
 
 ## Added for the knowledge base
 
@@ -83,6 +83,15 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | anthropic-help-where-to-access | Anthropic. (2026, March 16). Where can I access Claude? Claude Help Center. https://support.claude.com/en/articles/8461763-where-can-i-access-claude | C | 2026-10-05 |
 | anthropic-docs-data-residency | Anthropic. (n.d.). Data residency. Claude Platform documentation. https://platform.claude.com/docs/en/manage-claude/data-residency | C | 2026-10-05 |
 | anthropic-docs-data-retention | Anthropic. (n.d.). API and data retention. Claude Platform documentation. https://platform.claude.com/docs/en/manage-claude/api-and-data-retention | C | 2026-10-05 |
+| anthropic-docs-rate-limits | Anthropic. (n.d.). Rate limits (spend limits section). Claude Platform documentation. https://platform.claude.com/docs/en/api/rate-limits | C | 2026-10-05 |
+| anthropic-docs-messages-api | Anthropic. (n.d.). Messages API reference: `max_tokens`. Claude Platform documentation. https://platform.claude.com/docs/en/api/messages | C | 2026-10-05 |
+| pan-2025-onprem-breakeven | Pan, G., Chodnekar, V., Roy, A., & Wang, H. (2025; v3 2025, November 11). A cost-benefit analysis of on-premise large language model deployment: Breaking even with commercial LLM services. arXiv:2509.18101. Read from arXiv's public bulk-data mirror (storage.googleapis.com/arxiv-dataset), as arxiv.org was blocked. | B | 2026-10-05 |
+| patil-2026-concurrency-cost | Patil, C. (2026, June 10). Beyond per-token pricing: A concurrency-aware methodology for LLM infrastructure cost estimation. arXiv:2606.11690v1. Independent researcher. Read from the same arXiv mirror. | B | 2026-10-05 |
+| eu-2024-ai-act-high-risk | European Union. (2024). Regulation (EU) 2024/1689 (Artificial Intelligence Act): Article 6 (classification of high-risk systems), Article 113 (entry into force and application) and Annex III (high-risk uses), as published 12 July 2024. EUR-Lex and the other EU hosts were blocked, so this was read from an unofficial convenience copy of the Official Journal text: https://github.com/superuserkalo/eu-ai-act (skills/eu-ai-act/references, retrieved by that project 2026-10-01). The 2024 wording was cross-checked against a second copy, https://github.com/bojkovski-cpu/ai-act-annotated (updated 2026-05-19). | C | 2026-10-05 |
+| eu-2026-digital-omnibus-ai | European Union. (2026). Regulation (EU) 2026/1744 (Digital Omnibus on AI), Article 1, points (8) and (40), amending Articles 6 and 113 of the AI Act. Published 24 July 2026 according to the copy. Read only from the superuserkalo/eu-ai-act copy above, not from EUR-Lex; verify there before relying on it. | C | 2026-10-05 |
+| n8n-docs-self-hosting | n8n. (n.d.). Install using Docker Compose; Install with Docker. n8n documentation. Read from https://github.com/n8n-io/n8n-docs (docs/deploy/host-n8n/install-options/, commit of 2026-10-05). | C | 2026-10-05 |
+| n8n-docs-wait-node | n8n. (n.d.). Wait node. n8n documentation. Read from https://github.com/n8n-io/n8n-docs (docs/integrations/builtin/core-nodes/n8n-nodes-base.wait.md). | C | 2026-10-05 |
+| airflow-docs-installation | Apache Software Foundation. (n.d.). Installation of Airflow (Prerequisites; Notes about minimum requirements) and Running Airflow in Docker. Apache Airflow documentation (main branch, commit of 2026-10-05). Read from https://github.com/apache/airflow (airflow-core/docs/installation/, airflow-core/docs/howto/docker-compose/). | C | 2026-10-05 |
 
 ## Notes
 
@@ -95,20 +104,33 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
   spectrum". The team notes cover skills, MCP, system prompts and Cowork, but
   say nothing about an autonomy spectrum, and the slides are unavailable. That
   attribution cannot be verified and should be dropped or confirmed.
-- **Team notes not re-read for topic 6.** The Assignment 4 PDF was not
-  available in the session that wrote topics 6 onward, so chunks T01–T06 do
-  not cite it, even where the notes cover skills, MCP and system prompts.
+- **Team notes not re-read for topics 6–8.** The Assignment 4 PDF was not
+  available in the sessions that wrote topics 6 onward (still not found on
+  2026-10-05, on disk or in the connected Google Drive). So chunks T01–T06,
+  L01–L06 and D01–D04 do not cite it, even where the notes cover skills, MCP,
+  system prompts, Cowork, Hermes or hosting.
 - **Blocked hosts (topic 7).** In the session that wrote topics 6 and 7, the
   environment's network policy blocked dev.to, hermes-agent.nousresearch.com,
   agentic-ai.readthedocs.io, dreamsaicanbuy.com, docs.n8n.io, n8n.io and
-  airflow.apache.org. selfhosting-2026-airflow-n8n, nous-hermes-site and
-  kumar-hermes-kb therefore remain unread; the project's own GitHub sources
-  were read instead. Pabani was read earlier but could not be re-checked.
-  For topic 8, mindstudio.ai and every EU host tried (eur-lex.europa.eu,
-  artificialintelligenceact.eu, ec.europa.eu, europarl.europa.eu,
-  consilium.europa.eu) were also blocked, so mindstudio-2026-local-cloud
-  remains unread and the EU AI Act's high-risk categories are not yet
-  covered.
+  airflow.apache.org. The project's own GitHub sources were read instead.
+- **Still blocked on 2026-10-05 (second session).** mindstudio.ai, dev.to,
+  hermes-agent.nousresearch.com, agentic-ai.readthedocs.io,
+  dreamsaicanbuy.com, arxiv.org, eur-lex.europa.eu and
+  artificialintelligenceact.eu were all refused again. The workarounds were:
+  - **kumar-hermes-kb:** read from the page's GitHub source.
+  - **Pabani:** not re-checked. Its earlier reading stands, and M03, L03 and
+    L04 still cite it.
+  - **mindstudio-2026-local-cloud and selfhosting-2026-airflow-n8n:** still
+    unread. The claims the site took from them were checked against other
+    sources instead (D03; n8n and Airflow docs in L01 and L02). Where those
+    sources did not support a claim, the site's wording was changed.
+  - **nous-hermes-site:** still unread.
+  - **EU AI Act:** read from community copies of the Official Journal text
+    on GitHub (see eu-2024-ai-act-high-risk).
+- **Site attributions to unread sources.** Rules H2-H5, G6 and G20 still name
+  MindStudio, and G11-G12 name selfhosting.sh, as the team's sources. The
+  knowledge base backs them through other chunks, not through those
+  articles.
 - **"Anthropic. (2026). Claude Sonnet 5.5"** is listed in the team's
   bibliography as a tool used while researching. It is not a source of
   claims and is not cited here.

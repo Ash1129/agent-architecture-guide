@@ -152,6 +152,16 @@ describe("starter kit for named designs", () => {
     expect(merge.parameters.numberInputs).toBe(3);
   });
 
+  it("model notes in n8n don't tell a step to switch to the model it is already on", () => {
+    const wf = JSON.parse(file(kit({ ...support, roles: "both" }).files, "n8n/workflow.json")!.content);
+    const models = wf.nodes.filter((n: { type: string }) => /lmChat/.test(n.type));
+    expect(models.some((m: { name: string }) => /Opus 5\.5$/.test(m.name))).toBe(true);
+    for (const m of models) {
+      if (/Opus 5\.5$/.test(m.name)) expect(m.notes).toMatch(/keep it there/);
+      expect(m.notes).not.toMatch(/switch to this one/);
+    }
+  });
+
   it("restricted regions get open-weight models in n8n", () => {
     const wf = JSON.parse(file(kit({ ...support, location: "residency", team: "large" }).files, "n8n/workflow.json")!.content);
     expect(wf.nodes.some((n: { type: string }) => /lmChat/.test(n.type))).toBe(true);

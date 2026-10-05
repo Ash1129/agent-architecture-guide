@@ -134,6 +134,8 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
   const add = (...x: string[]) => L.push(...x);
   const level = r.autonomy.level;
   const models = [...new Map(bp.nodes.filter(modelOf).map((n) => [modelOf(n)!.model, modelOf(n)!])).values()];
+  // Steps already on the strongest model have nothing to step down to.
+  const stepDown = models.some((m) => m.model !== "opus" && m.model !== "openLarge");
 
   add(
     `# Build brief: ${task}`,
@@ -187,7 +189,7 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     add(
       "## Models",
       "",
-      `Build the first version with the most capable model on every AI step (${models.some((m) => m.model.startsWith("open")) ? "a large open-weight model" : `\`${MODEL_API_ID.opus}\``}), record results on the test set, then switch each step to the model below and keep the switch only if quality still meets the baseline. Judge on quality, cost per run and speed.`,
+      `Build the first version with the most capable model on every AI step (${models.some((m) => m.model.startsWith("open")) ? "a large open-weight model" : `\`${MODEL_API_ID.opus}\``}) and record results on the test set. ${stepDown ? "Then switch each step whose model below is smaller, and keep the switch only if quality still meets the baseline. Steps listed with the most capable model stay on it." : "Every step below stays on that model."} Judge on quality, cost per run and speed.`,
       "",
       "| Model | API id | Used for steps | Why |",
       "| --- | --- | --- | --- |",
@@ -225,7 +227,7 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     `2. Ask the owner for 10 to 20 real past examples and fill in \`evals/examples.csv\`. This is the test set.`,
     ...stepsForCore(r, a).map((s, i) => `${i + 3}. ${s}`),
     `${stepsForCore(r, a).length + 3}. Run every example through the system and record the results as the baseline.`,
-    `${stepsForCore(r, a).length + 4}. ${r.models.needed ? "Step each AI step down to the model listed above, re-run the test set, and keep only changes that hold quality." : "Run it alongside the current process for two weeks before switching over."}`,
+    `${stepsForCore(r, a).length + 4}. ${!r.models.needed ? "Run it alongside the current process for two weeks before switching over." : stepDown ? "Move each AI step whose listed model is smaller onto that model, re-run the test set, and keep only changes that hold quality." : "Re-run the test set after every change, and keep only changes that hold quality."}`,
     `${stepsForCore(r, a).length + 5}. Pilot at autonomy level ${level} (${AUTONOMY[level].name.toLowerCase()}) with the checkpoints above. Agree with the owner what track record earns the next level.`,
     "",
     "The owner's own first steps this week:",
@@ -671,7 +673,7 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
       type: open ? "@n8n/n8n-nodes-langchain.lmChatOllama" : "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       typeVersion: open ? 1 : 1.3,
       position: pos(n, 0, 200),
-      notes: `${m.why} Prototype first on the most capable model, then switch to this one if it holds quality.`,
+      notes: `${m.why} ${m.prototype}`,
     });
     connect(name, host, "ai_languageModel");
   };

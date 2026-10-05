@@ -67,9 +67,9 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 
 | ID | Chunk | Summary |
 | --- | --- | --- |
-| L01 | [n8n](chunks/07-platforms/L01-n8n.md) | AI Agent node (Tools Agent); MCP client and server nodes; Sustainable Use License is internal-use, not open source. |
-| L02 | [Apache Airflow](chunks/07-platforms/L02-airflow.md) | Python workflows with a clear start and end; not for "clicking over coding"; asset-aware scheduling. |
-| L03 | [Hermes Agent](chunks/07-platforms/L03-hermes-agent.md) | MIT, any model, seven backends; small memory; self-written Skills unreviewed by default; command approval modes; cron needs the gateway. |
+| L01 | [n8n](chunks/07-platforms/L01-n8n.md) | AI Agent node (Tools Agent); MCP client and server nodes; Wait node resumes on time, callback or form, not on data; 4 GB RAM for Docker Compose; Sustainable Use License is internal-use, not open source. |
+| L02 | [Apache Airflow](chunks/07-platforms/L02-airflow.md) | Python workflows with a clear start and end; not for "clicking over coding"; asset-aware scheduling; 4 GB memory floor, production needs continuous tuning. |
+| L03 | [Hermes Agent](chunks/07-platforms/L03-hermes-agent.md) | MIT, any model, seven backends; small memory; self-written Skills unreviewed by default; command approval modes; cron needs the gateway; Kumar's security advice and the "successor to OpenClaw" claim. |
 | L04 | [Claude Cowork](chunks/07-platforms/L04-claude-cowork.md) | Runs in the cloud; scheduled tasks no longer need the computer on; memory shared with chat; Manual/Auto/Skip; admin and HIPAA limits; Pabani outdated. |
 | L05 | [Claude Code](chunks/07-platforms/L05-claude-code.md) | Surfaces; CLAUDE.md, Skills, hooks, MCP, sub-agents; Routines vs desktop tasks; Agent SDK. |
 | L06 | [Combining platforms](chunks/07-platforms/L06-combining-platforms.md) | MCP and Skills as portable joints; plugins; where scheduled work runs; n8n + agent hybrid; short chooser. |
@@ -80,9 +80,5 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | --- | --- | --- |
 | D01 | [Where Claude can be used, and where it processes data](chunks/08-deployment-and-data/D01-where-claude-is-available-and-processes-data.md) | 175 supported countries (not China, Hong Kong, Russia...); first-party API offers only US or global processing, US at 1.1×; regions via cloud partners. |
 | D02 | [What Anthropic keeps, and the privacy arrangements available](chunks/08-deployment-and-data/D02-data-retention-and-privacy.md) | No training without permission; retention periods; ZDR scope (not the apps, Skills or Fable 5.1); HIPAA; flagged data up to 2 years. |
-
-## Planned topics
-
-| Topic | Covers |
-| --- | --- |
-| 08 Deployment and data (rest) | Local vs cloud costs and hardware (mindstudio-2026-local-cloud); EU AI Act high-risk categories and timeline. Blocked by this environment's network policy on 2026-10-05. |
+| D03 | [Local vs cloud - what each costs, and when your own hardware pays off](chunks/08-deployment-and-data/D03-local-vs-cloud-costs-and-hardware.md) | Capex vs per-token costs; GPU prices; break-even months by model size (Pan et al.) vs utilisation penalty of 17.5-36.3× (Patil); Anthropic spend limits and max_tokens. |
+| D04 | [EU AI Act - which uses are high-risk, and from when](chunks/08-deployment-and-data/D04-eu-ai-act-high-risk.md) | Art. 6 routes and exemptions; Annex III's eight areas (hiring, credit, insurance, education...); Art. 113 dates, moved by the 2026 Digital Omnibus to 2 Dec 2027 (Annex III) and 2 Aug 2028 (Annex I). |

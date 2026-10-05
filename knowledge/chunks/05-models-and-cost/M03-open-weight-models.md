@@ -54,5 +54,5 @@ last_verified: 2026-10-05
 - The leading open models come from Chinese developers. Running their weights
   on your own hardware keeps data local, but some businesses have procurement
   rules about model origin. The deployment topic should cover this.
-- The cost and hardware side of running these models is covered in the
-  deployment topic (local vs cloud).
+- The cost and hardware side of running these models is covered in D03
+  (local vs cloud).

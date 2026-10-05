@@ -2,7 +2,7 @@
 id: L03
 title: Hermes Agent - an open-source personal agent that learns
 topic: platforms
-sources: [hermes-2026-repo, pabani-2026-openclaw-hermes-cowork]
+sources: [hermes-2026-repo, kumar-hermes-kb, pabani-2026-openclaw-hermes-cowork]
 last_verified: 2026-10-05
 ---
 
@@ -48,12 +48,43 @@ last_verified: 2026-10-05
   [hermes-2026-repo docs §Scheduled Tasks (Cron), What cron can do now; How it works]
 - Pabani (April 2026) also describes Hermes as open-source and
   model-agnostic. [pabani-2026-openclaw-hermes-cowork §What each one actually is]
+- **Kumar's summary** (page dated 2026-07-17) [kumar-hermes-kb]:
+  - Hermes launched in February 2026 as a self-improving personal agent
+    that runs unattended across messaging apps. (§Overview)
+  - It creates Skills from experience after complex tasks and refines them
+    during later use. It recalls past sessions through full-text search
+    with summaries, and models the user with Honcho.
+    (§Key Capabilities, Self-Improvement and Learning Loop)
+  - It has 40 or more built-in tools, MCP support and the agentskills.io
+    Skills standard. It runs anywhere from a $5 VPS to GPU clusters.
+    (§Tool Use and MCP Integration; §Architecture)
+- **Kumar on security** (§Security Considerations; §Limitations):
+  - Hermes carries the "toxic flow trifecta": private data, untrusted
+    content and the ability to act outside (G02's lethal trifecta).
+  - Suggested mitigations: run it sandboxed in Docker or Daytona, enable
+    only the tools needed, give it a dedicated messaging account, and
+    review Skills before enabling them.
+  - Limitations: it needs broad permissions, Windows support is early beta,
+    and third-party Skills carry supply-chain risk.
+
+## Where sources disagree
+
+- Kumar calls Hermes the "direct successor to OpenClaw". The Hermes README
+  offers a migration from OpenClaw, importing settings, memories and Skills,
+  but does not call itself a successor. Treat Hermes and OpenClaw as
+  separate projects. [kumar-hermes-kb §Overview; hermes-2026-repo README §Migrating from OpenClaw]
+- Kumar's comparison table says Claude Code has no cross-session memory.
+  L05 records CLAUDE.md and Claude Code's memory of learnings, so the table
+  undersells it. [kumar-hermes-kb §Comparison with Related Agents]
 
 ## Not verified
 
-- The Nous Research website (nous-hermes-site) and Kumar's knowledge-base
-  page were blocked from this environment; the claims above come from the
-  project's own GitHub repository, read on 2026-10-05.
+- The Nous Research website (nous-hermes-site) was still blocked on
+  2026-10-05. Its landing page is not in the hermes-agent repository, which
+  holds only the /docs/ site, so it remains unread.
+- Kumar's page was read from its source in the GitHub repository
+  ankurkumarz/agentic-ai-knowledge-base (docs/AgentPlatforms/hermes-agent.md,
+  last changed 2026-09-13), because agentic-ai.readthedocs.io was blocked.
 
 ## What this means for the guide
 
@@ -64,3 +95,6 @@ last_verified: 2026-10-05
 - The guide should tell users to turn on `write_approval` for Skills in
   business use, and to keep approvals on "manual" or "smart", never "off".
   This matches the staged-autonomy advice in A04.
+- Kumar's mitigations match the guide's advice: a sandbox, only the tools
+  needed, and Skill review (G14). Add "a dedicated account for chat apps"
+  when Hermes is connected to messaging.
