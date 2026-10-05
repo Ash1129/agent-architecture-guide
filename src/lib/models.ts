@@ -6,6 +6,7 @@
 
 import { LAST_REVIEWED } from "./catalog";
 import type { Answers } from "./questions";
+import type { ChunkId } from "./knowledge";
 import type { Basis } from "./rules";
 
 export type ModelId = "opus" | "sonnet" | "haiku" | "openLarge" | "openSmall";
@@ -42,6 +43,8 @@ type ModelRule = {
   adjust?: string;
   why: string;
   basis: Basis;
+  /** Knowledge-base chunks that support this pick (see src/lib/knowledge.ts). */
+  kb: ChunkId[];
 };
 
 /** Starting picks per kind of step. Published on the "How it decides" page. */
@@ -53,6 +56,7 @@ export const MODEL_RULES: ModelRule[] = [
     open: "openSmall",
     why: "Sorting is a simple classification. A small, fast model is usually enough.",
     basis: { kind: "source", sources: ["openai"] },
+    kb: ["P01", "M02", "M01"],
   },
   {
     role: "worker",
@@ -62,6 +66,7 @@ export const MODEL_RULES: ModelRule[] = [
     adjust: "Haiku 4.5 at hundreds of runs a day, when nothing customer-facing or irreversible is at stake",
     why: "A balanced model handles most judgement steps well at a reasonable cost per run.",
     basis: { kind: "design" },
+    kb: ["M01", "M02"],
   },
   {
     role: "attempt",
@@ -70,6 +75,7 @@ export const MODEL_RULES: ModelRule[] = [
     open: "openSmall",
     why: "Several cheap attempts compared by vote often beat one expensive attempt.",
     basis: { kind: "design" },
+    kb: ["P02", "M02"],
   },
   {
     role: "checker",
@@ -79,6 +85,7 @@ export const MODEL_RULES: ModelRule[] = [
     adjust: "Sonnet 5.5 when output reaches customers, is irreversible or involves personal data",
     why: "Checking against a clear checklist is narrower than producing the work.",
     basis: { kind: "design" },
+    kb: ["P02", "G04"],
   },
   {
     role: "agent",
@@ -87,6 +94,7 @@ export const MODEL_RULES: ModelRule[] = [
     open: "openLarge",
     why: "Agents need dependable tool use and multi-step reasoning, run after run.",
     basis: { kind: "source", sources: ["openai", "databricks"] },
+    kb: ["T01", "F06", "M01"],
   },
   {
     role: "coordinator",
@@ -95,6 +103,7 @@ export const MODEL_RULES: ModelRule[] = [
     open: "openLarge",
     why: "Planning across several specialists is the hardest reasoning in the system.",
     basis: { kind: "design" },
+    kb: ["P04", "M01"],
   },
   {
     role: "specialist",
@@ -104,6 +113,7 @@ export const MODEL_RULES: ModelRule[] = [
     adjust: "Haiku 4.5 at hundreds of runs a day",
     why: "Each specialist has a narrow brief, so a balanced model is usually enough.",
     basis: { kind: "design" },
+    kb: ["P03", "M01"],
   },
 ];
 

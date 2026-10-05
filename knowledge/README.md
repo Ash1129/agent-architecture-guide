@@ -16,6 +16,12 @@ knowledge/
     ...               one folder per topic
 ```
 
+The site links to it directly: every rule in `src/lib/rules.ts` and model
+pick in `src/lib/models.ts` has a `kb` list of chunk IDs, and rules the
+knowledge base doesn't fully back are listed in `src/lib/knowledge.ts`
+(`KB_ISSUES`). `tests/knowledge-links.test.ts` fails if a cited chunk is
+missing or a rule has neither chunks nor a listed gap.
+
 Retrieval works like RAG: read `INDEX.md`, pick the chunks whose summary
 matches the question, and open only those. Never load the whole folder.
 
