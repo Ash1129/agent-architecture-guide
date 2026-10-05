@@ -63,9 +63,19 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | T05 | [Skills - reusable playbooks loaded only when needed](chunks/06-tools-mcp-and-skills/T05-skills.md) | Progressive disclosure and token costs; where Skills work and how they're shared; security; authoring advice; site gotcha G9 overstated. |
 | T06 | [System prompts and managing what the agent sees](chunks/06-tools-mcp-and-skills/T06-system-prompts-and-context.md) | Role, clarity, reasons, examples; the "right altitude"; confirm risky actions; context rot; compaction, notes, sub-agents. |
 
+## 07 Platforms
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| L01 | [n8n](chunks/07-platforms/L01-n8n.md) | AI Agent node (Tools Agent); MCP client and server nodes; Sustainable Use License is internal-use, not open source. |
+| L02 | [Apache Airflow](chunks/07-platforms/L02-airflow.md) | Python workflows with a clear start and end; not for "clicking over coding"; asset-aware scheduling. |
+| L03 | [Hermes Agent](chunks/07-platforms/L03-hermes-agent.md) | MIT, any model, seven backends; small memory; self-written Skills unreviewed by default; command approval modes; cron needs the gateway. |
+| L04 | [Claude Cowork](chunks/07-platforms/L04-claude-cowork.md) | Runs in the cloud; scheduled tasks no longer need the computer on; memory shared with chat; Manual/Auto/Skip; admin and HIPAA limits; Pabani outdated. |
+| L05 | [Claude Code](chunks/07-platforms/L05-claude-code.md) | Surfaces; CLAUDE.md, Skills, hooks, MCP, sub-agents; Routines vs desktop tasks; Agent SDK. |
+| L06 | [Combining platforms](chunks/07-platforms/L06-combining-platforms.md) | MCP and Skills as portable joints; plugins; where scheduled work runs; n8n + agent hybrid; short chooser. |
+
 ## Planned topics
 
 | Topic | Covers |
 | --- | --- |
-| 07 Platforms | n8n, Apache Airflow, Hermes Agent, Claude Cowork, Claude Code, hybrids. |
 | 08 Deployment and data | Local vs cloud; privacy; company size and budget; regional availability. |

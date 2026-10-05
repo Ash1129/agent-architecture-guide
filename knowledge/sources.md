@@ -69,6 +69,16 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | anthropic-docs-tool-use | Anthropic. (n.d.). Tool use with Claude (overview). Claude Platform documentation. https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview | C | 2026-10-05 |
 | anthropic-docs-tool-search | Anthropic. (n.d.). Tool search tool. Claude Platform documentation. https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool | C | 2026-10-05 |
 | anthropic-docs-prompting-best-practices | Anthropic. (n.d.). Prompting best practices. Claude Platform documentation. https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices (the older "system prompts" URL redirects here). | C | 2026-10-05 |
+| n8n-docs-ai-agent | n8n. (n.d.). AI Agent node; Tools AI Agent node. n8n documentation. https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/ Read from the docs source at https://github.com/n8n-io/n8n-docs (docs.n8n.io was blocked from this environment). | C | 2026-10-05 |
+| n8n-docs-mcp-nodes | n8n. (n.d.). MCP Client Tool node; MCP Server Trigger node. n8n documentation. Read from https://github.com/n8n-io/n8n-docs. | C | 2026-10-05 |
+| n8n-2026-license | n8n. (n.d., read 2026). LICENSE.md: Sustainable Use License, version 1.0. https://github.com/n8n-io/n8n/blob/master/LICENSE.md | C | 2026-10-05 |
+| airflow-docs-overview | Apache Software Foundation. (n.d.). What is Airflow? Apache Airflow documentation (main branch). Read from https://github.com/apache/airflow (airflow-core/docs/index.rst); airflow.apache.org was blocked from this environment. | C | 2026-10-05 |
+| airflow-docs-asset-scheduling | Apache Software Foundation. (n.d.). Asset-aware scheduling. Apache Airflow documentation (main branch). Read from https://github.com/apache/airflow (airflow-core/docs/authoring-and-scheduling/asset-scheduling.rst). | C | 2026-10-05 |
+| hermes-2026-repo | Nous Research. (2025–2026). hermes-agent repository: README, LICENSE, and docs pages Security, Persistent Memory, Skills System and Scheduled Tasks (Cron). https://github.com/NousResearch/hermes-agent | C | 2026-10-05 |
+| anthropic-help-cowork | Anthropic. (n.d.). Get started with Claude Cowork. Claude Help Center. https://support.claude.com/en/articles/13345190-getting-started-with-cowork | C | 2026-10-05 |
+| anthropic-help-cowork-scheduled | Anthropic. (n.d.). Schedule recurring tasks in Claude Cowork. Claude Help Center. https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-cowork | C | 2026-10-05 |
+| anthropic-help-cowork-team | Anthropic. (n.d.). Use Claude Cowork on Team and Enterprise plans. Claude Help Center. https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans | C | 2026-10-05 |
+| anthropic-docs-claude-code-overview | Anthropic. (n.d.). Claude Code overview. Claude Code documentation. https://code.claude.com/docs/en/overview | C | 2026-10-05 |
 
 ## Notes
 
@@ -84,6 +94,12 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 - **Team notes not re-read for topic 6.** The Assignment 4 PDF was not
   available in the session that wrote topics 6 onward, so chunks T01–T06 do
   not cite it, even where the notes cover skills, MCP and system prompts.
+- **Blocked hosts (topic 7).** In the session that wrote topics 6 and 7, the
+  environment's network policy blocked dev.to, hermes-agent.nousresearch.com,
+  agentic-ai.readthedocs.io, dreamsaicanbuy.com, docs.n8n.io, n8n.io and
+  airflow.apache.org. selfhosting-2026-airflow-n8n, nous-hermes-site and
+  kumar-hermes-kb therefore remain unread; the project's own GitHub sources
+  were read instead. Pabani was read earlier but could not be re-checked.
 - **"Anthropic. (2026). Claude Sonnet 5.5"** is listed in the team's
   bibliography as a tool used while researching. It is not a source of
   claims and is not cited here.
