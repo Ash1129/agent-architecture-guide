@@ -52,10 +52,20 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | M02 | [Cutting cost without losing quality](chunks/05-models-and-cost/M02-cutting-cost.md) | Cascades (FrugalGPT, up to 98%), routing (RouteLLM, >2×), escalation; batch 50% off; prompt caching; agents use 4–15× tokens. |
 | M03 | [Open-weight models](chunks/05-models-and-cost/M03-open-weight-models.md) | Open models ~4 months behind closed (Epoch); leading open models as of 2026-10-05; Hermes is model-agnostic; site examples are dated. |
 
+## 06 Tools, MCP and skills
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| T01 | [How an agent uses tools, and what tools cost](chunks/06-tools-mcp-and-skills/T01-how-agents-use-tools.md) | Client vs server tools; the model decides when to call; guessing missing values; tools cost tokens even unused. |
+| T02 | [Designing tools an agent can use well](chunks/06-tools-mcp-and-skills/T02-designing-good-tools.md) | Fewer, consolidated tools; clear names; readable, short outputs; descriptions as onboarding notes; accuracy drops past 30–50 tools. |
+| T03 | [What MCP is, and when it is the right connector](chunks/06-tools-mcp-and-skills/T03-what-mcp-is.md) | Host, client, server; tools vs resources vs prompts; 2026-07-28 spec changes; token cost at scale and code execution (150k to 2k). |
+| T04 | [Connecting tools safely](chunks/06-tools-mcp-and-skills/T04-mcp-permissions-and-security.md) | MCP consent principles; person able to deny tool calls; annotations untrusted; local servers are installed software; least-privilege scopes. |
+| T05 | [Skills - reusable playbooks loaded only when needed](chunks/06-tools-mcp-and-skills/T05-skills.md) | Progressive disclosure and token costs; where Skills work and how they're shared; security; authoring advice; site gotcha G9 overstated. |
+| T06 | [System prompts and managing what the agent sees](chunks/06-tools-mcp-and-skills/T06-system-prompts-and-context.md) | Role, clarity, reasons, examples; the "right altitude"; confirm risky actions; context rot; compaction, notes, sub-agents. |
+
 ## Planned topics
 
 | Topic | Covers |
 | --- | --- |
-| 06 Tools, MCP and skills | Model Context Protocol; skills; system prompts; tool design. |
 | 07 Platforms | n8n, Apache Airflow, Hermes Agent, Claude Cowork, Claude Code, hybrids. |
 | 08 Deployment and data | Local vs cloud; privacy; company size and budget; regional availability. |

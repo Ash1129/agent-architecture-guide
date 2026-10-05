@@ -58,6 +58,17 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | ong-2025-routellm | Ong, I., Almahairi, A., Wu, V., Chiang, W.-L., Wu, T., Gonzalez, J. E., Kadous, M. W., & Stoica, I. (2025). RouteLLM: Learning to route LLMs from preference data. ICLR 2025. arXiv:2406.18665 | A | 2026-10-05 |
 | epoch-2026-open-closed-gap | Edwards, J., & Emberson, L. (2026, May 29). Open models lag state-of-the-art closed models by 4 months. Epoch AI Data Insight. https://epoch.ai/data-insights/open-closed-eci-gap | D | 2026-10-05 |
 | huang-2024-cannot-self-correct | Huang, J., Chen, X., Mishra, S., Zheng, H. S., Yu, A. W., Song, X., & Zhou, D. (2024). Large language models cannot self-correct reasoning yet. ICLR 2024. arXiv:2310.01798 | A | 2026-10-05 |
+| mcp-2026-spec | Model Context Protocol. (2026, July 28). Specification, version 2026-07-28: Overview, Architecture, Server features: Tools, and Key Changes. Read from the spec source at https://github.com/modelcontextprotocol/modelcontextprotocol (docs/specification/2026-07-28/); modelcontextprotocol.io was not reachable from this environment. | C | 2026-10-05 |
+| mcp-2026-docs | Model Context Protocol. (2026). Documentation, version 2026-07-28: What is MCP?, Understanding MCP servers, and Security Best Practices. Read from the same GitHub source (docs/docs/2026-07-28/). | C | 2026-10-05 |
+| anthropic-2025-agent-skills | Zhang, B., Lazuka, K., & Murag, M. (2025, October 16; updated December 18). Equipping agents for the real world with Agent Skills. Anthropic. https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills | C | 2026-10-05 |
+| anthropic-docs-agent-skills | Anthropic. (n.d.). Agent Skills (overview). Claude Platform documentation. https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview | C | 2026-10-05 |
+| anthropic-docs-skill-best-practices | Anthropic. (n.d.). Skill authoring best practices. Claude Platform documentation. https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices | C | 2026-10-05 |
+| anthropic-2025-writing-tools | Aizawa, K. (2025, September 11). Writing effective tools for agents, with agents. Anthropic. https://www.anthropic.com/engineering/writing-tools-for-agents | C | 2026-10-05 |
+| anthropic-2025-context-engineering | Rajasekaran, P., Dixon, E., Ryan, C., & Hadfield, J. (2025, September 29). Effective context engineering for AI agents. Anthropic. https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents | C | 2026-10-05 |
+| anthropic-2025-code-execution-mcp | Jones, A., & Kelly, C. (2025, November 4). Code execution with MCP: Building more efficient agents. Anthropic. https://www.anthropic.com/engineering/code-execution-with-mcp | C | 2026-10-05 |
+| anthropic-docs-tool-use | Anthropic. (n.d.). Tool use with Claude (overview). Claude Platform documentation. https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview | C | 2026-10-05 |
+| anthropic-docs-tool-search | Anthropic. (n.d.). Tool search tool. Claude Platform documentation. https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool | C | 2026-10-05 |
+| anthropic-docs-prompting-best-practices | Anthropic. (n.d.). Prompting best practices. Claude Platform documentation. https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices (the older "system prompts" URL redirects here). | C | 2026-10-05 |
 
 ## Notes
 
@@ -70,6 +81,9 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
   spectrum". The team notes cover skills, MCP, system prompts and Cowork, but
   say nothing about an autonomy spectrum, and the slides are unavailable. That
   attribution cannot be verified and should be dropped or confirmed.
+- **Team notes not re-read for topic 6.** The Assignment 4 PDF was not
+  available in the session that wrote topics 6 onward, so chunks T01–T06 do
+  not cite it, even where the notes cover skills, MCP and system prompts.
 - **"Anthropic. (2026). Claude Sonnet 5.5"** is listed in the team's
   bibliography as a tool used while researching. It is not a source of
   claims and is not cited here.
