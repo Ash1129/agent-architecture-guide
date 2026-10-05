@@ -1,12 +1,12 @@
-import { ClockCounterClockwise, Moon, Sun } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { ArrowRight, ClockCounterClockwise, Moon, Scales, Sun } from "@phosphor-icons/react";
+import { useEffect, useRef, useState, type FocusEvent } from "react";
 import { LAST_REVIEWED } from "../lib/catalog";
 import { AI_TAILORING } from "../lib/features";
 import { href, type Route } from "../lib/router";
 import { loadTheme, saveTheme, type ThemePref } from "../lib/storage";
 import { btn } from "./ui";
 
-function ThemeToggle() {
+function ThemeToggle({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<ThemePref>(loadTheme);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -19,63 +19,123 @@ function ThemeToggle() {
         setTheme(next);
         saveTheme(next);
       }}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-[width,height,color,background-color] duration-300 hover:bg-surface-2 hover:text-ink ${compact ? "mouse:h-8 mouse:w-8" : ""}`}
       aria-label={`Switch to ${next} theme`}
     >
-      {theme === "dark" ? <Sun size={19} weight="regular" /> : <Moon size={19} weight="regular" />}
+      {theme === "dark" ? <Sun size={compact ? 17 : 19} weight="regular" /> : <Moon size={compact ? 17 : 19} weight="regular" />}
     </button>
   );
 }
 
-export function Wordmark() {
+/** Labels in the top bar fold away when it is collapsed, leaving only the icons. */
+function fold(collapsed: boolean, side: "left" | "right" = "left") {
+  const gap = side === "left" ? `ml-2 ${collapsed ? "mouse:ml-0" : ""}` : `mr-2 ${collapsed ? "mouse:mr-0" : ""}`;
+  return `overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none max-w-56 opacity-100 ${gap} ${
+    collapsed ? "mouse:max-w-0 mouse:opacity-0" : ""
+  }`;
+}
+
+export function Wordmark({ collapsed = false }: { collapsed?: boolean }) {
   return (
-    <a href={href({ name: "home" })} className="group inline-flex items-center gap-2.5 rounded-full py-1 pr-2">
-      <svg aria-hidden viewBox="0 0 32 32" className="h-7 w-7 shrink-0">
+    <a href={href({ name: "home" })} aria-label="Agent Architecture Guide, home" className="group inline-flex items-center rounded-full py-1 pr-2">
+      <svg
+        aria-hidden
+        viewBox="0 0 32 32"
+        className={`shrink-0 transition-[width,height] duration-300 motion-reduce:transition-none ${collapsed ? "h-7 w-7 mouse:h-6 mouse:w-6" : "h-7 w-7"}`}
+      >
         <rect width="32" height="32" rx="8" className="fill-accent" />
         <path d="M9 16h6l4-6M15 16l4 6" fill="none" className="stroke-accent-ink" strokeWidth="2" strokeLinecap="round" />
         <circle cx="9" cy="16" r="3" className="fill-accent-ink" />
         <circle cx="21" cy="9" r="3" className="fill-accent-ink" />
         <circle cx="21" cy="23" r="3" className="fill-accent-ink" />
       </svg>
-      <span className="whitespace-nowrap text-[15px] font-semibold tracking-tight text-ink">Agent Architecture Guide</span>
+      <span className={`${fold(collapsed)} text-[15px] font-semibold tracking-tight text-ink`}>Agent Architecture Guide</span>
     </a>
   );
 }
 
+/**
+ * Like the macOS Spaces bar: with a mouse or trackpad the top bar rests as a
+ * slim, translucent strip of icons and expands with labels while the pointer
+ * is over it or keyboard focus is inside it. On touch screens it is an
+ * ordinary full bar.
+ */
+function useMenuBar() {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  return {
+    collapsed: !hovered && !focused,
+    handlers: {
+      onMouseEnter: () => {
+        window.clearTimeout(timer.current);
+        setHovered(true);
+      },
+      onMouseLeave: () => {
+        window.clearTimeout(timer.current);
+        timer.current = window.setTimeout(() => setHovered(false), 260);
+      },
+      onFocus: () => setFocused(true),
+      onBlur: (e: FocusEvent) => e.currentTarget.contains(e.relatedTarget as Node | null) || setFocused(false),
+    },
+  };
+}
+
 export function Nav({ route, cta, historyCount = 0 }: { route: Route; cta: { label: string; to: Route }; historyCount?: number }) {
+  const { collapsed, handlers } = useMenuBar();
+  const item = `${btn.quiet} gap-0 aria-[current=page]:text-ink ${collapsed ? "mouse:px-2.5 mouse:py-1.5" : ""}`;
   return (
-    <header className="no-print sticky top-0 z-40 border-b border-line/70 bg-bg/85 backdrop-blur-md">
-      <nav aria-label="Main" className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Wordmark />
-        <div className="flex items-center gap-1 sm:gap-2">
-          <a
-            href={href({ name: "how" })}
-            aria-current={route.name === "how" ? "page" : undefined}
-            className={`${btn.quiet} max-sm:hidden aria-[current=page]:text-ink`}
-          >
-            How it decides
-          </a>
-          <a
-            href={href({ name: "history" })}
-            aria-current={route.name === "history" ? "page" : undefined}
-            aria-label={`History, ${historyCount} saved result${historyCount === 1 ? "" : "s"}`}
-            className={`${btn.quiet} aria-[current=page]:text-ink`}
-          >
-            <ClockCounterClockwise size={17} aria-hidden />
-            <span className="max-sm:hidden">History</span>
-            {historyCount > 0 && (
-              <span className="rounded-full bg-surface-2 px-1.5 py-px font-mono text-[11.5px] text-ink">{historyCount}</span>
-            )}
-          </a>
-          <ThemeToggle />
-          {route.name !== "guide" && route.name !== "result" && (
-            <a href={href(cta.to)} className={`${btn.primarySmall} ml-1 max-md:hidden`}>
-              {cta.label}
+    <>
+      {/* Keeps page content clear of the resting strip, which floats above it. */}
+      <div aria-hidden className="no-print hidden h-11 mouse:block" />
+      <header
+        {...handlers}
+        className={`no-print sticky top-0 z-40 border-b backdrop-blur-xl transition-[background-color,border-color,box-shadow] duration-300 motion-reduce:transition-none mouse:fixed mouse:inset-x-0 ${
+          collapsed
+            ? "border-line/70 bg-bg/85 mouse:border-line/40 mouse:bg-bg/45"
+            : "border-line/70 bg-bg/85 mouse:shadow-[0_10px_30px_-14px_hsl(var(--shadow)/0.3)]"
+        }`}
+      >
+        <nav
+          aria-label="Main"
+          className={`mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 transition-[height] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none sm:px-6 ${
+            collapsed ? "mouse:h-11" : ""
+          }`}
+        >
+          <Wordmark collapsed={collapsed} />
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <a href={href({ name: "how" })} aria-current={route.name === "how" ? "page" : undefined} className={`${item} max-sm:hidden`} title={collapsed ? "How it decides" : undefined}>
+              <Scales size={17} aria-hidden />
+              <span className={fold(collapsed)}>How it decides</span>
             </a>
-          )}
-        </div>
-      </nav>
-    </header>
+            <a
+              href={href({ name: "history" })}
+              aria-current={route.name === "history" ? "page" : undefined}
+              aria-label={`History, ${historyCount} saved result${historyCount === 1 ? "" : "s"}`}
+              title={collapsed ? "History" : undefined}
+              className={item}
+            >
+              <ClockCounterClockwise size={17} aria-hidden />
+              <span className={`${fold(collapsed)} max-sm:hidden`}>History</span>
+              {historyCount > 0 && <span className="ml-1.5 rounded-full bg-surface-2 px-1.5 py-px font-mono text-[11.5px] text-ink">{historyCount}</span>}
+            </a>
+            <ThemeToggle compact={collapsed} />
+            {route.name !== "guide" && route.name !== "result" && (
+              <a
+                href={href(cta.to)}
+                aria-label={cta.label}
+                title={collapsed ? cta.label : undefined}
+                className={`${btn.primarySmall} ml-1 gap-0 transition-[padding] duration-300 max-md:hidden ${collapsed ? "mouse:px-2 mouse:py-2" : ""}`}
+              >
+                <span className={fold(collapsed, "right")}>{cta.label}</span>
+                <ArrowRight size={15} weight="bold" aria-hidden />
+              </a>
+            )}
+          </div>
+        </nav>
+      </header>
+    </>
   );
 }
 

@@ -1,5 +1,5 @@
-import { CaretDown, Check, CircleNotch, Copy, DownloadSimple, FileCode, FileText, FlowArrow, Package, Robot, Sparkle, Terminal, TreeStructure } from "@phosphor-icons/react";
-import { AnimatePresence, m, useReducedMotion } from "motion/react";
+import { Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Package, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
+import { m, useReducedMotion } from "motion/react";
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { AI_TAILORING } from "../lib/features";
 import { type Answers, effectiveAnswers } from "../lib/questions";
@@ -7,7 +7,8 @@ import type { Kit, KitFile, KitTool } from "../lib/starter";
 import { btn } from "./ui";
 
 // The starter kit panel: one file to paste into an AI coding assistant, plus
-// every supporting file on its own. Sits directly under the diagram.
+// every supporting file on its own. Sits beside the diagram, or under it when
+// the diagram needs the full width.
 
 function download(name: string, data: BlobPart, type: string) {
   const url = URL.createObjectURL(new Blob([data], { type }));
@@ -63,7 +64,8 @@ type Tailoring =
   | { state: "done"; content: string; model: string; using: "ai" | "generated" }
   | { state: "error"; message: string; problems?: string[] };
 
-export function StarterKit({ kit, slug, answers }: { kit: Kit; slug: string; answers: Answers }) {
+/** `rail`: a slim column beside the diagram. Otherwise a short strip under it. */
+export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slug: string; answers: Answers; rail?: boolean }) {
   const [tailoring, setTailoring] = useState<Tailoring>({ state: "idle" });
   const request = useRef<AbortController | null>(null);
 
@@ -117,7 +119,18 @@ export function StarterKit({ kit, slug, answers }: { kit: Kit; slug: string; ans
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const panelId = useId();
+
+  // The file preview is a modal dialog, so it never takes room on the page.
+  useEffect(() => {
+    const d = dialogRef.current;
+    if (!d) return;
+    if (open && !d.open) {
+      d.showModal();
+      tabRefs.current[active]?.focus();
+    } else if (!open && d.open) d.close();
+  }, [open]);
   const brief = files[0];
   const current = files[active];
 
@@ -154,167 +167,163 @@ export function StarterKit({ kit, slug, answers }: { kit: Kit; slug: string; ans
     tabRefs.current[next]?.focus();
   };
 
-  return (
-    <section aria-labelledby="kit-title" className="no-print mt-5 rounded-2xl border border-line bg-surface">
-      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-5">
-        <div className="flex min-w-0 items-start gap-3">
-          <span aria-hidden className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-            <Terminal size={19} />
-          </span>
-          <div className="min-w-0">
-            <h2 id="kit-title" className="text-[16px] font-semibold text-ink">
-              Build it with an AI coding assistant
-            </h2>
-            <p className="mt-0.5 text-[13.5px] leading-relaxed text-muted">
-              Paste <span className="font-mono text-[12.5px] text-ink">BUILD.md</span> into Claude Code, Codex or any AI assistant: it
-              holds the plan and all {files.length - 1} other files. Or use each tool's file directly below.
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className={btn.primarySmall}
-            onClick={() => copyText(brief.content).then(() => flash("brief"))}
-          >
-            {copied === "brief" ? <Check size={16} weight="bold" aria-hidden /> : <Copy size={16} aria-hidden />}
-            {copied === "brief" ? "Copied" : "Copy BUILD.md"}
-          </button>
-          <button type="button" className={btn.small} onClick={downloadAll}>
-            <DownloadSimple size={16} aria-hidden />
-            Download all (.zip)
-          </button>
-          <button
-            type="button"
-            className={btn.quiet}
-            aria-expanded={open}
-            aria-controls={panelId}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? "Hide files" : "Preview files"}
-            <CaretDown size={14} aria-hidden className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-          </button>
-        </div>
+  const toolList = tools.length > 0 && (
+    <ul aria-label="Ready to use in your tools" className={`grid gap-2 ${rail ? "" : tools.length > 1 ? "md:grid-cols-2" : ""}`}>
+      {tools.map((t) => {
+        const Icon = TOOL_ICON[t.id];
+        const done = copied === t.id;
+        return (
+          <li key={t.id} className="rounded-xl bg-surface-2/70 p-3">
+            <div className="flex items-center gap-2.5">
+              <Icon size={17} aria-hidden className="shrink-0 text-accent" />
+              <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug text-ink">{t.name}</p>
+              <button type="button" className={`${btn.small} shrink-0 bg-surface px-3 py-1.5 text-[13px]`} onClick={() => runTool(t)}>
+                {done ? <Check size={14} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={14} aria-hidden /> : <DownloadSimple size={14} aria-hidden />}
+                {done ? "Copied" : t.action.label}
+              </button>
+            </div>
+            {t.id === "n8n" && tailoring.state === "done" && tailoring.using === "ai" && (
+              <span className="mt-2 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-medium text-accent">Tailored by {tailoring.model}</span>
+            )}
+            <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{t.how}</p>
+            {AI_TAILORING && t.id === "n8n" && <TailorControls tailoring={tailoring} onTailor={tailor} onUse={(using) => tailoring.state === "done" && setTailoring({ ...tailoring, using })} />}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  const actions = (
+    <div className={rail ? "grid gap-2" : "flex flex-wrap items-center gap-2"}>
+      <button type="button" className={`${btn.primarySmall} ${rail ? "w-full" : ""}`} onClick={() => copyText(brief.content).then(() => flash("brief"))}>
+        {copied === "brief" ? <Check size={16} weight="bold" aria-hidden /> : <Copy size={16} aria-hidden />}
+        {copied === "brief" ? "Copied" : "Copy BUILD.md"}
+      </button>
+      <div className="flex flex-wrap items-center gap-1">
+        <button type="button" className={btn.quiet} onClick={downloadAll}>
+          <DownloadSimple size={16} aria-hidden />
+          Download all
+        </button>
+        <button type="button" className={btn.quiet} aria-haspopup="dialog" onClick={() => setOpen(true)}>
+          <Eye size={16} aria-hidden />
+          Preview files
+        </button>
       </div>
-      {tools.length > 0 && (
-        <ul aria-label="Ready to use in your tools" className="grid gap-2 border-t border-line p-3 sm:p-4 md:grid-cols-2">
-          {tools.map((t) => {
-            const Icon = TOOL_ICON[t.id];
-            const done = copied === t.id;
-            return (
-              <li key={t.id} className="flex items-start gap-3 rounded-xl bg-surface-2/70 p-3.5">
-                <Icon size={18} aria-hidden className="mt-0.5 shrink-0 text-accent" />
-                <div className="min-w-0 flex-1">
-                  <p className="flex flex-wrap items-center gap-2 text-[14.5px] font-semibold text-ink">
-                    {t.name}
-                    {t.id === "n8n" && tailoring.state === "done" && tailoring.using === "ai" && (
-                      <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-medium text-accent">Tailored by {tailoring.model}</span>
-                    )}
-                  </p>
-                  <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{t.how}</p>
-                  {AI_TAILORING && t.id === "n8n" && <TailorControls tailoring={tailoring} onTailor={tailor} onUse={(using) => tailoring.state === "done" && setTailoring({ ...tailoring, using })} />}
-                </div>
-                <button type="button" className={`${btn.small} shrink-0 bg-surface`} onClick={() => runTool(t)}>
-                  {done ? <Check size={15} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={15} aria-hidden /> : <DownloadSimple size={15} aria-hidden />}
-                  {done ? "Copied" : t.action.label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+    </div>
+  );
+
+  return (
+    <m.section
+      aria-labelledby="kit-title"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      className={`no-print shadow-soft overflow-hidden rounded-2xl border border-line bg-surface ${rail ? "sticky top-20 mouse:top-16" : ""}`}
+    >
+      <div className={rail ? "bg-accent-soft/70 px-4 pb-4 pt-5" : "flex flex-wrap items-center justify-between gap-x-8 gap-y-3 bg-accent-soft/70 px-5 py-4 sm:px-6"}>
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-accent">
+            <Terminal size={14} weight="bold" aria-hidden />
+            Start building
+          </p>
+          <h2 id="kit-title" className="mt-1 text-[1.125rem] font-semibold leading-snug tracking-tight text-ink">
+            Build it with an AI coding assistant
+          </h2>
+          <p className="mt-1 text-[13.5px] leading-relaxed text-muted">
+            Paste <span className="font-mono text-[12.5px] text-ink">BUILD.md</span> into Claude Code, Codex or any AI assistant. It holds the plan
+            and all {files.length - 1} other files.
+          </p>
+        </div>
+        <div className={rail ? "mt-4" : ""}>{actions}</div>
+      </div>
+      {toolList && <div className={`border-t border-line ${rail ? "p-3" : "p-3 sm:px-4"}`}>{toolList}</div>}
       <p className="sr-only" aria-live="polite">
         {copied ? "Copied to clipboard" : ""}
       </p>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <m.div
-            id={panelId}
-            initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            animate={reduce ? { opacity: 1 } : { height: "auto", opacity: 1 }}
-            exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-t border-line"
-          >
-            <div className="grid lg:grid-cols-[260px_minmax(0,1fr)]">
-              <div
-                role="tablist"
-                aria-label="Starter kit files"
-                aria-orientation="vertical"
-                className="flex gap-1 overflow-x-auto border-b border-line p-2 lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r"
-              >
-                {files.map((f, i) => {
-                  const Icon = f.lang === "markdown" ? FileText : FileCode;
-                  const on = i === active;
-                  return (
-                    <button
-                      key={f.path}
-                      ref={(el) => {
-                        tabRefs.current[i] = el;
-                      }}
-                      type="button"
-                      role="tab"
-                      id={`${panelId}-tab-${i}`}
-                      aria-selected={on}
-                      aria-controls={`${panelId}-file`}
-                      tabIndex={on ? 0 : -1}
-                      onClick={() => setActive(i)}
-                      onKeyDown={(e) => onTabKey(e, i)}
-                      className={`flex shrink-0 items-start gap-2 rounded-xl px-3 py-2 text-left transition-colors lg:w-full ${
-                        on ? "bg-accent-soft" : "hover:bg-surface-2"
-                      }`}
-                    >
-                      <Icon size={15} aria-hidden className={`mt-0.5 shrink-0 ${on ? "text-accent" : "text-muted"}`} />
-                      <span className="min-w-0">
-                        <span className="block whitespace-nowrap font-mono text-[12.5px] text-ink lg:whitespace-normal lg:break-all">{f.path}</span>
-                        <span className="hidden text-[12px] leading-snug text-muted lg:block">{f.purpose}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div role="tabpanel" id={`${panelId}-file`} aria-labelledby={`${panelId}-tab-${active}`} className="min-w-0">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5">
-                  <p className="min-w-0 text-[13px] text-muted">
-                    <span className="font-mono text-ink">{current.path}</span>
-                    <span className="lg:hidden"> {current.purpose}</span>
-                  </p>
-                  <div className="flex gap-1.5">
-                    <button
-                      type="button"
-                      className={btn.quiet}
-                      onClick={() => copyText(current.content).then(() => flash(current.path))}
-                      aria-label={`Copy ${current.path}`}
-                    >
-                      {copied === current.path ? <Check size={15} weight="bold" aria-hidden /> : <Copy size={15} aria-hidden />}
-                      {copied === current.path ? "Copied" : "Copy"}
-                    </button>
-                    <button
-                      type="button"
-                      className={btn.quiet}
-                      onClick={() => download(current.path.split("/").pop()!, current.content, MIME[current.lang])}
-                      aria-label={`Download ${current.path}`}
-                    >
-                      <DownloadSimple size={15} aria-hidden />
-                      Download
-                    </button>
-                  </div>
-                </div>
-                <pre
-                  tabIndex={0}
-                  aria-label={`Contents of ${current.path}`}
-                  className="max-h-[360px] overflow-auto bg-surface-2/50 px-4 py-3.5 font-mono text-[12.5px] leading-relaxed text-ink"
-                >
-                  <code>{current.content}</code>
-                </pre>
-              </div>
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={`${panelId}-title`}
+        onClose={() => setOpen(false)}
+        onClick={(e) => e.target === e.currentTarget && setOpen(false)}
+        className="m-auto h-[min(760px,88vh)] w-[min(1080px,calc(100%-2rem))] max-w-none overflow-hidden rounded-2xl border border-line bg-surface p-0 text-ink shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-[2px]"
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
+            <h2 id={`${panelId}-title`} className="text-[15.5px] font-semibold text-ink">
+              Starter kit files
+            </h2>
+            <button type="button" className={btn.quiet} onClick={() => setOpen(false)}>
+              <X size={16} aria-hidden />
+              Close
+            </button>
+          </div>
+          <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[250px_minmax(0,1fr)] md:grid-rows-1">
+            <div
+              role="tablist"
+              aria-label="Starter kit files"
+              aria-orientation="vertical"
+              className="flex gap-1 overflow-x-auto border-b border-line p-2 md:flex-col md:overflow-y-auto md:overflow-x-visible md:border-b-0 md:border-r"
+            >
+              {files.map((f, i) => {
+                const Icon = f.lang === "markdown" ? FileText : FileCode;
+                const on = i === active;
+                return (
+                  <button
+                    key={f.path}
+                    ref={(el) => {
+                      tabRefs.current[i] = el;
+                    }}
+                    type="button"
+                    role="tab"
+                    id={`${panelId}-tab-${i}`}
+                    aria-selected={on}
+                    aria-controls={`${panelId}-file`}
+                    tabIndex={on ? 0 : -1}
+                    onClick={() => setActive(i)}
+                    onKeyDown={(e) => onTabKey(e, i)}
+                    className={`flex shrink-0 items-start gap-2 rounded-xl px-3 py-2 text-left transition-colors md:w-full ${on ? "bg-accent-soft" : "hover:bg-surface-2"}`}
+                  >
+                    <Icon size={15} aria-hidden className={`mt-0.5 shrink-0 ${on ? "text-accent" : "text-muted"}`} />
+                    <span className="min-w-0">
+                      <span className="block whitespace-nowrap font-mono text-[12.5px] text-ink md:whitespace-normal md:break-all">{f.path}</span>
+                      <span className="hidden text-[12px] leading-snug text-muted md:block">{f.purpose}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          </m.div>
-        )}
-      </AnimatePresence>
-    </section>
+
+            <div role="tabpanel" id={`${panelId}-file`} aria-labelledby={`${panelId}-tab-${active}`} className="flex min-h-0 min-w-0 flex-col">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2.5">
+                <p className="min-w-0 text-[13px] text-muted">
+                  <span className="font-mono text-ink">{current.path}</span>
+                  <span className="md:hidden"> {current.purpose}</span>
+                </p>
+                <div className="flex gap-1.5">
+                  <button type="button" className={btn.quiet} onClick={() => copyText(current.content).then(() => flash(current.path))} aria-label={`Copy ${current.path}`}>
+                    {copied === current.path ? <Check size={15} weight="bold" aria-hidden /> : <Copy size={15} aria-hidden />}
+                    {copied === current.path ? "Copied" : "Copy"}
+                  </button>
+                  <button
+                    type="button"
+                    className={btn.quiet}
+                    onClick={() => download(current.path.split("/").pop()!, current.content, MIME[current.lang])}
+                    aria-label={`Download ${current.path}`}
+                  >
+                    <DownloadSimple size={15} aria-hidden />
+                    Download
+                  </button>
+                </div>
+              </div>
+              <pre tabIndex={0} aria-label={`Contents of ${current.path}`} className="min-h-0 flex-1 overflow-auto bg-surface-2/50 px-4 py-3.5 font-mono text-[12.5px] leading-relaxed text-ink">
+                <code>{current.content}</code>
+              </pre>
+            </div>
+          </div>
+        </div>
+      </dialog>
+    </m.section>
   );
 }
 
@@ -356,7 +365,7 @@ function TailorControls({
           ) : (
             <Sparkle size={14} weight="fill" aria-hidden />
           )}
-          {tailoring.state === "working" ? "Tailoring to your task. This can take a minute." : "Tailor with AI"}
+          {tailoring.state === "working" ? "Tailoring to your task. This can take a few minutes." : "Tailor with AI"}
         </button>
       )}
       <p className="mt-1 text-[12px] leading-snug text-muted">

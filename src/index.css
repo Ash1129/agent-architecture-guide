@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Devices with a mouse or trackpad: the top bar hides until the pointer nears the top edge. */
+@custom-variant mouse (@media (hover: hover) and (pointer: fine));
+
 /*
   Design tokens. One accent (deep green) on cool neutrals; both themes pass
   WCAG AA for text and 3:1 for control borders.

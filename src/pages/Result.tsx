@@ -21,8 +21,8 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArchitectureMap, GateBadge, KIND_ICON } from "../components/ArchitectureMap";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ArchitectureMap, COL_GAP, COL_MIN, GateBadge, KIND_ICON, PAD_X } from "../components/ArchitectureMap";
 import { DiagramBoundary } from "../components/DiagramBoundary";
 import { Walkthrough } from "../components/Walkthrough";
 import { StarterKit } from "../components/StarterKit";
@@ -458,6 +458,21 @@ function Ready({
   const reduce = useReducedMotion();
   const panelId = useId();
   const cardRef = useRef<HTMLElement>(null);
+
+  // The build kit sits beside the diagram only when the diagram can still run
+  // left to right; otherwise the diagram takes the full width and the kit goes under it.
+  const [outputsEl, outputsRef] = useState<HTMLDivElement | null>(null);
+  const [outputsWidth, setOutputsWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (!outputsEl) return;
+    setOutputsWidth(outputsEl.getBoundingClientRect().width);
+    const ro = new ResizeObserver(([entry]) => setOutputsWidth(entry.contentRect.width));
+    ro.observe(outputsEl);
+    return () => ro.disconnect();
+  }, [outputsEl]);
+  const widest = Math.max(full.stages, simple.stages);
+  const diagramNeeds = widest * COL_MIN + (widest - 1) * COL_GAP + PAD_X * 2 + 42; // plus the card's padding and border
+  const besideKit = outputsWidth > 0 && outputsWidth - 300 - 20 >= diagramNeeds;
   const [variant, setVariant] = useState<"recommended" | "simpler">("recommended");
   const [view, setView] = useState<"diagram" | "list">("diagram");
   const [selected, setSelected] = useState<string | null>(null);
@@ -558,7 +573,7 @@ function Ready({
   ];
 
   return (
-    <main id="main" className="mx-auto w-full max-w-[1320px] px-4 pb-28 pt-7 sm:px-6 sm:pt-10">
+    <main id="main" className="mx-auto w-full max-w-[1640px] px-4 pb-28 pt-7 sm:px-6 sm:pt-10">
       {walking && <Walkthrough bp={bp} onClose={endWalk} />}
       {/* -------------------------------------------------- header: only what's needed */}
       <m.header
@@ -587,113 +602,124 @@ function Ready({
           </div>
           <Actions r={r} bp={full} answers={answers} onEdit={openAnswers} />
         </div>
-        <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface sm:grid-cols-3 lg:grid-cols-5">
-          {facts.map((f) => (
-            <div key={f.label} className="-ml-px -mt-px border-l border-t border-line px-4 py-3">
-              <dt className="flex items-center gap-1.5 text-[12.5px] text-muted">
-                {f.icon}
-                {f.label}
-              </dt>
-              <dd className={`mt-0.5 text-[14.5px] font-semibold leading-snug ${f.strong ? "text-accent" : "text-ink"}`}>{f.value}</dd>
-            </div>
-          ))}
-        </dl>
       </m.header>
 
-      {/* -------------------------------------------------- the architecture */}
-      <m.section
-        ref={cardRef}
-        aria-labelledby="architecture-title"
-        initial={reduce ? false : { opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-        className="shadow-soft mt-7 rounded-2xl border border-line bg-surface"
-      >
-        <div className="no-print flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:px-5">
-          <div role="group" aria-label="Which design to show" className="inline-flex rounded-full bg-surface-2 p-1">
-            {(["recommended", "simpler"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                aria-pressed={variant === v}
-                onClick={() => setVariant(v)}
-                className={`rounded-full px-3.5 py-1.5 text-[13.5px] font-medium transition-colors ${
-                  variant === v ? "bg-surface text-ink shadow-[0_1px_2px_hsl(var(--shadow)/0.12)] ring-1 ring-line" : "text-muted hover:text-ink"
-                }`}
-              >
-                {v === "recommended" ? "Recommended" : "Simpler start"}
-              </button>
-            ))}
+      <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface sm:grid-cols-3 lg:grid-cols-5">
+        {facts.map((f) => (
+          <div key={f.label} className="-ml-px -mt-px border-l border-t border-line px-4 py-3">
+            <dt className="flex items-center gap-1.5 text-[12.5px] text-muted">
+              {f.icon}
+              {f.label}
+            </dt>
+            <dd className={`mt-0.5 text-[14.5px] font-semibold leading-snug ${f.strong ? "text-accent" : "text-ink"}`}>{f.value}</dd>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button ref={walkButton} type="button" onClick={walk} className={btn.primarySmall}>
-              <PlayCircle size={17} aria-hidden />
-              Walk me through it
-            </button>
-            <button
-              type="button"
-              aria-pressed={view === "list"}
-              onClick={() => setView(view === "list" ? "diagram" : "list")}
-              className={btn.quiet}
-            >
-              {view === "list" ? <TreeStructure size={16} aria-hidden /> : <ListNumbers size={16} aria-hidden />}
-              {view === "list" ? "Show diagram" : "Show as list"}
-            </button>
-          </div>
-        </div>
+        ))}
+      </dl>
 
-        <h2 id="architecture-title" className={variant === "simpler" ? "px-4 pt-4 text-[14.5px] font-semibold text-ink sm:px-6" : "sr-only"}>
-          {variant === "recommended" ? "How it works" : `Simpler start: ${simple.title}`}
-        </h2>
-
-        <div className="px-3 sm:px-5">
-          <AnimatePresence mode="wait" initial={false}>
-            <m.div
-              key={`${variant}-${view}`}
-              initial={reduce ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
-            >
-              {view === "diagram" ? (
-                <DiagramBoundary
-                  resetKey={`${bp.variant}-${bp.nodes.map((n) => n.id).join()}`}
-                  fallback={<StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />}
+      {/* -------------------------------------------------- the two main outputs: how it works, and what to build */}
+      <div ref={outputsRef} className={`mt-5 grid items-start gap-5 ${besideKit ? "grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
+        <m.section
+          ref={cardRef}
+          aria-labelledby="architecture-title"
+          initial={reduce ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+          className="shadow-soft rounded-2xl border border-line bg-surface"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 rounded-t-2xl border-b border-line bg-accent-soft/70 px-5 py-5 sm:px-7">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[13px] font-medium text-accent">
+                <TreeStructure size={15} weight="bold" aria-hidden />
+                Your architecture
+              </p>
+              <h2 id="architecture-title" className="mt-1.5 text-[1.375rem] font-semibold leading-tight tracking-tight text-ink sm:text-[1.625rem]">
+                {variant === "recommended" ? "How it works" : "Simpler start"}
+              </h2>
+            </div>
+            <div className="no-print flex flex-wrap items-center gap-2">
+              <div role="group" aria-label="Which design to show" className="inline-flex rounded-full bg-surface p-1 ring-1 ring-line">
+                {(["recommended", "simpler"] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    aria-pressed={variant === v}
+                    onClick={() => setVariant(v)}
+                    className={`rounded-full px-3.5 py-1.5 text-[13.5px] font-medium transition-colors ${
+                      variant === v ? "bg-surface text-ink shadow-[0_1px_2px_hsl(var(--shadow)/0.12)] ring-1 ring-line" : "text-muted hover:text-ink"
+                    }`}
+                  >
+                    {v === "recommended" ? "Recommended" : "Simpler start"}
+                  </button>
+                ))}
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button ref={walkButton} type="button" onClick={walk} className={btn.primarySmall}>
+                  <PlayCircle size={17} aria-hidden />
+                  Walk me through it
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={view === "list"}
+                  onClick={() => setView(view === "list" ? "diagram" : "list")}
+                  className={btn.quiet}
                 >
-                  <ArchitectureMap bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
-                </DiagramBoundary>
-              ) : (
-                <StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
-              )}
-            </m.div>
-          </AnimatePresence>
-        </div>
-        <ModelPlan bp={bp} onSelect={setSelected} />
-        {view === "diagram" && <Legend bp={bp} />}
-
-        <StepPanel
-          bp={bp}
-          selected={selected}
-          onSelect={setSelected}
-          panelId={panelId}
-          idle={
-            variant === "simpler" ? (
-              <Compare r={r} full={full} simple={simple} />
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <p className="text-[14px] text-muted">Select a step for details.</p>
-                <button type="button" onClick={() => setVariant("simpler")} className={`${btn.small} no-print`}>
-                  Compare with a simpler start
-                  <ArrowRight size={15} weight="bold" aria-hidden />
+                  {view === "list" ? <TreeStructure size={16} aria-hidden /> : <ListNumbers size={16} aria-hidden />}
+                  {view === "list" ? "Show diagram" : "Show as list"}
                 </button>
               </div>
-            )
-          }
-        />
-      </m.section>
+            </div>
+          </div>
 
-      {/* -------------------------------------------------- starter kit for an AI coding assistant */}
-      <StarterKit kit={kit} slug={slugify(r.task)} answers={answers} />
+          {variant === "simpler" && <p className="px-4 pt-4 text-[14.5px] font-semibold text-ink sm:px-6">{simple.title}</p>}
+
+          <div className="px-3 sm:px-5">
+            <AnimatePresence mode="wait" initial={false}>
+              <m.div
+                key={`${variant}-${view}`}
+                initial={reduce ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+              >
+                {view === "diagram" ? (
+                  <DiagramBoundary
+                    resetKey={`${bp.variant}-${bp.nodes.map((n) => n.id).join()}`}
+                    fallback={<StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />}
+                  >
+                    <ArchitectureMap bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
+                  </DiagramBoundary>
+                ) : (
+                  <StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
+                )}
+              </m.div>
+            </AnimatePresence>
+          </div>
+          <ModelPlan bp={bp} onSelect={setSelected} />
+          {view === "diagram" && <Legend bp={bp} />}
+
+          <StepPanel
+            bp={bp}
+            selected={selected}
+            onSelect={setSelected}
+            panelId={panelId}
+            idle={
+              variant === "simpler" ? (
+                <Compare r={r} full={full} simple={simple} />
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <p className="text-[14px] text-muted">Select a step for details.</p>
+                  <button type="button" onClick={() => setVariant("simpler")} className={`${btn.small} no-print`}>
+                    Compare with a simpler start
+                    <ArrowRight size={15} weight="bold" aria-hidden />
+                  </button>
+                </div>
+              )
+            }
+          />
+        </m.section>
+
+        <StarterKit kit={kit} slug={slugify(r.task)} answers={answers} rail={besideKit} />
+      </div>
 
       {/* -------------------------------------------------- the detail, on demand */}
       <section aria-labelledby="detail" className="mt-12">
