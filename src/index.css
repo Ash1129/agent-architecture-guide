@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+/*
+  Design tokens. One accent (deep green) on cool neutrals; both themes pass
+  WCAG AA for text and 3:1 for control borders.
+  Shape rule: buttons and chips are full pills, surfaces are 16px, inputs 12px.
+*/
+:root,
+:root[data-theme="light"] {
+  --bg: #f3f5f4;
+  --surface: #fbfcfb;
+  --surface-2: #eaeeec;
+  --ink: #13201b;
+  --muted: #4d5b55;
+  --line: #d6ddd9;
+  --line-strong: #7f8d87;
+  --accent: #1c6650;
+  --accent-ink: #f5fbf8;
+  --accent-soft: #e1ede7;
+  --shadow: 160 20% 20%;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1311;
+  --surface: #131b18;
+  --surface-2: #1a2420;
+  --ink: #e5ece8;
+  --muted: #9aa9a2;
+  --line: #26322d;
+  --line-strong: #5e6e67;
+  --accent: #79cbab;
+  --accent-ink: #0a1813;
+  --accent-soft: #15302a;
+  --shadow: 160 30% 2%;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+.shadow-soft {
+  box-shadow:
+    0 1px 2px hsl(var(--shadow) / 0.06),
+    0 12px 32px -12px hsl(var(--shadow) / 0.16);
+}
+
+/* Subtle dotted backdrop for diagrams, so nodes read as a system. */
+.diagram-surface {
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f2f4f3;
+    --ink: #111111;
+    --muted: #444444;
+    --line: #cccccc;
+    --accent: #1c6650;
+    --accent-soft: #eef4f1;
+  }
+  .no-print {
+    display: none !important;
+  }
+  /* Sections that reveal on scroll must still print if never scrolled to. */
+  [style*="opacity"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
+}
