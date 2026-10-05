@@ -191,10 +191,15 @@ describe("decision paths", () => {
     expect(m.kind === "model" && m.why).toMatch(/only in the US or worldwide/);
   });
 
-  it("model picks name Fable 5.1 as the step up and Haiku 4.5's fallback", () => {
+  it("model picks name Fable 5.1 as the step up and never default to Haiku 4.5", () => {
     const router = pickModel("router", customerSupport);
     expect(router.kind === "model" && router.prototype).toMatch(/Fable 5\.1/);
-    expect(router.kind === "model" && router.prototype).toMatch(/Sonnet 5\.5 is the fallback/);
+    for (const role of ["router", "worker", "attempt", "checker", "agent", "coordinator", "specialist"] as const) {
+      for (const volume of ["occasional", "daily", "high"] as const) {
+        const e = pickModel(role, { ...customerSupport, volume });
+        expect(e.kind === "model" && e.model).not.toBe("haiku");
+      }
+    }
     const open = pickModel("router", marketResearch);
     expect(open.kind === "model" && open.prototype).not.toMatch(/Fable/);
   });

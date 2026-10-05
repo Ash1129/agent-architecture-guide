@@ -33,8 +33,12 @@ export const MODELS: Record<ModelId, { name: string; short: string; size: string
 /** The step up when Opus 5.5 still falls short on demanding reasoning or long agent sessions (M01). */
 export const TOP_MODEL = { name: "Claude Fable 5.1", note: "it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention" };
 
-/** Haiku 4.5's earliest retirement date (M01). Designs that rely on it name Sonnet 5.5 as the fallback. */
-export const HAIKU_FALLBACK = "Haiku 4.5 may be retired from October 15, 2026; Sonnet 5.5 is the fallback.";
+/**
+ * Haiku 4.5 may be retired from October 15, 2026 (M01), so no step defaults to
+ * it. Sonnet 5.5 takes the small-model roles; Haiku stays an option to test
+ * while it remains available.
+ */
+export const HAIKU_NOTE = "Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default.";
 
 export type Engine =
   | { kind: "model"; model: ModelId; name: string; short: string; prototype: string; why: string; alternative?: string }
@@ -59,9 +63,9 @@ export const MODEL_RULES: ModelRule[] = [
   {
     role: "router",
     step: "Sorting requests by type",
-    pick: "haiku",
+    pick: "sonnet",
     open: "openSmall",
-    why: "Sorting is a simple classification. A small, fast model is usually enough.",
+    why: "Sorting is a simple classification. A fast, balanced model is enough; a smaller one can be tested later.",
     basis: { kind: "source", sources: ["openai"] },
     kb: ["P01", "M02", "M01"],
   },
@@ -70,7 +74,6 @@ export const MODEL_RULES: ModelRule[] = [
     step: "Reading, drafting or judging inside a workflow",
     pick: "sonnet",
     open: "openLarge",
-    adjust: "Haiku 4.5 at hundreds of runs a day, when nothing customer-facing or irreversible is at stake",
     why: "A balanced model handles most judgement steps well at a reasonable cost per run.",
     basis: { kind: "design" },
     kb: ["M01", "M02"],
@@ -78,18 +81,18 @@ export const MODEL_RULES: ModelRule[] = [
   {
     role: "attempt",
     step: "Independent attempts that are voted on",
-    pick: "haiku",
+    pick: "sonnet",
     open: "openSmall",
-    why: "Several cheap attempts compared by vote often beat one expensive attempt.",
+    why: "Several independent attempts compared by vote often beat one attempt by a bigger model.",
     basis: { kind: "design" },
     kb: ["P02", "M02"],
   },
   {
     role: "checker",
     step: "Checking work against a checklist",
-    pick: "haiku",
+    pick: "sonnet",
     open: "openSmall",
-    adjust: "Sonnet 5.5 when output reaches customers, is irreversible or involves personal data",
+    adjust: "Opus 5.5 when output reaches customers, is irreversible or involves personal data",
     why: "Checking against a clear checklist is narrower than producing the work.",
     basis: { kind: "design" },
     kb: ["P02", "G04"],
@@ -117,7 +120,6 @@ export const MODEL_RULES: ModelRule[] = [
     step: "A specialist agent with one role",
     pick: "sonnet",
     open: "openLarge",
-    adjust: "Haiku 4.5 at hundreds of runs a day",
     why: "Each specialist has a narrow brief, so a balanced model is usually enough.",
     basis: { kind: "design" },
     kb: ["P03", "M01"],
@@ -135,17 +137,15 @@ export function pickModel(role: Role, a: Answers): Engine {
   const sensitive = !!a.risks?.some((x) => x === "visible" || x === "irreversible" || x === "personal");
   let id: ModelId = open ? rule.open : rule.pick;
 
-  if (!open && role === "worker" && a.volume === "high" && !a.risks?.some((x) => x === "visible" || x === "irreversible")) id = "haiku";
-  if (!open && role === "specialist" && a.volume === "high") id = "haiku";
-  if (role === "checker" && sensitive) id = open ? "openLarge" : "sonnet";
+  if (role === "checker" && sensitive) id = open ? "openLarge" : "opus";
 
   const m = MODELS[id];
   const top = open ? MODELS.openLarge : MODELS.opus;
   const inRegion = a.location === "residency" && !open;
   const why =
     rule.why +
-    (id === "haiku" && role === "worker" ? " At your volume, cost per run matters most." : "") +
-    (id === "sonnet" && role === "checker" ? " Mistakes here would be visible or costly, so the checker gets a stronger model." : "") +
+    (role === "checker" && sensitive ? " Mistakes here would be visible or costly, so the checker gets a stronger model." : "") +
+    (!open && a.volume === "high" && (role === "router" || role === "attempt" || role === "worker" || role === "specialist") ? ` ${HAIKU_NOTE}` : "") +
     (open ? " You need models you can host or buy from several providers." : "") +
     (inRegion
       ? " Anthropic's own API processes data only in the US or worldwide, so use Claude through a cloud provider's regional service (such as Amazon Bedrock or Google Cloud) to keep data in your region."
@@ -158,10 +158,9 @@ export function pickModel(role: Role, a: Answers): Engine {
     short: m.short,
     prototype:
       `Build the first version on ${top.name}${top.examples ? ` (${top.examples})` : ""}. Switch to ${m.name.split(",")[0]} once it matches that baseline on your test examples.` +
-      (open ? "" : ` If ${top.name} itself falls short on the hardest steps, try ${TOP_MODEL.name}; ${TOP_MODEL.note}.`) +
-      (id === "haiku" ? ` ${HAIKU_FALLBACK}` : ""),
+      (open ? "" : ` If ${top.name} itself falls short on the hardest steps, try ${TOP_MODEL.name}; ${TOP_MODEL.note}.`),
     why,
-    alternative: open ? undefined : `Open-weight alternative: ${id === "haiku" ? MODELS.openSmall.examples : MODELS.openLarge.examples}.`,
+    alternative: open ? undefined : `Open-weight alternative: ${rule.open === "openSmall" ? MODELS.openSmall.examples : MODELS.openLarge.examples}.`,
   };
 }
 
