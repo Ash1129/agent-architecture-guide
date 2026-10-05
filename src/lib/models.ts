@@ -2,7 +2,8 @@
 // assignment's model framework: build the first version on the most capable
 // model, then step each part down to the smallest model that still matches
 // your test baseline. The role-to-model table below is this guide's starting
-// suggestion; model names are examples as of the review date.
+// suggestion; model names are examples as of the review date (knowledge base
+// chunks M01 and M03, checked October 5, 2026).
 
 import { LAST_REVIEWED } from "./catalog";
 import type { Answers } from "./questions";
@@ -12,22 +13,28 @@ import type { Basis } from "./rules";
 export type ModelId = "opus" | "sonnet" | "haiku" | "openLarge" | "openSmall";
 
 export const MODELS: Record<ModelId, { name: string; short: string; size: string; examples?: string }> = {
-  opus: { name: "Claude Opus 5.5", short: "Opus 5.5", size: "Most capable" },
+  opus: { name: "Claude Opus 5.5", short: "Opus 5.5", size: "Default starting point" },
   sonnet: { name: "Claude Sonnet 5.5", short: "Sonnet 5.5", size: "Balanced" },
-  haiku: { name: "Claude Haiku 4.5", short: "Haiku 4.5", size: "Fast, low cost" },
+  haiku: { name: "Claude Haiku 4.5", short: "Haiku 4.5", size: "Fast, low cost; may retire from October 15, 2026" },
   openLarge: {
     name: "Large open-weight model",
     short: "Open-weight, large",
     size: "Most capable you can host",
-    examples: "for example Qwen3 235B, Llama 4 Maverick or Hermes 4",
+    examples: "for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)",
   },
   openSmall: {
     name: "Small open-weight model",
     short: "Open-weight, small",
     size: "Fast, low cost",
-    examples: "for example Qwen3 8B",
+    examples: "for example a smaller model from the same open families, chosen by testing",
   },
 };
+
+/** The step up when Opus 5.5 still falls short on demanding reasoning or long agent sessions (M01). */
+export const TOP_MODEL = { name: "Claude Fable 5.1", note: "it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention" };
+
+/** Haiku 4.5's earliest retirement date (M01). Designs that rely on it name Sonnet 5.5 as the fallback. */
+export const HAIKU_FALLBACK = "Haiku 4.5 may be retired from October 15, 2026; Sonnet 5.5 is the fallback.";
 
 export type Engine =
   | { kind: "model"; model: ModelId; name: string; short: string; prototype: string; why: string; alternative?: string }
@@ -140,14 +147,19 @@ export function pickModel(role: Role, a: Answers): Engine {
     (id === "haiku" && role === "worker" ? " At your volume, cost per run matters most." : "") +
     (id === "sonnet" && role === "checker" ? " Mistakes here would be visible or costly, so the checker gets a stronger model." : "") +
     (open ? " You need models you can host or buy from several providers." : "") +
-    (inRegion ? " Use it through a cloud provider that processes data in your region." : "");
+    (inRegion
+      ? " Anthropic's own API processes data only in the US or worldwide, so use Claude through a cloud provider's regional service (such as Amazon Bedrock or Google Cloud) to keep data in your region."
+      : "");
 
   return {
     kind: "model",
     model: id,
     name: m.name + (m.examples ? `, ${m.examples}` : ""),
     short: m.short,
-    prototype: `Build the first version on ${top.name}${top.examples ? ` (${top.examples})` : ""}. Switch to ${m.name.split(",")[0]} once it matches that baseline on your test examples.`,
+    prototype:
+      `Build the first version on ${top.name}${top.examples ? ` (${top.examples})` : ""}. Switch to ${m.name.split(",")[0]} once it matches that baseline on your test examples.` +
+      (open ? "" : ` If ${top.name} itself falls short on the hardest steps, try ${TOP_MODEL.name}; ${TOP_MODEL.note}.`) +
+      (id === "haiku" ? ` ${HAIKU_FALLBACK}` : ""),
     why,
     alternative: open ? undefined : `Open-weight alternative: ${id === "haiku" ? MODELS.openSmall.examples : MODELS.openLarge.examples}.`,
   };

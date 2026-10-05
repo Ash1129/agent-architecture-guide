@@ -66,15 +66,20 @@ last_verified: 2026-10-05
   chat. The help centre is the primary and newer source; Pabani's points
   are out of date. [pabani-2026-openclaw-hermes-cowork, read earlier on 2026-10-05; the site was blocked in the session that wrote this chunk, so its section headings were not re-checked; anthropic-help-cowork-scheduled]
 
+- **Team observation (2026-10-05):** on the team's own account, chat and
+  Cowork are still separate. The help centre describes the merge as rolling
+  out gradually to Pro and Max, and Team and Enterprise keep them separate,
+  so the guide treats them as separate for now.
+
 ## What this means for the guide
 
 - Cowork fits a person or small team who wants an agent for documents,
   research and recurring briefings, with no setup beyond a paid plan.
-- **Discrepancies in the site:**
+- **Discrepancies in the site** (catalog and G13 fixed 2026-10-05):
   - the catalog says Cowork is "in the desktop app"; it now runs on web and
     mobile too, in the cloud
-  - gotcha G7 ("Cowork isn't the regular chat") is becoming outdated for
-    Pro and Max, where they are merging
+  - gotcha G7 ("Cowork isn't the regular chat") still holds while chat and
+    Cowork are separate; revisit if the merge reaches the team's plan
   - gotcha G13 ("Claude forgets between conversations") is not true for
     Cowork cloud sessions, which share memory with chat
 - For business use, recommend Manual mode at first and Auto only after a

@@ -8,6 +8,11 @@ import { QUESTIONS, type QuestionId } from "../lib/questions";
 import { href, type Route } from "../lib/router";
 import { RULES, RULE_GROUPS } from "../lib/rules";
 import { ALSO_CREDITED, SOURCES } from "../lib/sources";
+
+const SOURCE_GROUPS = [
+  { origin: "assignment", title: "From AI Assignment 4" },
+  { origin: "added", title: "Added for this guide" },
+] as const;
 import { AI_TAILORING } from "../lib/features";
 import { ALGORITHMS, MODELS, MODEL_RULES } from "../lib/models";
 
@@ -285,29 +290,37 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
       <section className="mt-20" aria-labelledby="sources">
         <H2 id="sources">Sources</H2>
         <p className="mt-3 max-w-[62ch] text-[16px] leading-relaxed text-muted">
-          All sources are those cited in AI Assignment 4. Counts show how many rules rely on each.
+          Most sources come from AI Assignment 4. The rest were added while building the guide, mainly official documentation
+          for the tools it recommends. Counts show how many rules rely on each.
         </p>
-        <ul className="mt-8 divide-y divide-line border-y border-line">
-          {Object.values(SOURCES).map((s) => (
-            <li key={s.id} className="grid gap-2 py-5 md:grid-cols-[1fr_1fr_6rem] md:gap-8">
-              <div>
-                <p className="text-[15px] font-medium leading-snug text-ink">
-                  {s.url ? (
-                    <a href={s.url} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline">
-                      {s.citation}
-                      <ArrowSquareOut size={13} aria-hidden className="ml-1 inline align-baseline text-muted" />
-                      <span className="sr-only">(opens in a new tab)</span>
-                    </a>
-                  ) : (
-                    s.citation
-                  )}
-                </p>
-              </div>
-              <p className="text-[14.5px] leading-relaxed text-muted">{s.usedFor}</p>
-              <p className="text-[14px] text-muted md:text-right">{citeCount(s.id)} rules</p>
-            </li>
-          ))}
-        </ul>
+        {SOURCE_GROUPS.map((g) => (
+          <div key={g.origin} className="mt-8">
+            <h3 className="text-[15px] font-semibold text-ink">{g.title}</h3>
+            <ul className="mt-3 divide-y divide-line border-y border-line">
+              {Object.values(SOURCES)
+                .filter((s) => s.origin === g.origin)
+                .map((s) => (
+                <li key={s.id} className="grid gap-2 py-5 md:grid-cols-[1fr_1fr_6rem] md:gap-8">
+                  <div>
+                    <p className="text-[15px] font-medium leading-snug text-ink">
+                      {s.url ? (
+                        <a href={s.url} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline">
+                          {s.citation}
+                          <ArrowSquareOut size={13} aria-hidden className="ml-1 inline align-baseline text-muted" />
+                          <span className="sr-only">(opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        s.citation
+                      )}
+                    </p>
+                  </div>
+                  <p className="text-[14.5px] leading-relaxed text-muted">{s.usedFor}</p>
+                  <p className="text-[14px] text-muted md:text-right">{citeCount(s.id)} rules</p>
+                </li>
+                ))}
+            </ul>
+          </div>
+        ))}
         <p className="mt-4 max-w-[70ch] text-[13.5px] leading-relaxed text-muted">Also credited in the assignment: {ALSO_CREDITED}</p>
       </section>
 

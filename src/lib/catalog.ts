@@ -50,7 +50,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     id: "cowork",
     name: "Claude Cowork",
     plain:
-      "Claude working as an agent in the desktop app. It can take a multi-step task, work through it on its own, and run scheduled tasks while you're away.",
+      "Claude working as an agent, in the desktop app, on the web or on mobile. It can take a multi-step task, work through it on its own, and run scheduled tasks in the cloud while your computer is off.",
     product: true,
     link: "https://claude.com",
   },

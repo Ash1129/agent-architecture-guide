@@ -46,7 +46,7 @@ last_verified: 2026-10-05
 - An open-weight model is a reasonable choice when control, data location or
   vendor independence matter more than having the very best model. Expect
   capability roughly a few months behind the frontier.
-- **Discrepancy in the site:** `src/lib/models.ts` gives "Qwen3 235B, Llama 4
+- **Discrepancy in the site (fixed 2026-10-05):** `src/lib/models.ts` gave "Qwen3 235B, Llama 4
   Maverick or Hermes 4" as example open-weight models. These are dated; Qwen3
   is now a step behind the leaders, and Llama 4 Maverick and Hermes 4 do not
   appear among the top open models. Update the examples, with a date, or

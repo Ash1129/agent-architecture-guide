@@ -54,7 +54,8 @@ last_verified: 2026-10-05
 
 - The guide's method of building on a capable model and stepping each part
   down after testing is supported by both OpenAI and Anthropic.
-- **Discrepancies in the site's model table (`src/lib/models.ts`):**
+- **Discrepancies in the site's model table (`src/lib/models.ts`)**, all
+  fixed on 2026-10-05:
   1. It has no Fable 5.1, and treats Opus 5.5 as "most capable", which is
      no longer true.
   2. Haiku 4.5's earliest retirement is Oct 15, 2026, so designs that rely on

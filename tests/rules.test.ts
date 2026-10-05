@@ -9,7 +9,7 @@ import {
 import { RULES, recommend } from "../src/lib/rules";
 import { SOURCES } from "../src/lib/sources";
 import { TOOLS, TOPOLOGIES } from "../src/lib/catalog";
-import { ALGORITHMS, MODELS, MODEL_RULES } from "../src/lib/models";
+import { ALGORITHMS, MODELS, MODEL_RULES, pickModel } from "../src/lib/models";
 import { decodeAnswers, encodeAnswers, resultAsText, resultCode } from "../src/lib/share";
 import { allPaths, sampledPaths } from "./paths";
 
@@ -172,11 +172,31 @@ describe("decision paths", () => {
     expect(recommend(a).gotchas.map((g) => g.id)).toContain("G7");
   });
 
-  it("memory need in Cowork adds a Project and a forgetting warning", () => {
+  it("memory need in Cowork adds a Project and a warning not to rely on general memory", () => {
     const a: Answers = { ...marketResearch, location: "open", roles: "one", team: "small" };
     expect(coreTool(a)).toBe("cowork");
     expect(tools(a)).toContain("project");
     expect(recommend(a).gotchas.map((g) => g.id)).toContain("G13");
+  });
+
+  it("n8n designs carry the licence warning", () => {
+    expect(coreTool(invoiceReminders)).toBe("n8n");
+    expect(recommend(invoiceReminders).gotchas.map((g) => g.id)).toContain("G21");
+  });
+
+  it("in-region data without an IT team points Claude users to a cloud provider's regional service", () => {
+    const a: Answers = { ...customerSupport, location: "residency", team: "small" };
+    expect(recommend(a).hosting.body).toMatch(/Bedrock/);
+    const m = pickModel("agent", a);
+    expect(m.kind === "model" && m.why).toMatch(/only in the US or worldwide/);
+  });
+
+  it("model picks name Fable 5.1 as the step up and Haiku 4.5's fallback", () => {
+    const router = pickModel("router", customerSupport);
+    expect(router.kind === "model" && router.prototype).toMatch(/Fable 5\.1/);
+    expect(router.kind === "model" && router.prototype).toMatch(/Sonnet 5\.5 is the fallback/);
+    const open = pickModel("router", marketResearch);
+    expect(open.kind === "model" && open.prototype).not.toMatch(/Fable/);
   });
 
   it("a fixed workflow in n8n doesn't need tool use from the model; the workflow tool does it", () => {

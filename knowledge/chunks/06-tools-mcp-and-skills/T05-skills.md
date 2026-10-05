@@ -70,7 +70,7 @@ last_verified: 2026-10-05
 - Recommend a Skill when there is a repeatable playbook (steps, templates,
   house rules) or when the AI needs to know which connected tools to use
   for a task.
-- **Discrepancy in the site:** gotcha G9 says "a Skill can't use tools by
+- **Discrepancy in the site (fixed 2026-10-05):** gotcha G9 said "a Skill can't use tools by
   itself". That is only partly true. A Skill can bundle scripts that run,
   and in Claude Code they have network access. What a Skill can't do is
   reach your business software without access being set up (a connector

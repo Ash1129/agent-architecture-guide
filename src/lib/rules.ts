@@ -481,7 +481,7 @@ export const RULES: Rule[] = [
     group: "Tools",
     if: "An agent is needed, started by you or on a schedule",
     then: "Use Claude Cowork.",
-    basis: src("enmgt", "notes"),
+    basis: src("enmgt", "notes", "anthropicDocs"),
     kb: ["L04"],
     when: (a, d) => agentic(a) && !core(d),
     apply: (d, a, why) => {
@@ -493,8 +493,8 @@ export const RULES: Rule[] = [
           : "Runs the agent: you hand it the goal and it works through the steps on its own.",
         why(
           a.trigger === "schedule"
-            ? `You said ${said(a, "trigger")}. Cowork can do scheduled work without you at the computer, which the regular chat can't.`
-            : "Cowork can act repeatedly and reason between steps, which makes it an agent, with no setup beyond the desktop app.",
+            ? `You said ${said(a, "trigger")}. Cowork's scheduled tasks run in Anthropic's cloud, so they keep going while your computer is off.`
+            : "Cowork can act repeatedly and reason between steps, which makes it an agent, with no setup beyond a paid Claude plan. It runs in the desktop app, on the web and on mobile.",
         ),
         true,
       );
@@ -621,11 +621,11 @@ export const RULES: Rule[] = [
     group: "Tools",
     if: "It should remember past work, and runs in Claude or Cowork",
     then: "Keep shared context in a Claude Project.",
-    basis: src("notes", "pabani"),
+    basis: src("notes", "anthropicDocs"),
     kb: ["L04"],
     when: (a, d) => knows(a, "memory") && ["claude", "cowork"].includes(core(d) ?? ""),
     apply: (d, _a, why) => {
-      addTool(d, "project", "Keeps files and past work in one place so each task starts with context.", why(`You said ${saidOption("knowledge", "memory")}. Claude doesn't remember between conversations on its own; a Project or Skill is how you carry context forward.`));
+      addTool(d, "project", "Keeps files and past work in one place so each task starts with context.", why(`You said ${saidOption("knowledge", "memory")}. A Project keeps this task's files, instructions and memory together, so each run starts with the right context.`));
     },
   },
   {
@@ -692,14 +692,14 @@ export const RULES: Rule[] = [
     id: "H3",
     group: "Hosting",
     if: "Data must stay in your region, without an IT team",
-    then: "Use cloud services that guarantee in-region processing, and self-host only what must stay in-house.",
-    basis: src("mindstudio"),
+    then: "Use cloud services that guarantee in-region processing, and self-host only what must stay in-house. For Claude, that means a cloud provider's regional service, not Anthropic's own API.",
+    basis: src("mindstudio", "anthropicDocs"),
     kb: ["D01"],
     when: (a, d) => !d.hosting && a.location === "residency",
     apply: (d, a, why) => {
       d.hosting = {
         title: "In-region cloud",
-        body: "Pick cloud providers that guarantee processing in your region. Buying and running your own hardware rarely pays off at your size, because fixed costs dominate.",
+        body: "Pick cloud providers that guarantee processing in your region. Anthropic's own API processes data only in the US or worldwide, so use Claude through a cloud provider's regional service, such as Amazon Bedrock or Google Cloud. Buying and running your own hardware rarely pays off at your size, because fixed costs dominate.",
         why: why(`You said ${said(a, "location")} and ${said(a, "team")}.`),
       };
     },
@@ -849,11 +849,11 @@ export const RULES: Rule[] = [
     group: "Models",
     if: "It handles personal or confidential information",
     then: "Look for strong data controls: no training on your data, clear retention settings.",
-    basis: design,
+    basis: src("anthropicDocs"),
     kb: ["D02"],
     when: (a) => ai(a) && risk(a, "personal"),
     apply: (d, _a, why) => {
-      d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept.", why: why(`You said ${saidOption("risks", "personal")}.`) });
+      d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the chat and Cowork apps, and which rules out Claude Fable 5.1.", why: why(`You said ${saidOption("risks", "personal")}.`) });
     },
   },
   {
@@ -861,7 +861,7 @@ export const RULES: Rule[] = [
     group: "Models",
     if: "AI is used",
     then: "Choose models by testing: start with the most capable, set a quality baseline, then try smaller models step by step, weighing quality, cost and speed.",
-    basis: src("openai", "notes"),
+    basis: src("openai", "notes", "anthropicDocs", "epoch"),
     kb: ["M01", "G04"],
     when: (a) => ai(a),
     apply: (d, a) => {
@@ -869,12 +869,13 @@ export const RULES: Rule[] = [
       d.models.process = [
         "Build the first version with the most capable model for every step.",
         "Run it on your real examples and record how good the results are. That is your baseline.",
+        "Before switching to a smaller model, try a lower effort setting on the same model if it offers one; that is often the better lever.",
         "Swap in smaller, cheaper models one step at a time, keeping each swap only if quality still meets the baseline.",
         "Judge each choice on three things: quality against your examples, cost per run, and speed.",
       ];
-      d.models.examples = `Examples as of ${LAST_REVIEWED}; check before choosing. Demanding steps: Claude Opus 5.5 or Claude Sonnet 5.5. Fast routine steps: Claude Haiku 4.5. OpenAI, Google and others offer similar tiers.${
+      d.models.examples = `Examples as of ${LAST_REVIEWED}; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced: Claude Sonnet 5.5. Fast routine steps: Claude Haiku 4.5, which may be retired from October 15, 2026, with Sonnet 5.5 as the fallback. OpenAI, Google and others offer similar tiers.${
         vendorFree(a) || a.location === "residency"
-          ? " Open-weight families such as Qwen, Llama, DeepSeek and Nous Research's Hermes models can run on your own hardware or through regional providers."
+          ? " Leading open-weight models include Kimi, GLM, DeepSeek and MiniMax, about four months behind the best closed models. They can run on your own hardware or through regional providers."
           : ""
       }`;
     },
@@ -1145,10 +1146,10 @@ export const RULES: Rule[] = [
     group: "Gotchas",
     if: "Claude Cowork is recommended",
     then: "Warn not to confuse Cowork with the regular chat.",
-    basis: src("notes", "enmgt"),
-    kb: [],
+    basis: src("notes", "enmgt", "anthropicDocs"),
+    kb: ["L04"],
     when: (_a, d) => core(d) === "cowork",
-    apply: (d) => gotcha(d, { id: "G7", priority: 3, title: "Cowork isn't the regular chat", body: "In the standard Claude chat, nothing happens until you type a request. Scheduled and unattended work happens in Cowork. Set it up there, or nothing will run while you're away." }, src("notes", "enmgt")),
+    apply: (d) => gotcha(d, { id: "G7", priority: 3, title: "Cowork isn't the regular chat", body: "In the regular Claude chat, nothing happens until you type a request. Scheduled and unattended work is set up in Cowork, where scheduled tasks run in the cloud even when your computer is off. Tasks that need files or apps on your computer still need the desktop app open." }, src("notes", "enmgt", "anthropicDocs")),
   },
   {
     id: "G8",
@@ -1164,11 +1165,11 @@ export const RULES: Rule[] = [
     id: "G9",
     group: "Gotchas",
     if: "A Skill and MCP are both recommended",
-    then: "Warn that a Skill can't call tools on its own.",
-    basis: src("notes", "enmgt"),
-    kb: [],
+    then: "Warn that a Skill can't reach your systems without a connector.",
+    basis: src("notes", "enmgt", "anthropicDocs"),
+    kb: ["T05"],
     when: (_a, d) => hasTool(d, "skill") && hasTool(d, "mcp"),
-    apply: (d) => gotcha(d, { id: "G9", priority: 4, title: "A Skill can't use tools by itself", body: "A Skill only tells the AI which tools to reach for. Each tool still needs its own connector set up and permitted, or the Skill will point at something that isn't there." }, src("notes", "enmgt")),
+    apply: (d) => gotcha(d, { id: "G9", priority: 4, title: "A Skill can't reach your systems by itself", body: "A Skill says what to do and which tools to use. It can include small scripts, but it still needs a connector or access set up for each of your systems, or it will point at something that isn't there." }, src("notes", "enmgt", "anthropicDocs")),
   },
   {
     id: "G10",
@@ -1204,21 +1205,21 @@ export const RULES: Rule[] = [
     id: "G13",
     group: "Gotchas",
     if: "It should remember past work but runs in Claude or Cowork",
-    then: "Warn that Claude doesn't remember between conversations by default.",
-    basis: src("notes"),
-    kb: [],
+    then: "Warn not to rely on Claude's general memory for this task's context.",
+    basis: src("notes", "anthropicDocs"),
+    kb: ["L04", "T05"],
     when: (a, d) => knows(a, "memory") && ["claude", "cowork"].includes(core(d) ?? ""),
-    apply: (d) => gotcha(d, { id: "G13", priority: 3, title: "Claude forgets between conversations", body: "Unless work happens inside a shared Project or lessons are written into a Skill, each conversation starts fresh. Make updating the Skill part of the routine." }, src("notes")),
+    apply: (d) => gotcha(d, { id: "G13", priority: 3, title: "Don't rely on general memory", body: "Claude's memory carries general context between conversations, but it isn't organised around this task. Keep the task's files and instructions in a Project, write lessons into the Skill, and make updating the Skill part of the routine." }, src("notes", "anthropicDocs")),
   },
   {
     id: "G14",
     group: "Gotchas",
     if: "Hermes Agent is recommended",
-    then: "Warn about running open-source software yourself.",
-    basis: design,
+    then: "Warn about running open-source software yourself, and turn on approval for the skills it writes.",
+    basis: src("hermesDocs"),
     kb: ["L03"],
     when: (_a, d) => hasTool(d, "hermes"),
-    apply: (d) => gotcha(d, { id: "G14", priority: 3, title: "Self-improving means self-maintained", body: "Hermes is open-source: you look after hosting, updates and security. It also writes its own skills as it learns, so review those changes the way you would review a new hire's process notes." }, design),
+    apply: (d) => gotcha(d, { id: "G14", priority: 3, title: "Self-improving means self-maintained", body: "Hermes is open-source: you look after hosting, updates and security. It writes its own skills as it learns, and by default saves them without asking, so turn on skill-write approval and review changes like a new hire's process notes. Keep command approvals on; never switch them off." }, src("hermesDocs")),
   },
   {
     id: "G15",
@@ -1280,6 +1281,17 @@ export const RULES: Rule[] = [
     when: (_a, d) => d.hosting?.title === "Local or self-hosted" || d.hosting?.title === "Cloud now, local for the steady bulk",
     apply: (d) => gotcha(d, { id: "G20", priority: 4, title: "Local is cheaper only once it's busy", body: "Your own hardware has a large upfront cost and needs looking after. It pays back through high, steady volume, not occasional use." }, src("mindstudio")),
   },
+  {
+    id: "G21",
+    group: "Gotchas",
+    if: "n8n is recommended",
+    then: "Point out that n8n's licence allows internal use but restricts selling it on.",
+    basis: src("n8nDocs"),
+    kb: ["L01"],
+    when: (_a, d) => hasTool(d, "n8n") || hasTool(d, "n8n-agent"),
+    apply: (d) => gotcha(d, { id: "G21", priority: 4, title: "n8n isn't open source", body: "n8n's licence lets you use and change it for your own internal business purposes. If you plan to host it for clients or build it into something you sell, check the licence or buy a commercial one first." }, src("n8nDocs")),
+  },
+
 
   // ------------------------------------------------------------ First steps
   {
