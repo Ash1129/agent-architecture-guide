@@ -79,6 +79,10 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | anthropic-help-cowork-scheduled | Anthropic. (n.d.). Schedule recurring tasks in Claude Cowork. Claude Help Center. https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-cowork | C | 2026-10-05 |
 | anthropic-help-cowork-team | Anthropic. (n.d.). Use Claude Cowork on Team and Enterprise plans. Claude Help Center. https://support.claude.com/en/articles/13455879-use-claude-cowork-on-team-and-enterprise-plans | C | 2026-10-05 |
 | anthropic-docs-claude-code-overview | Anthropic. (n.d.). Claude Code overview. Claude Code documentation. https://code.claude.com/docs/en/overview | C | 2026-10-05 |
+| anthropic-docs-supported-regions | Anthropic. (n.d.). Supported regions. Claude Platform documentation. https://platform.claude.com/docs/en/api/supported-regions | C | 2026-10-05 |
+| anthropic-help-where-to-access | Anthropic. (2026, March 16). Where can I access Claude? Claude Help Center. https://support.claude.com/en/articles/8461763-where-can-i-access-claude | C | 2026-10-05 |
+| anthropic-docs-data-residency | Anthropic. (n.d.). Data residency. Claude Platform documentation. https://platform.claude.com/docs/en/manage-claude/data-residency | C | 2026-10-05 |
+| anthropic-docs-data-retention | Anthropic. (n.d.). API and data retention. Claude Platform documentation. https://platform.claude.com/docs/en/manage-claude/api-and-data-retention | C | 2026-10-05 |
 
 ## Notes
 
@@ -100,6 +104,11 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
   airflow.apache.org. selfhosting-2026-airflow-n8n, nous-hermes-site and
   kumar-hermes-kb therefore remain unread; the project's own GitHub sources
   were read instead. Pabani was read earlier but could not be re-checked.
+  For topic 8, mindstudio.ai and every EU host tried (eur-lex.europa.eu,
+  artificialintelligenceact.eu, ec.europa.eu, europarl.europa.eu,
+  consilium.europa.eu) were also blocked, so mindstudio-2026-local-cloud
+  remains unread and the EU AI Act's high-risk categories are not yet
+  covered.
 - **"Anthropic. (2026). Claude Sonnet 5.5"** is listed in the team's
   bibliography as a tool used while researching. It is not a source of
   claims and is not cited here.

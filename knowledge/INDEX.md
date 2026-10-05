@@ -74,8 +74,15 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | L05 | [Claude Code](chunks/07-platforms/L05-claude-code.md) | Surfaces; CLAUDE.md, Skills, hooks, MCP, sub-agents; Routines vs desktop tasks; Agent SDK. |
 | L06 | [Combining platforms](chunks/07-platforms/L06-combining-platforms.md) | MCP and Skills as portable joints; plugins; where scheduled work runs; n8n + agent hybrid; short chooser. |
 
+## 08 Deployment and data
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| D01 | [Where Claude can be used, and where it processes data](chunks/08-deployment-and-data/D01-where-claude-is-available-and-processes-data.md) | 175 supported countries (not China, Hong Kong, Russia...); first-party API offers only US or global processing, US at 1.1×; regions via cloud partners. |
+| D02 | [What Anthropic keeps, and the privacy arrangements available](chunks/08-deployment-and-data/D02-data-retention-and-privacy.md) | No training without permission; retention periods; ZDR scope (not the apps, Skills or Fable 5.1); HIPAA; flagged data up to 2 years. |
+
 ## Planned topics
 
 | Topic | Covers |
 | --- | --- |
-| 08 Deployment and data | Local vs cloud; privacy; company size and budget; regional availability. |
+| 08 Deployment and data (rest) | Local vs cloud costs and hardware (mindstudio-2026-local-cloud); EU AI Act high-risk categories and timeline. Blocked by this environment's network policy on 2026-10-05. |
