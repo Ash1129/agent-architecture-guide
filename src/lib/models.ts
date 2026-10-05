@@ -157,7 +157,9 @@ export function pickModel(role: Role, a: Answers): Engine {
     name: m.name + (m.examples ? `, ${m.examples}` : ""),
     short: m.short,
     prototype:
-      `Build the first version on ${top.name}${top.examples ? ` (${top.examples})` : ""}. Switch to ${m.name.split(",")[0]} once it matches that baseline on your test examples.` +
+      (id === (open ? "openLarge" : "opus")
+        ? `Build on ${top.name}${top.examples ? ` (${top.examples})` : ""} and keep it there: this step needs the strongest model in the design.`
+        : `Build the first version on ${top.name}${top.examples ? ` (${top.examples})` : ""}. Switch to ${m.name.split(",")[0]} once it matches that baseline on your test examples.`) +
       (open ? "" : ` If ${top.name} itself falls short on the hardest steps, try ${TOP_MODEL.name}; ${TOP_MODEL.note}.`),
     why,
     alternative: open ? undefined : `Open-weight alternative: ${rule.open === "openSmall" ? MODELS.openSmall.examples : MODELS.openLarge.examples}.`,

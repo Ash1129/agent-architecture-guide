@@ -200,6 +200,11 @@ describe("decision paths", () => {
         expect(e.kind === "model" && e.model).not.toBe("haiku");
       }
     }
+    for (const [role, a] of [["coordinator", customerSupport], ["coordinator", marketResearch], ["checker", customerSupport]] as const) {
+      const e = pickModel(role, a);
+      expect(e.kind === "model" && e.prototype).not.toMatch(/Switch to/);
+      expect(e.kind === "model" && e.prototype).toMatch(/keep it there/);
+    }
     const open = pickModel("router", marketResearch);
     expect(open.kind === "model" && open.prototype).not.toMatch(/Fable/);
   });
