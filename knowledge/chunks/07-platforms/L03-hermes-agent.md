@@ -2,7 +2,7 @@
 id: L03
 title: Hermes Agent - an open-source personal agent that learns
 topic: platforms
-sources: [hermes-2026-repo, kumar-hermes-kb, pabani-2026-openclaw-hermes-cowork]
+sources: [hermes-2026-repo, kumar-hermes-kb, pabani-2026-openclaw-hermes-cowork, team-2026-assignment4, anthropic-help-cowork, anthropic-docs-claude-code-overview]
 last_verified: 2026-10-05
 ---
 
@@ -66,6 +66,12 @@ last_verified: 2026-10-05
     review Skills before enabling them.
   - Limitations: it needs broad permissions, Windows support is early beta,
     and third-party Skills carry supply-chain risk.
+- **Team notes** [team-2026-assignment4 §Hermes, p. 2]:
+  - memory is "persistent everywhere"; in Claude the notes say that needs a
+    shared Project or Skills
+  - Hermes acts like Cowork but isn't restricted to Anthropic's models
+  - it is built to learn and get better at tasks, "which Claude is not"
+  - it learns by recognising when to create or edit a Skill (citing Kumar)
 
 ## Where sources disagree
 
@@ -76,6 +82,17 @@ last_verified: 2026-10-05
 - Kumar's comparison table says Claude Code has no cross-session memory.
   L05 records CLAUDE.md and Claude Code's memory of learnings, so the table
   undersells it. [kumar-hermes-kb §Comparison with Related Agents]
+- **Memory.** The notes call Hermes' memory "persistent everywhere". The
+  repo describes it as persistent but deliberately small (about 1,300
+  tokens across two files), with search over past sessions for the rest.
+  [team-2026-assignment4 §Hermes, p. 2; hermes-2026-repo docs §Persistent Memory]
+- **Claude's memory and learning.** The notes say Claude keeps memory only
+  through Projects or Skills and doesn't learn. Anthropic's current docs
+  disagree on both:
+  - Cowork cloud sessions share memory with chat (L04)
+  - Claude Code keeps automatic memory of learnings (L05)
+
+  [team-2026-assignment4 §Hermes, p. 2; anthropic-help-cowork §Key capabilities; anthropic-docs-claude-code-overview §What you can do]
 
 ## Not verified
 

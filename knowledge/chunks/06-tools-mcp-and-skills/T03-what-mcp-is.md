@@ -2,7 +2,7 @@
 id: T03
 title: What MCP is, and when it is the right connector
 topic: tools
-sources: [mcp-2026-spec, mcp-2026-docs, anthropic-2025-code-execution-mcp]
+sources: [mcp-2026-spec, mcp-2026-docs, anthropic-2025-code-execution-mcp, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -48,6 +48,11 @@ last_verified: 2026-10-05
   Data can also be filtered, or personal details masked, before the model
   sees it. The trade-off: agent-written code needs a sandbox, resource limits
   and monitoring. [anthropic-2025-code-execution-mcp §Code execution with MCP improves context efficiency; §Privacy-preserving operations; §State persistence and skills]
+- **Team notes.** MCP is how the client inside a host learns which tools
+  exist and how to use them. For Claude to do CAD in Fusion, it must connect
+  to Fusion's MCP server. [team-2026-assignment4 §MCP, p. 1]
+- The notes list MCP among the tools to choose when a task needs other
+  programs run. [team-2026-assignment4 §MCP, p. 1]
 
 ## Where sources disagree
 

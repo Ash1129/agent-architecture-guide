@@ -2,7 +2,7 @@
 id: T06
 title: System prompts and managing what the agent sees
 topic: tools
-sources: [anthropic-2025-context-engineering, anthropic-docs-prompting-best-practices]
+sources: [anthropic-2025-context-engineering, anthropic-docs-prompting-best-practices, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -49,6 +49,9 @@ last_verified: 2026-10-05
   context. A hybrid (some context up front, the rest on demand) may suit
   less dynamic work such as legal or finance.
   [anthropic-2025-context-engineering §Context retrieval and agentic search]
+- **Team notes.** A system prompt sets the context for the model or agents:
+  universal truths, not specific to a tool, task or call. With several
+  agents, each can have its own system prompt. [team-2026-assignment4 §System Prompts, p. 1; §One or multiple, p. 3]
 
 ## Where sources disagree
 
@@ -56,6 +59,11 @@ last_verified: 2026-10-05
   prompt [anthropic-docs-prompting-best-practices §Structure prompts with XML tags],
   while the context-engineering post says exact formatting is "likely becoming
   less important" as models improve. Both agree clear sections help.
+- Emphasis differs. The team notes keep task-specific instructions out of
+  the system prompt (they go in Skills). Anthropic's prompting docs put the
+  role, goal and reasons for the expected behaviour there. Both agree the
+  prompt is the standing context, and that repeatable task playbooks belong
+  in a Skill. [team-2026-assignment4 §System Prompts, p. 1; anthropic-docs-prompting-best-practices §Give Claude a role]
 
 ## What this means for the guide
 

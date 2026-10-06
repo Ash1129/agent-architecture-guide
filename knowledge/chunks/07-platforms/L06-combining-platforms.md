@@ -2,7 +2,7 @@
 id: L06
 title: Combining platforms, and choosing between them
 topic: platforms
-sources: [n8n-docs-mcp-nodes, anthropic-help-cowork, anthropic-help-cowork-scheduled, anthropic-help-cowork-team, anthropic-docs-claude-code-overview, hermes-2026-repo, anthropic-2025-agent-skills, mcp-2026-docs]
+sources: [n8n-docs-mcp-nodes, anthropic-help-cowork, anthropic-help-cowork-scheduled, anthropic-help-cowork-team, anthropic-docs-claude-code-overview, hermes-2026-repo, anthropic-2025-agent-skills, mcp-2026-docs, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -35,6 +35,10 @@ last_verified: 2026-10-05
   | Claude Code | Routines in the cloud, or desktop tasks on the machine | [anthropic-docs-claude-code-overview §What you can do] |
   | Hermes | in its gateway process, wherever it is hosted | [hermes-2026-repo docs §Scheduled Tasks (Cron), How it works] |
   | n8n, Airflow | on the server running them (L01, L02) | |
+- **Team notes: two hybrids** [team-2026-assignment4 §Hybrid, p. 2]:
+  - n8n with an outside agent node
+  - a Skill that points the AI to tools, which it then uses through an MCP
+    client connected to an MCP server
 
 ## What this means for the guide
 
@@ -51,3 +55,5 @@ last_verified: 2026-10-05
   - documents, research, briefings, no setup → Cowork
   - code, or a custom-built agent → Claude Code / Agent SDK
   - self-hosted, any model, always-on in chat apps → Hermes
+- The team's two hybrids match the site's TL16 (n8n plus agent) and TL17
+  (Skill plus MCP) rules.

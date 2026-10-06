@@ -2,7 +2,7 @@
 id: L04
 title: Claude Cowork - Claude as an agent for knowledge work
 topic: platforms
-sources: [anthropic-help-cowork, anthropic-help-cowork-scheduled, anthropic-help-cowork-team, pabani-2026-openclaw-hermes-cowork]
+sources: [anthropic-help-cowork, anthropic-help-cowork-scheduled, anthropic-help-cowork-team, pabani-2026-openclaw-hermes-cowork, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -55,6 +55,11 @@ last_verified: 2026-10-05
     to sensitive files and limit web access to trusted sources (§Prompt injection risks)
 - Current limits: sessions can't be shared with others.
   [anthropic-help-cowork §Current limitations]
+- **Team notes.** Cowork is for work done without you at the computer, such
+  as scheduled tasks. Don't confuse it with the standard desktop chat, where
+  everything starts from a prompt. The notes give Cowork as an agent example,
+  because it can act and reason repeatedly on its own.
+  [team-2026-assignment4 §Claude Cowork, p. 1; §Do they need an agent?, p. 3]
 
 ## Where sources disagree
 
@@ -70,6 +75,10 @@ last_verified: 2026-10-05
   Cowork are still separate. The help centre describes the merge as rolling
   out gradually to Pro and Max, and Team and Enterprise keep them separate,
   so the guide treats them as separate for now.
+- The team notes don't say whether the computer must stay on. The help
+  centre says cloud scheduled tasks run without it, unless the task needs
+  local files or apps. That matches site gotcha G7.
+  [team-2026-assignment4 §Claude Cowork, p. 1; anthropic-help-cowork-scheduled]
 
 ## What this means for the guide
 

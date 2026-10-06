@@ -2,7 +2,7 @@
 id: D01
 title: Where Claude can be used, and where it processes data
 topic: deployment
-sources: [anthropic-docs-supported-regions, anthropic-help-where-to-access, anthropic-docs-data-residency, anthropic-docs-data-retention]
+sources: [anthropic-docs-supported-regions, anthropic-help-where-to-access, anthropic-docs-data-residency, anthropic-docs-data-retention, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -36,6 +36,10 @@ last_verified: 2026-10-05
 - On Bedrock and Google Cloud, the cloud provider (not Anthropic) is the
   data processor, and its own retention and compliance documents apply.
   [anthropic-docs-data-retention intro]
+- **Team notes.** Where the business is located, and where the agent will
+  be operated, limits which tools and models can be used. The example given
+  is a business in China that can't access Anthropic's models.
+  [team-2026-assignment4 opening questions, p. 1; §Hermes, p. 2]
 
 ## Where sources disagree
 
@@ -56,3 +60,5 @@ last_verified: 2026-10-05
   say this plainly.
 - If US-only processing is required, budget for the 1.1× price, and note
   that Haiku 4.5 can't be pinned to the US on the first-party API.
+- The team notes frame location as an opening question. The supported-countries
+  list above is what turns that question into a yes or no for Claude.

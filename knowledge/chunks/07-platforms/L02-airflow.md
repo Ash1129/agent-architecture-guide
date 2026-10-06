@@ -2,7 +2,7 @@
 id: L02
 title: Apache Airflow - scheduled data pipelines as code
 topic: platforms
-sources: [airflow-docs-overview, airflow-docs-asset-scheduling, airflow-docs-installation, n8n-docs-self-hosting]
+sources: [airflow-docs-overview, airflow-docs-asset-scheduling, airflow-docs-installation, n8n-docs-self-hosting, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -35,6 +35,13 @@ last_verified: 2026-10-05
 - In production, Airflow is a complex system to be monitored and tuned
   continuously. The docs say managed Airflow services make many of these
   choices for you. [airflow-docs-installation, Installation §Notes about minimum requirements]
+- **Team notes** [team-2026-assignment4 §Apache Airflow (DAG), p. 2]:
+  - Airflow is like n8n but suits systems with many dependencies, where
+    "infinite loops won't cut it"
+  - it is script-based, not node-based, with more setup and a steeper
+    learning curve; the notes add that it needs more RAM
+  - it has "data aware scheduling", so it doesn't rely on webhooks while
+    waiting for data
 
 ## Where sources disagree
 
@@ -43,6 +50,12 @@ last_verified: 2026-10-05
   8 GB in Docker), and n8n's Docker Compose setup 4 GB with 2 vCPUs
   (L01). The difference the docs do show is in running it: Python for every
   workflow, and continuous tuning in production.
+- **Naming, not a real disagreement.** The team notes say "data aware
+  scheduling". The current docs page is titled asset-aware scheduling, but
+  the Assets page still calls the same mechanism data-aware scheduling.
+  [team-2026-assignment4 §Apache Airflow (DAG), p. 2; airflow-docs-asset-scheduling, Assets §Security Implication of Asset Creation]
+- **RAM.** The memory comparison above (Airflow needs more than n8n) is
+  the team notes' claim, sourced to selfhosting.sh.
 
 ## Not verified
 

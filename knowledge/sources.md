@@ -11,7 +11,7 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 
 | ID | Source | Tier | Read |
 | --- | --- | --- | --- |
-| team-2026-assignment4 | AI Assignment 4, team research notes (Sasha and Ashwin). 4-page PDF, provided by the team. | E | 2026-10-05 |
+| team-2026-assignment4 | AI Assignment 4, team research notes (Sasha and Ashwin). 4-page PDF, provided by the team. Cited by page (p. 1: tools, Skills, system prompts, MCP, Cowork; p. 2: Hermes, n8n, Airflow, hybrids, local vs cloud; p. 3: agents and multi-agent; p. 3-4: bibliography). | E | 2026-10-06 (first read 2026-10-05) |
 | enmgt-2026-slides | ENMGT 5405 lecture slides, Canvas course materials (Swart, D.), Cornell University, 2026. Not available to this knowledge base; known only through the team notes. | E | not read |
 | databricks-2026-harness | Databricks. (2026, June 17). What is an AI agent harness? https://www.databricks.com/blog/ai-harness | D | 2026-10-05 |
 | mindstudio-2026-local-cloud | Chavez-Mattos, L. (2026, May 27). Local AI vs cloud AI in 2026: When to run models on your own hardware. MindStudio. https://www.mindstudio.ai/blog/local-ai-vs-cloud-ai-2026 | D | not read (still blocked; see Notes) |
@@ -73,7 +73,7 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | n8n-docs-mcp-nodes | n8n. (n.d.). MCP Client Tool node; MCP Server Trigger node. n8n documentation. Read from https://github.com/n8n-io/n8n-docs. | C | 2026-10-05 |
 | n8n-2026-license | n8n. (n.d., read 2026). LICENSE.md: Sustainable Use License, version 1.0. https://github.com/n8n-io/n8n/blob/master/LICENSE.md | C | 2026-10-05 |
 | airflow-docs-overview | Apache Software Foundation. (n.d.). What is Airflow? Apache Airflow documentation (main branch). Read from https://github.com/apache/airflow (airflow-core/docs/index.rst); airflow.apache.org was blocked from this environment. | C | 2026-10-05 |
-| airflow-docs-asset-scheduling | Apache Software Foundation. (n.d.). Asset-aware scheduling. Apache Airflow documentation (main branch). Read from https://github.com/apache/airflow (airflow-core/docs/authoring-and-scheduling/asset-scheduling.rst). | C | 2026-10-05 |
+| airflow-docs-asset-scheduling | Apache Software Foundation. (n.d.). Asset-aware scheduling. Apache Airflow documentation (main branch). Read from https://github.com/apache/airflow (airflow-core/docs/authoring-and-scheduling/asset-scheduling.rst; assets.rst added 2026-10-06). | C | 2026-10-05 |
 | hermes-2026-repo | Nous Research. (2025–2026). hermes-agent repository: README, LICENSE, and docs pages Security, Persistent Memory, Skills System and Scheduled Tasks (Cron). https://github.com/NousResearch/hermes-agent | C | 2026-10-05 |
 | anthropic-help-cowork | Anthropic. (n.d.). Get started with Claude Cowork. Claude Help Center. https://support.claude.com/en/articles/13345190-getting-started-with-cowork | C | 2026-10-05 |
 | anthropic-help-cowork-scheduled | Anthropic. (n.d.). Schedule recurring tasks in Claude Cowork. Claude Help Center. https://support.claude.com/en/articles/13854387-schedule-recurring-tasks-in-cowork | C | 2026-10-05 |
@@ -104,11 +104,17 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
   spectrum". The team notes cover skills, MCP, system prompts and Cowork, but
   say nothing about an autonomy spectrum, and the slides are unavailable. That
   attribution cannot be verified and should be dropped or confirmed.
-- **Team notes not re-read for topics 6–8.** The Assignment 4 PDF was not
-  available in the sessions that wrote topics 6 onward (still not found on
-  2026-10-05, on disk or in the connected Google Drive). So chunks T01–T06,
-  L01–L06 and D01–D04 do not cite it, even where the notes cover skills, MCP,
-  system prompts, Cowork, Hermes or hosting.
+- **Team notes re-read for topics 6–8 (2026-10-06).** T01, T03, T05, T06,
+  L01–L04, L06, D01 and D03 now cite the PDF. Where the notes disagree with a
+  primary source, the chunk records it, for example:
+  - Skills "cannot call the tool itself"
+  - Hermes' memory as "persistent everywhere"
+  - Claude not learning
+  - Airflow needing more RAM
+  - local hosting being cheaper once running
+  - not being able to control output tokens
+- The re-read confirms the earlier note: the PDF says nothing about an
+  autonomy spectrum.
 - **Blocked hosts (topic 7).** In the session that wrote topics 6 and 7, the
   environment's network policy blocked dev.to, hermes-agent.nousresearch.com,
   agentic-ai.readthedocs.io, dreamsaicanbuy.com, docs.n8n.io, n8n.io and

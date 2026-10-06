@@ -2,7 +2,7 @@
 id: T01
 title: How an agent uses tools, and what tools cost
 topic: tools
-sources: [anthropic-docs-tool-use, anthropic-2025-writing-tools, anthropic-2025-context-engineering]
+sources: [anthropic-docs-tool-use, anthropic-2025-writing-tools, anthropic-2025-context-engineering, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -38,6 +38,9 @@ last_verified: 2026-10-05
   [anthropic-2025-writing-tools §What is a tool?]
 - Anthropic now defines an agent simply as an LLM "autonomously using tools in
   a loop". [anthropic-2025-context-engineering §Context retrieval and agentic search]
+- **Team notes.** In Claude's chat app, the model itself decides whether
+  to use tools or just answer. Its tool steps show up as "ran a command" and
+  "thinking about how to" before the final reply. [team-2026-assignment4 §Do they need an agent?, p. 3]
 
 ## What this means for the guide
 
@@ -50,3 +53,5 @@ last_verified: 2026-10-05
 - Where a missing detail would cause a wrong action (an amount, a recipient),
   the design should require the AI to ask rather than guess. Pick a more
   capable model or force a confirmation step for those actions.
+- The team notes back site gotcha G8 (check what it actually did): look for
+  tool steps in the reply before assuming Claude checked anything.

@@ -2,7 +2,7 @@
 id: T05
 title: Skills - reusable playbooks loaded only when needed
 topic: tools
-sources: [anthropic-2025-agent-skills, anthropic-docs-agent-skills, anthropic-docs-skill-best-practices, anthropic-2025-code-execution-mcp]
+sources: [anthropic-2025-agent-skills, anthropic-docs-agent-skills, anthropic-docs-skill-best-practices, anthropic-2025-code-execution-mcp, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -58,12 +58,24 @@ last_verified: 2026-10-05
 - Skills and MCP complement each other: a Skill can teach the workflow that
   uses MCP tools, and an agent can save working code as a Skill for reuse.
   [anthropic-2025-agent-skills §The future of Skills; anthropic-2025-code-execution-mcp §State persistence and skills]
+- **Team notes** [team-2026-assignment4 §Skills, p. 1]:
+  - a Skill holds instructions you would otherwise give every time
+  - it is used on a trigger
+  - it teaches Claude which tools to use through your MCP connectors, and
+    helps it pick the right one from the list
+  - it can be thought of as a "node-free" workflow
+  - it "cannot call the tool itself"
 
 ## Where sources disagree
 
 - On trust, the engineering post says to install Skills from "trusted
   sources" and audit others; the docs narrow trusted to Skills you wrote or
   got from Anthropic. The guide should use the stricter version.
+- The team notes say a Skill "cannot call the tool itself". Anthropic's
+  docs say a Skill can bundle scripts the agent runs, with network access
+  in Claude Code. The notes hold for business software: a Skill still needs
+  a connector or access to reach it. This is the wording site gotcha G9
+  now uses. [team-2026-assignment4 §Skills, p. 1; anthropic-2025-agent-skills §Skills and code execution]
 
 ## What this means for the guide
 

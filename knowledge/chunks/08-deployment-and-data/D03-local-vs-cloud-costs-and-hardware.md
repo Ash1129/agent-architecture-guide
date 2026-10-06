@@ -2,7 +2,7 @@
 id: D03
 title: Local vs cloud - what each costs, and when your own hardware pays off
 topic: deployment
-sources: [pan-2025-onprem-breakeven, patil-2026-concurrency-cost, anthropic-docs-rate-limits, anthropic-docs-messages-api]
+sources: [pan-2025-onprem-breakeven, patil-2026-concurrency-cost, anthropic-docs-rate-limits, anthropic-docs-messages-api, team-2026-assignment4]
 last_verified: 2026-10-05
 ---
 
@@ -65,6 +65,14 @@ last_verified: 2026-10-05
     resets or is raised. [anthropic-docs-rate-limits §Setting your own spend limit]
   - Each request's `max_tokens` sets "the absolute maximum" length of the
     reply. [anthropic-docs-messages-api, max_tokens]
+- **Team notes** (citing the unread MindStudio article) [team-2026-assignment4 §Local vs Cloud, p. 2]:
+  - local runs on your own hardware; the notes call it "more secure and
+    generally cheaper once it's running", with setup and hardware as the cost
+  - cloud needs little hardware, but you pay per token, which the notes say
+    "you cannot fully control (input but not output)"
+  - so a small business might prefer cloud, to avoid fixed costs dominating;
+    a large one might build its own hardware, to avoid variable costs
+    dominating
 
 ## Where sources disagree
 
@@ -82,9 +90,25 @@ last_verified: 2026-10-05
   The claims above use the tables.
 - **mindstudio-2026-local-cloud** (the team's source on this topic) has not
   been read, so whether it agrees is unknown.
+- **Team notes vs the cost papers.** The notes call local "generally
+  cheaper once it's running". Pan et al. agree only when the hardware runs at
+  full use. Patil finds that at low traffic most of the saving disappears,
+  and idle hardware can cost more per token than an API.
+- **"Cannot fully control" output.** The notes say you can't control how
+  much the model writes. Anthropic's API caps each reply (`max_tokens`) and
+  total monthly spend (spend limits). What can't be fixed in advance is how
+  many requests a busy system will make. [team-2026-assignment4 §Local vs Cloud, p. 2; anthropic-docs-messages-api; anthropic-docs-rate-limits]
+- **Company size.** The notes tie the choice to company size. Pan et al.
+  tie it to monthly token volume and model size; for small companies, a
+  small open model breaks even fastest (0.3-3 months), assuming full use and
+  no staff costs. [pan-2025-onprem-breakeven §VI.F]
 
 ## What this means for the guide
 
+- The team notes' size rule (small → cloud, large → local) is only a rough
+  proxy. Steady volume decides, and so does
+  having staff to run the hardware. A large company with occasional use
+  still pays for idle hardware.
 - Local hardware pays off only through **high, steady use**. Occasional or
   uncertain volume favours paying per use. This supports rules H4, H5 and
   G20.
