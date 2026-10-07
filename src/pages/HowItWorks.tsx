@@ -13,7 +13,7 @@ const SOURCE_GROUPS = [
   { origin: "assignment", title: "From AI Assignment 4" },
   { origin: "added", title: "Added for this guide" },
 ] as const;
-import { AI_TAILORING } from "../lib/features";
+import { AI_ENABLED } from "../lib/features";
 import { ALGORITHMS, MODELS, MODEL_RULES } from "../lib/models";
 
 const ASKED_WHEN: Partial<Record<QuestionId, string>> = {
@@ -96,9 +96,9 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
           </p>
         </div>
         <div>
-          <h2 className="text-[16px] font-semibold text-ink">{AI_TAILORING ? "What leaves your browser" : "Your answers stay with you"}</h2>
+          <h2 className="text-[16px] font-semibold text-ink">{AI_ENABLED ? "What leaves your browser" : "Your answers stay with you"}</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
-            {AI_TAILORING
+            {AI_ENABLED
               ? "Everything runs in your browser and there's no account. The one exception is Tailor with AI: if you choose it, your task and answers go to OpenAI through this site's server to tailor the n8n workflow. A shared link carries the answers inside the link itself."
               : "Everything runs in your browser. There's no account and nothing is sent anywhere. A shared link carries the answers inside the link itself."}
           </p>

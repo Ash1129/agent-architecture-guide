@@ -9,28 +9,34 @@ import {
   Cloud,
   Cpu,
   Function as FunctionIcon,
-  ListNumbers,
   PencilSimple,
   Robot,
   Toolbox,
   UserCheck,
-  PlayCircle,
   Printer,
   ShareNetwork,
-  TreeStructure,
   Warning,
+  CircleNotch,
+  Sparkle,
+  ArrowUpRight,
+  GitBranch,
+  ArrowLeft,
+  Play,
 } from "@phosphor-icons/react";
-import { AnimatePresence, m, useReducedMotion } from "motion/react";
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArchitectureMap, COL_GAP, COL_MIN, GateBadge, KIND_ICON, PAD_X } from "../components/ArchitectureMap";
+import { m, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { ArchitectureMap, GateBadge, KIND_ICON } from "../components/ArchitectureMap";
 import { DiagramBoundary } from "../components/DiagramBoundary";
 import { Walkthrough } from "../components/Walkthrough";
 import { StarterKit } from "../components/StarterKit";
+import { ArchitectureArt, keySteps, leadStep } from "../components/ArchitectureArt";
+import { StudioShell } from "../components/StudioShell";
 import { buildStarterKit, slugify } from "../lib/starter";
 import { AutonomyScale, Ladder } from "../components/Scales";
-import { StepPanel } from "../components/StepPanel";
+import { ModelGuidance, StepPanel } from "../components/StepPanel";
 import { BasisLabel, Term, WhyList, btn } from "../components/ui";
 import {
+  type BNode,
   type Blueprint,
   KIND_LABEL,
   type NodeKind,
@@ -50,10 +56,12 @@ import {
   isComplete,
   optionLabel,
 } from "../lib/questions";
-import { href } from "../lib/router";
+import { type ResultView, href } from "../lib/router";
 import { RULES, recommend, type Recommendation } from "../lib/rules";
 import { resultAsText, resultUrl } from "../lib/share";
 import { SOURCES, type SourceId } from "../lib/sources";
+import { type DesignState, type KitTextState, fetchDesign, fetchKitText, rememberedDesign } from "../lib/designs";
+import { AI_ENABLED } from "../lib/features";
 
 type Props = {
   answers: Answers;
@@ -62,11 +70,15 @@ type Props = {
   onChange: (q: QuestionId) => void;
   onStartOver: () => void;
   invalidLink: boolean;
+  /** Which view of the result is showing: the solution, how to build it, or how it works. */
+  view: ResultView;
+  onView: (view: ResultView) => void;
+  historyCount: number;
 };
 
-export function Result({ answers, saved = false, onChange, onStartOver, invalidLink }: Props) {
+export function Result({ answers, saved = false, onChange, onStartOver, invalidLink, view, onView, historyCount }: Props) {
   if (!isComplete(answers)) return <NotReady answers={answers} invalidLink={invalidLink} onStartOver={onStartOver} />;
-  return <Ready answers={answers} saved={saved} onChange={onChange} onStartOver={onStartOver} />;
+  return <Ready answers={answers} saved={saved} onChange={onChange} onStartOver={onStartOver} view={view} onView={onView} historyCount={historyCount} />;
 }
 
 // ------------------------------------------------------------------ empty state
@@ -192,7 +204,51 @@ function AnswerList({ answers, onChange }: { answers: Answers; onChange: (q: Que
           </div>
         );
       })}
+      {answers.details?.map((d) => (
+        <div key={d.q} className="border-b border-line py-3">
+          <dt className="text-[13px] leading-snug text-muted">{d.q}</dt>
+          <dd className="mt-1 text-[14.5px] font-medium leading-snug text-ink">{d.a}</dd>
+        </div>
+      ))}
     </dl>
+  );
+}
+
+/** Where the design on screen came from, and a way to compare it with the rules' version. */
+function DesignNote({ design, showRules, onShowRules, bare = false }: { design: DesignState; showRules: boolean; onShowRules: (v: boolean) => void; bare?: boolean }) {
+  const reduce = useReducedMotion();
+  if (design.status === "off") return null;
+  const toggle = (label: string, value: boolean) => (
+    <button type="button" onClick={() => onShowRules(value)} className="font-medium text-accent underline-offset-4 hover:underline">
+      {label}
+    </button>
+  );
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={
+        bare
+          ? "no-print text-[13.5px] leading-relaxed text-muted [&>svg]:mr-1.5 [&>svg]:inline [&>svg]:align-[-2px]"
+          : "no-print flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-line px-4 py-2.5 text-[13px] leading-snug text-muted sm:px-6"
+      }
+    >
+      {design.status === "loading" ? (
+        <>
+          <CircleNotch size={14} aria-hidden className={`text-accent ${reduce ? "" : "animate-spin"}`} />
+          Drafting a design for your task with AI, grounded in the knowledge base. This is the rules' design until it's ready (about a minute).
+        </>
+      ) : design.status === "failed" ? (
+        <>Showing the rules' design. {design.note}</>
+      ) : showRules ? (
+        <>Showing the rules' design. {toggle("Back to the AI design", false)}</>
+      ) : (
+        <>
+          <Sparkle size={14} weight="fill" aria-hidden className="text-accent" />
+          Designed for your task by AI{design.source === "cache" ? " (saved from an earlier run)" : ""}, checked against the guide's rules and knowledge base. Select a step to see its sources. {toggle("Compare with the rules' design", true)}
+        </>
+      )}
+    </p>
   );
 }
 
@@ -241,6 +297,22 @@ function Legend({ bp }: { bp: Blueprint }) {
             </li>
           );
         })}
+      {bp.nodes.some((n) => n.engine?.kind === "model") && (
+        <li className="inline-flex items-center gap-1.5">
+          <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-surface ring-1 ring-accent/50">
+            <Cpu size={11} weight="bold" className="text-accent" />
+          </span>
+          AI model
+        </li>
+      )}
+      {bp.nodes.some((n) => n.engine?.kind === "algorithm" && n.kind !== "start") && (
+        <li className="inline-flex items-center gap-1.5">
+          <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-surface-2 ring-1 ring-line-strong/50">
+            <FunctionIcon size={11} weight="bold" className="text-muted" />
+          </span>
+          Method, no AI
+        </li>
+      )}
       {gates.has("human") && (
         <li className="inline-flex items-center gap-1.5">
           <GateBadge kind="human" text="A person steps in" compact /> A person steps in
@@ -381,50 +453,6 @@ function Compare({ r, full, simple }: { r: Recommendation; full: Blueprint; simp
 }
 
 /** Which model or method runs where, at a glance. Each chip jumps to its first step. */
-function ModelPlan({ bp, onSelect }: { bp: Blueprint; onSelect: (id: string) => void }) {
-  const { models, methods } = modelPlan(bp);
-  const open = models.some((g) => g.engine.kind === "model" && g.engine.model.startsWith("open"));
-  const steps = (n: number[]) => `${n.length > 1 ? "Steps" : "Step"} ${n.join(", ")}`;
-  return (
-    <div className="mx-3 mb-4 grid gap-x-5 gap-y-2.5 rounded-2xl bg-surface-2 px-4 py-3.5 sm:mx-5 md:grid-cols-[auto_1fr]">
-      <p className="flex items-center gap-1.5 pt-1 text-[13px] font-semibold text-ink">
-        <Cpu size={15} aria-hidden className="text-accent" />
-        {models.length ? "Models" : "No AI model"}
-      </p>
-      <div className="flex flex-wrap items-center gap-2">
-        {models.map((g) => (
-          <button
-            key={g.engine.short}
-            type="button"
-            onClick={() => onSelect(g.first)}
-            className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-[13.5px] ring-1 ring-accent/50 transition-colors hover:bg-accent-soft"
-          >
-            <span className="font-semibold text-ink">{g.engine.kind === "model" ? g.engine.name.split(",")[0] : g.engine.name}</span>
-            <span className="text-muted">{steps(g.steps)}</span>
-          </button>
-        ))}
-        {methods.map((g) => (
-          <button
-            key={g.engine.short}
-            type="button"
-            onClick={() => onSelect(g.first)}
-            className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-[13.5px] ring-1 ring-line-strong/50 transition-colors hover:bg-surface-2"
-          >
-            <FunctionIcon size={13} aria-hidden className="text-muted" />
-            <span className="font-medium text-ink">{g.engine.name}</span>
-            <span className="text-muted">{steps(g.steps)}</span>
-          </button>
-        ))}
-        {models.length > 0 && (
-          <span className="text-[12.5px] text-muted">
-            Prototype on {open ? "the largest open-weight model" : "Claude Opus 5.5"}, then step down. Names as of {LAST_REVIEWED}.
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 function CheckList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2.5">
@@ -445,36 +473,63 @@ function Ready({
   saved,
   onChange,
   onStartOver,
+  view,
+  onView,
+  historyCount,
 }: {
   answers: Answers;
   saved: boolean;
   onChange: (q: QuestionId) => void;
   onStartOver: () => void;
+  view: ResultView;
+  onView: (view: ResultView) => void;
+  historyCount: number;
 }) {
   const r = useMemo(() => recommend(answers), [answers]);
-  const full = useMemo(() => buildBlueprint(r, answers), [r, answers]);
+  const ruleDesign = useMemo(() => buildBlueprint(r, answers), [r, answers]);
+
+  // With AI on, the architecture is drafted for this task by the local AI
+  // server and checked against the rules; the rules' design shows until then,
+  // and stays if the AI's draft can't pass the checks.
+  const [design, setDesign] = useState<DesignState>({ status: "off" });
+  const [showRules, setShowRules] = useState(false);
+  useEffect(() => {
+    setShowRules(false);
+    if (!AI_ENABLED || !isComplete(answers)) return setDesign({ status: "off" });
+    const known = rememberedDesign(answers);
+    if (known) return setDesign({ status: "ready", ...known });
+    const ctl = new AbortController();
+    setDesign({ status: "loading" });
+    fetchDesign(answers, ctl.signal)
+      .then((d) => setDesign({ status: "ready", ...d }))
+      .catch((e: Error) => !ctl.signal.aborted && setDesign({ status: "failed", note: e.message }));
+    return () => ctl.abort();
+  }, [answers]);
+  const full = design.status === "ready" && !showRules ? design.blueprint : ruleDesign;
+
+  // Once the design has settled, the kit's task-specific text is written for it.
+  const [kitText, setKitText] = useState<KitTextState>({ status: "off" });
+  useEffect(() => {
+    if (!AI_ENABLED || design.status === "off" || design.status === "loading") return setKitText({ status: "off" });
+    const ctl = new AbortController();
+    setKitText({ status: "loading" });
+    fetchKitText(answers, ctl.signal)
+      .then((response) => setKitText({ status: "ready", response }))
+      .catch((e: Error) => !ctl.signal.aborted && setKitText({ status: "failed", note: e.message }));
+    return () => ctl.abort();
+  }, [design.status, answers]); // eslint-disable-line react-hooks/exhaustive-deps -- answers change only with the design
+  // The text belongs to the design it was written for; the other design keeps the template kit.
+  const shownDesign = full === ruleDesign ? "rules" : "ai";
+  const text = kitText.status === "ready" && kitText.response.design === shownDesign ? kitText.response.text : undefined;
   const simple = useMemo(() => buildSimplerBlueprint(r, answers), [r, answers]);
-  const kit = useMemo(() => buildStarterKit(r, full, answers), [r, full, answers]);
+  const kit = useMemo(() => buildStarterKit(r, full, answers, text), [r, full, answers, text]);
   const reduce = useReducedMotion();
   const panelId = useId();
-  const cardRef = useRef<HTMLElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // The build kit sits beside the diagram only when the diagram can still run
-  // left to right; otherwise the diagram takes the full width and the kit goes under it.
-  const [outputsEl, outputsRef] = useState<HTMLDivElement | null>(null);
-  const [outputsWidth, setOutputsWidth] = useState(0);
-  useLayoutEffect(() => {
-    if (!outputsEl) return;
-    setOutputsWidth(outputsEl.getBoundingClientRect().width);
-    const ro = new ResizeObserver(([entry]) => setOutputsWidth(entry.contentRect.width));
-    ro.observe(outputsEl);
-    return () => ro.disconnect();
-  }, [outputsEl]);
-  const widest = Math.max(full.stages, simple.stages);
-  const diagramNeeds = widest * COL_MIN + (widest - 1) * COL_GAP + PAD_X * 2 + 42; // plus the card's padding and border
-  const besideKit = outputsWidth > 0 && outputsWidth - 300 - 20 >= diagramNeeds;
   const [variant, setVariant] = useState<"recommended" | "simpler">("recommended");
-  const [view, setView] = useState<"diagram" | "list">("diagram");
+  // The Workflow view lists the steps; the full diagram is one switch away.
+  const [display, setDisplay] = useState<"list" | "diagram">("list");
   const [selected, setSelected] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const bp = variant === "recommended" ? full : simple;
@@ -530,6 +585,7 @@ function Ready({
   }, []);
 
   const openAnswers = () => {
+    if (view !== "solution") onView("solution");
     const d = document.getElementById("answers") as HTMLDetailsElement | null;
     if (!d) return;
     d.open = true;
@@ -572,160 +628,150 @@ function Ready({
     { label: "Runs on", value: r.hosting.title, icon: <Cloud size={15} aria-hidden /> },
   ];
 
-  return (
-    <main id="main" className="mx-auto w-full max-w-[1640px] px-4 pb-28 pt-7 sm:px-6 sm:pt-10">
-      {walking && <Walkthrough bp={bp} onClose={endWalk} />}
-      {/* -------------------------------------------------- header: only what's needed */}
-      <m.header
-        initial={reduce ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-          <div className="min-w-0">
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-muted">
-              {r.task && (
-                <span>
-                  Recommended setup for <span className="text-ink">{r.task}</span>
-                </span>
-              )}
-              {saved && (
-                <a href={href({ name: "history" })} className="no-print inline-flex items-center gap-1 text-[13px] text-accent underline-offset-4 hover:underline">
-                  <Check size={13} weight="bold" aria-hidden />
-                  Saved to history
-                </a>
-              )}
-            </p>
-            <h1 className="mt-1 text-[1.75rem] font-semibold leading-[1.1] tracking-tight text-ink sm:text-[2.125rem]">
-              {SHORT_TITLE[r.approach.id]}
-            </h1>
-          </div>
-          <Actions r={r} bp={full} answers={answers} onEdit={openAnswers} />
+  // ---------------------------------------------------------------- shared pieces of the three views
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const kindOf = (n: BNode, b: Blueprint) => {
+    const parallel = Object.entries(b.captions).some(([st, t]) => Number(st) === n.stage && /same time/i.test(t));
+    const base =
+      n.kind === "start" ? "Trigger" : n.kind === "human" ? "Person" : n.kind === "end" ? "Finish" : n.kind === "tool" ? "Your tools" : n.engine?.kind === "model" ? "AI model" : n.engine?.short ?? KIND_LABEL[n.kind];
+    return parallel ? `${base} · Parallel` : base;
+  };
+  const first = full.nodes[0];
+  const last = full.nodes[full.nodes.length - 1];
+  const lead = leadStep(full);
+  const aiSteps = full.nodes.filter((n) => n !== lead && n.engine?.kind === "model");
+  const priorities = (aiSteps.length >= 2 ? aiSteps : keySteps(full, lead)).slice(0, 3).map((n) => n.name);
+  const level = r.autonomy.level;
+  const control = level === 1 ? "You do the work." : level === 2 ? "You're in control." : level === 3 ? "You handle the risky ones." : "It runs within guardrails.";
+
+  // The work in three phases: getting ready, the AI (or rule) work, and checking and handing over.
+  const phases = (() => {
+    const isWork = (n: BNode) => n.engine?.kind === "model" || n.kind === "decision";
+    const a = full.nodes.findIndex(isWork);
+    const b = full.nodes.length - 1 - [...full.nodes].reverse().findIndex(isWork);
+    const groups =
+      a === -1
+        ? [full.nodes.slice(0, 1), full.nodes.slice(1, -1), full.nodes.slice(-1)]
+        : [full.nodes.slice(0, a), full.nodes.slice(a, b + 1), full.nodes.slice(b + 1)];
+    const titles = ["Getting ready", a === -1 ? "The rules at work" : "Doing the work", "Checking and handing over"];
+    const sentence = (ns: BNode[]) => ns.map((n, i) => (i === 0 ? n.name : n.name.charAt(0).toLowerCase() + n.name.slice(1))).join(", ") + ".";
+    return groups.map((ns, i) => ({ title: titles[i], text: ns.length ? sentence(ns) : "" })).filter((x) => x.text);
+  })();
+
+  const steps = (ns: number[]) => {
+    // "steps 4–8", "step 2", "steps 2, 5"
+    const runs: string[] = [];
+    for (let i = 0; i < ns.length; i++) {
+      let j = i;
+      while (j + 1 < ns.length && ns[j + 1] === ns[j] + 1) j++;
+      runs.push(j > i + 1 ? `${ns[i]}–${ns[j]}` : j === i + 1 ? `${ns[i]}, ${ns[j]}` : `${ns[i]}`);
+      i = j;
+    }
+    return `${ns.length > 1 ? "steps" : "step"} ${runs.join(", ")}`;
+  };
+  const bpPlan = modelPlan(bp);
+  const selNode = selected ? bp.nodes.find((n) => n.id === selected) : undefined;
+  const selIndex = selNode ? bp.nodes.indexOf(selNode) : -1;
+
+  // ---------------------------------------------------------------- Solution
+  const solutionView = (
+    <>
+      <section aria-labelledby="solution-title">
+        <div className="section-kicker studio-caption">
+          <span className="status-dot" aria-hidden />
+          Your recommended solution
+          <span className="kicker-line" aria-hidden />
         </div>
-      </m.header>
-
-      <dl className="mt-5 grid grid-cols-2 overflow-hidden rounded-2xl border border-line bg-surface sm:grid-cols-3 lg:grid-cols-5">
-        {facts.map((f) => (
-          <div key={f.label} className="-ml-px -mt-px border-l border-t border-line px-4 py-3">
-            <dt className="flex items-center gap-1.5 text-[12.5px] text-muted">
-              {f.icon}
-              {f.label}
-            </dt>
-            <dd className={`mt-0.5 text-[14.5px] font-semibold leading-snug ${f.strong ? "text-accent" : "text-ink"}`}>{f.value}</dd>
+        <h1 id="solution-title">
+          {SHORT_TITLE[r.approach.id]}
+          <span className="title-period">.</span>
+        </h1>
+        <p className="studio-intro">{full.summary || r.approach.summary}</p>
+        {AI_ENABLED && (
+          <div className="-mt-4 mb-8 max-w-[70ch]">
+            <DesignNote design={design} showRules={showRules} onShowRules={setShowRules} bare />
           </div>
-        ))}
-      </dl>
-
-      {/* -------------------------------------------------- the two main outputs: how it works, and what to build */}
-      <div ref={outputsRef} className={`mt-5 grid items-start gap-5 ${besideKit ? "grid-cols-[minmax(0,1fr)_300px]" : ""}`}>
-        <m.section
-          ref={cardRef}
-          aria-labelledby="architecture-title"
-          initial={reduce ? false : { opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-          className="shadow-soft rounded-2xl border border-line bg-surface"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 rounded-t-2xl border-b border-line bg-accent-soft/70 px-5 py-5 sm:px-7">
-            <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-[13px] font-medium text-accent">
-                <TreeStructure size={15} weight="bold" aria-hidden />
-                Your architecture
+        )}
+        <div className="architecture-grid">
+          <figure>
+            <ArchitectureArt bp={full} />
+            <figcaption>
+              <span>01 — THE ARCHITECTURE</span>
+              <span>{TOPOLOGIES[r.topology.primary].name}.</span>
+            </figcaption>
+          </figure>
+          <div className="priorities">
+            <h3>Core priorities</h3>
+            <ul>
+              {priorities.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+            <div className="approval-note">
+              <Check size={18} weight="bold" aria-hidden className="mt-0.5 shrink-0" />
+              <p>
+                {control}
+                <span>{AUTONOMY[level].plain}</span>
               </p>
-              <h2 id="architecture-title" className="mt-1.5 text-[1.375rem] font-semibold leading-tight tracking-tight text-ink sm:text-[1.625rem]">
-                {variant === "recommended" ? "How it works" : "Simpler start"}
-              </h2>
             </div>
-            <div className="no-print flex flex-wrap items-center gap-2">
-              <div role="group" aria-label="Which design to show" className="inline-flex rounded-full bg-surface p-1 ring-1 ring-line">
-                {(["recommended", "simpler"] as const).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    aria-pressed={variant === v}
-                    onClick={() => setVariant(v)}
-                    className={`rounded-full px-3.5 py-1.5 text-[13.5px] font-medium transition-colors ${
-                      variant === v ? "bg-surface text-ink shadow-[0_1px_2px_hsl(var(--shadow)/0.12)] ring-1 ring-line" : "text-muted hover:text-ink"
-                    }`}
-                  >
-                    {v === "recommended" ? "Recommended" : "Simpler start"}
-                  </button>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button ref={walkButton} type="button" onClick={walk} className={btn.primarySmall}>
-                  <PlayCircle size={17} aria-hidden />
-                  Walk me through it
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={view === "list"}
-                  onClick={() => setView(view === "list" ? "diagram" : "list")}
-                  className={btn.quiet}
-                >
-                  {view === "list" ? <TreeStructure size={16} aria-hidden /> : <ListNumbers size={16} aria-hidden />}
-                  {view === "list" ? "Show diagram" : "Show as list"}
-                </button>
-              </div>
-            </div>
+            <button type="button" className="studio-quiet no-print" onClick={() => onView("workflow")}>
+              Explore the workflow
+              <ArrowUpRight size={16} aria-hidden />
+            </button>
           </div>
+        </div>
+        <div className="studio-actions no-print">
+          <Actions r={r} bp={full} answers={answers} onEdit={openAnswers} />
+          {saved && (
+            <a href={href({ name: "history" })} className="inline-flex items-center gap-1 self-center text-[13.5px] text-accent underline-offset-4 hover:underline">
+              <Check size={14} weight="bold" aria-hidden />
+              Saved to history
+            </a>
+          )}
+        </div>
+      </section>
 
-          {variant === "simpler" && <p className="px-4 pt-4 text-[14.5px] font-semibold text-ink sm:px-6">{simple.title}</p>}
-
-          <div className="px-3 sm:px-5">
-            <AnimatePresence mode="wait" initial={false}>
-              <m.div
-                key={`${variant}-${view}`}
-                initial={reduce ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.18 }}
-              >
-                {view === "diagram" ? (
-                  <DiagramBoundary
-                    resetKey={`${bp.variant}-${bp.nodes.map((n) => n.id).join()}`}
-                    fallback={<StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />}
-                  >
-                    <ArchitectureMap bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
-                  </DiagramBoundary>
-                ) : (
-                  <StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
-                )}
-              </m.div>
-            </AnimatePresence>
+      <section className="studio-section" aria-labelledby="operates-title">
+        <div className="section-kicker studio-caption">02 — Behind the solution</div>
+        <div className="section-heading">
+          <div className="min-w-0">
+            <h2 id="operates-title">How the system operates</h2>
+            <p>
+              A closer look at the path from {first.name.charAt(0).toLowerCase() + first.name.slice(1)} to {last.name.charAt(0).toLowerCase() + last.name.slice(1)}.
+            </p>
           </div>
-          <ModelPlan bp={bp} onSelect={setSelected} />
-          {view === "diagram" && <Legend bp={bp} />}
-
-          <StepPanel
-            bp={bp}
-            selected={selected}
-            onSelect={setSelected}
-            panelId={panelId}
-            idle={
-              variant === "simpler" ? (
-                <Compare r={r} full={full} simple={simple} />
-              ) : (
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <p className="text-[14px] text-muted">Select a step for details.</p>
-                  <button type="button" onClick={() => setVariant("simpler")} className={`${btn.small} no-print`}>
-                    Compare with a simpler start
-                    <ArrowRight size={15} weight="bold" aria-hidden />
-                  </button>
-                </div>
-              )
-            }
-          />
-        </m.section>
-
-        <StarterKit kit={kit} slug={slugify(r.task)} answers={answers} rail={besideKit} />
-      </div>
+          <button type="button" className="studio-quiet no-print" onClick={() => onView("workflow")}>
+            View workflow
+            <ArrowRight size={16} aria-hidden />
+          </button>
+        </div>
+        <ol className="summary-timeline">
+          {phases.map((ph) => (
+            <li key={ph.title}>
+              <span className="timeline-marker" aria-hidden />
+              <h3>{ph.title}</h3>
+              <p>{ph.text}</p>
+            </li>
+          ))}
+        </ol>
+        <button
+          type="button"
+          className="studio-quiet no-print mt-2"
+          onClick={() => {
+            setVariant("simpler");
+            onView("workflow");
+          }}
+        >
+          <GitBranch size={16} aria-hidden />
+          Compare with a simpler start
+          <ArrowRight size={16} aria-hidden />
+        </button>
+      </section>
 
       {/* -------------------------------------------------- the detail, on demand */}
-      <section aria-labelledby="detail" className="mt-12">
-        <h2 id="detail" className="text-[1.25rem] font-semibold tracking-tight text-ink">
-          Details
-        </h2>
+      <section aria-labelledby="detail" className="studio-section">
+        <div className="section-kicker studio-caption">03 — Everything behind it</div>
+        <h2 id="detail">The details</h2>
         <div className="mt-4 grid gap-3">
           <Disclosure id="first-steps" title="Your first steps" meta="Three things to do this week.">
             <ol className="grid gap-4 md:grid-cols-3">
@@ -919,8 +965,9 @@ function Ready({
             meta={`${r.fired.length} of ${RULES.length} rules applied. ${cited.length} sources cited.`}
           >
             <p className="max-w-[65ch] text-[14.5px] leading-relaxed text-ink">
-              No AI wrote this result. Your answers were checked against every published rule; the same answers always give the same
-              design. {designCount} of the rules applied are design choices made for this guide rather than findings from a source.
+              {full === ruleDesign
+                ? "No AI wrote this design. Your answers were checked against every published rule; the same answers always give the same design."
+                : "This design was drafted by AI for your task and then checked against every published rule below; anything that broke a rule was sent back or replaced by the rules' design."} {designCount} of the rules applied are design choices made for this guide rather than findings from a source.
             </p>
             <p className="mt-3 font-mono text-[12.5px] leading-relaxed text-ink">{r.fired.join(", ")}</p>
             <ul className="mt-5 divide-y divide-line border-y border-line">
@@ -944,7 +991,7 @@ function Ready({
             </a>
           </Disclosure>
 
-          <Disclosure id="answers" title="Your answers" meta={`${activeQuestions(answers).length} answers. Change any of them and the design updates.`}>
+          <Disclosure id="answers" title="Your answers" meta={`${activeQuestions(answers).length + (answers.details?.length ?? 0)} answers. Change any of them and the design updates.`}>
             <AnswerList answers={answers} onChange={onChange} />
             <div className="no-print mt-6 flex flex-wrap items-center gap-2">
               {confirming ? (
@@ -967,6 +1014,183 @@ function Ready({
           </Disclosure>
         </div>
       </section>
-    </main>
+    </>
+  );
+
+  // ---------------------------------------------------------------- Workflow
+  const glance = (
+    <>
+      <span className="section-kicker studio-caption">The design at a glance</span>
+      <h2>{r.approach.title}</h2>
+      <p>{r.approach.summary}</p>
+      <div className="workflow-model-note">
+        <h3>{bpPlan.models.length ? "Model allocation" : "Methods"}</h3>
+        <p>
+          {[...bpPlan.models, ...bpPlan.methods].map((g) => (
+            <span key={g.engine.short} className="block">
+              {g.engine.kind === "model" ? g.engine.name.split(",")[0] : g.engine.name}: {steps(g.steps)}.
+            </span>
+          ))}
+        </p>
+        {bpPlan.models.length > 0 && <p>Prototype on the most capable model, then step each part down once it matches on your test examples. Names as of {LAST_REVIEWED}.</p>}
+      </div>
+    </>
+  );
+
+  const stepDetail = selNode && (
+    <>
+      <span className="section-kicker studio-caption">
+        Step {selNode.step} of {bp.nodes.length}
+      </span>
+      <h2>{selNode.name}</h2>
+      <span className="step-type">{kindOf(selNode, bp)}</span>
+      {selNode.engine?.kind === "model" && (
+        <div className="text-[14.5px] leading-relaxed">
+          <p className="font-medium text-ink">{selNode.engine.name.split(",")[0]}</p>
+          <p className="mt-1 text-muted">{selNode.engine.why}</p>
+          <ModelGuidance engine={selNode.engine} className="mt-2 text-[14px]" />
+        </div>
+      )}
+      {selNode.engine?.kind === "algorithm" && selNode.kind !== "start" && <p className="text-[15px] leading-relaxed text-muted">{selNode.engine.how}</p>}
+      <dl className="step-detail">
+        <dt>What happens</dt>
+        <dd>{selNode.what}</dd>
+        <dt>Why it's here</dt>
+        <dd>{selNode.why}</dd>
+        <dt>What it passes on</dt>
+        <dd>{selNode.passes}</dd>
+      </dl>
+      {selNode.gates.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {selNode.gates.map((g) => (
+            <GateBadge key={g.text} kind={g.kind} text={g.text} />
+          ))}
+        </div>
+      )}
+      {AI_ENABLED && selNode.kb && selNode.kb.length > 0 && (
+        <p className="mt-4 text-[13px] leading-relaxed text-muted">
+          From the knowledge base: {selNode.kb.map((c) => `${c.id} ${c.title}`).join("; ")}
+        </p>
+      )}
+      <div className="walkthrough-controls no-print">
+        <button type="button" className="studio-outline" aria-label="Previous step" disabled={selIndex <= 0} onClick={() => setSelected(bp.nodes[Math.max(0, selIndex - 1)].id)}>
+          <ArrowLeft size={18} aria-hidden />
+        </button>
+        <button type="button" className="studio-btn" onClick={() => setSelected(selIndex < bp.nodes.length - 1 ? bp.nodes[selIndex + 1].id : null)}>
+          {selIndex === bp.nodes.length - 1 ? "Finish" : "Next step"}
+          {selIndex === bp.nodes.length - 1 ? <Check size={17} weight="bold" aria-hidden /> : <ArrowRight size={17} aria-hidden />}
+        </button>
+      </div>
+    </>
+  );
+
+  const workflowView = (
+    <section aria-labelledby="workflow-title">
+      <div className="section-kicker studio-caption">Behind the solution</div>
+      <div className="section-heading">
+        <div className="min-w-0">
+          <h1 id="workflow-title">
+            How it works<span className="title-period">.</span>
+          </h1>
+          <p>
+            The workflow, from {bp.nodes[0].name.charAt(0).toLowerCase() + bp.nodes[0].name.slice(1)} to{" "}
+            {bp.nodes[bp.nodes.length - 1].name.charAt(0).toLowerCase() + bp.nodes[bp.nodes.length - 1].name.slice(1)}.
+          </p>
+        </div>
+        <button ref={walkButton} type="button" className="studio-btn no-print" onClick={walk}>
+          <Play size={17} weight="fill" aria-hidden />
+          Walk me through it
+        </button>
+      </div>
+      <div className="workflow-tools no-print">
+        <div role="group" aria-label="Which design to show" className="view-switch">
+          {(["recommended", "simpler"] as const).map((v) => (
+            <button key={v} type="button" aria-pressed={variant === v} onClick={() => setVariant(v)}>
+              {v === "recommended" ? "Recommended" : "Simpler start"}
+            </button>
+          ))}
+        </div>
+        <div role="group" aria-label="How to show it" className="view-switch">
+          {(["list", "diagram"] as const).map((v) => (
+            <button key={v} type="button" aria-pressed={display === v} onClick={() => setDisplay(v)}>
+              {v === "list" ? "List" : "Diagram"}
+            </button>
+          ))}
+        </div>
+      </div>
+      {AI_ENABLED && variant === "recommended" && (
+        <div className="mb-6 max-w-[70ch]">
+          <DesignNote design={design} showRules={showRules} onShowRules={setShowRules} bare />
+        </div>
+      )}
+      {variant === "simpler" && <p className="mb-5 text-[15.5px] font-medium text-ink">{simple.title}</p>}
+      {display === "list" ? (
+        <div className="workflow-layout">
+          <ol className="full-timeline" aria-label="Steps">
+            {bp.nodes.map((n) => (
+              <li key={n.id}>
+                <button type="button" className="workflow-step" aria-pressed={selected === n.id} onClick={() => setSelected(selected === n.id ? null : n.id)}>
+                  <span className="step-number">{pad(n.step)}</span>
+                  <span className="min-w-0">
+                    <strong>{n.name}</strong>
+                    <small>{kindOf(n, bp)}</small>
+                  </span>
+                  <ArrowRight size={18} aria-hidden className="step-arrow" />
+                </button>
+              </li>
+            ))}
+          </ol>
+          <aside className="workflow-explanation" aria-live="polite">
+            {stepDetail || (variant === "simpler" ? <Compare r={r} full={full} simple={simple} /> : glance)}
+          </aside>
+        </div>
+      ) : (
+        <div ref={cardRef} className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="px-3 sm:px-5">
+            <DiagramBoundary
+              resetKey={`${bp.variant}-${bp.nodes.map((n) => n.id).join()}`}
+              fallback={<StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />}
+            >
+              <ArchitectureMap bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />
+            </DiagramBoundary>
+          </div>
+          <Legend bp={bp} />
+          <StepPanel
+            bp={bp}
+            selected={selected}
+            onSelect={setSelected}
+            panelId={panelId}
+            idle={variant === "simpler" ? <Compare r={r} full={full} simple={simple} /> : <p className="text-[14px] text-muted">Select a step for details.</p>}
+          />
+        </div>
+      )}
+    </section>
+  );
+
+  return (
+    <StudioShell view={view} onView={onView} facts={facts.map(({ label, value }) => ({ label, value }))} historyCount={historyCount}>
+      {walking && <Walkthrough bp={bp} onClose={endWalk} />}
+      <main id="main" className="studio-page">
+        {/* A new view swaps in at once and fades up; it never waits on the old one to leave. */}
+        <m.div key={view} initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
+          {view === "solution" && solutionView}
+          {view === "workflow" && workflowView}
+        </m.div>
+        {/* The kit stays mounted on every view, so a tailoring request or open guide survives switching views. */}
+        <div hidden={view !== "build"}>
+          <StarterKit
+            kit={kit}
+            slug={slugify(r.task)}
+            answers={answers}
+            studio
+            writing={!AI_ENABLED ? undefined : design.status === "loading" || kitText.status === "loading" ? "loading" : text ? "ready" : "template"}
+          />
+        </div>
+        <footer className="studio-footer no-print">
+          <span>BLUEPRINT STUDIO</span>
+          <span>A solution shaped around your request.</span>
+        </footer>
+      </main>
+    </StudioShell>
   );
 }

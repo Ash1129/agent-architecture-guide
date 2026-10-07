@@ -2,9 +2,10 @@ import { ArrowRight, ClockCounterClockwise, Cpu, MagnifyingGlass, Trash, UserChe
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
 import { btn } from "../components/ui";
-import { AI_TAILORING } from "../lib/features";
+import { AI_ENABLED } from "../lib/features";
 import { AUTONOMY, type AutonomyLevel } from "../lib/catalog";
 import { type HistoryEntry, clearHistory, removeHistory, restoreHistory } from "../lib/history";
+import { type SavedTailoring, clearTailored, putTailored, takeTailored } from "../lib/tailored";
 
 export const SHORT_TITLE: Record<HistoryEntry["approach"], string> = {
   automation: "Plain automation, no AI",
@@ -39,7 +40,7 @@ export function History({
 }) {
   const reduce = useReducedMotion();
   const [query, setQuery] = useState("");
-  const [undo, setUndo] = useState<{ entry: HistoryEntry; index: number } | null>(null);
+  const [undo, setUndo] = useState<{ entry: HistoryEntry; index: number; tailored?: SavedTailoring } | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
 
   const shown = useMemo(() => {
@@ -49,8 +50,11 @@ export function History({
   }, [entries, query]);
 
   const remove = (e: HistoryEntry) => {
-    setUndo({ entry: e, index: entries.findIndex((x) => x.id === e.id) });
-    onChange(removeHistory(e.id));
+    const next = removeHistory(e.id);
+    // Its AI-tailored workflow goes too, unless another saved result shares the same answers.
+    const tailored = next.some((x) => x.code === e.code) ? undefined : takeTailored(e.code);
+    setUndo({ entry: e, index: entries.findIndex((x) => x.id === e.id), tailored });
+    onChange(next);
   };
 
   return (
@@ -59,7 +63,7 @@ export function History({
         <div>
           <h1 className="text-[1.875rem] font-semibold tracking-tight text-ink sm:text-[2.25rem]">History</h1>
           <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-muted">
-            Every result you reach is saved here automatically, in this browser only.{AI_TAILORING ? "" : " Nothing is sent anywhere."}
+            Every result you reach is saved here automatically, in this browser only.{AI_ENABLED ? "" : " Nothing is sent anywhere."}
           </p>
         </div>
         {entries.length > 0 &&
@@ -70,6 +74,7 @@ export function History({
                 className={btn.danger}
                 onClick={() => {
                   clearHistory();
+                  clearTailored();
                   onChange([]);
                   setConfirmClear(false);
                   setUndo(null);
@@ -126,6 +131,7 @@ export function History({
               type="button"
               className="font-medium text-accent underline-offset-4 hover:underline"
               onClick={() => {
+                if (undo.tailored) putTailored(undo.entry.code, undo.tailored);
                 onChange(restoreHistory(undo.entry, undo.index));
                 setUndo(null);
               }}

@@ -12,6 +12,9 @@ import type { Basis } from "./rules";
 
 export type ModelId = "opus" | "sonnet" | "haiku" | "openLarge" | "openSmall";
 
+/** Leading open-weight models as of the review date (M03), shown as examples of the large open-weight tier. */
+export const OPEN_LARGE_PICKS = ["Kimi K2.6", "GLM-5", "DeepSeek-V3.2"];
+
 export const MODELS: Record<ModelId, { name: string; short: string; size: string; examples?: string }> = {
   opus: { name: "Claude Opus 5.5", short: "Opus 5.5", size: "Default starting point" },
   sonnet: { name: "Claude Sonnet 5.5", short: "Sonnet 5.5", size: "Balanced" },
@@ -20,7 +23,7 @@ export const MODELS: Record<ModelId, { name: string; short: string; size: string
     name: "Large open-weight model",
     short: "Open-weight, large",
     size: "Most capable you can host",
-    examples: "for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)",
+    examples: `for example ${OPEN_LARGE_PICKS.slice(0, -1).join(", ")} or ${OPEN_LARGE_PICKS.at(-1)} (leading open-weight models in ${LAST_REVIEWED})`,
   },
   openSmall: {
     name: "Small open-weight model",
@@ -41,7 +44,7 @@ export const TOP_MODEL = { name: "Claude Fable 5.1", note: "it requires Anthropi
 export const HAIKU_NOTE = "Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default.";
 
 export type Engine =
-  | { kind: "model"; model: ModelId; name: string; short: string; prototype: string; why: string; alternative?: string }
+  | { kind: "model"; model: ModelId; role: Role; name: string; short: string; prototype: string; why: string; alternative?: string }
   | { kind: "algorithm"; name: string; short: string; how: string };
 
 export type Role = "router" | "worker" | "attempt" | "checker" | "agent" | "coordinator" | "specialist";
@@ -154,6 +157,7 @@ export function pickModel(role: Role, a: Answers): Engine {
   return {
     kind: "model",
     model: id,
+    role,
     name: m.name + (m.examples ? `, ${m.examples}` : ""),
     short: m.short,
     prototype:

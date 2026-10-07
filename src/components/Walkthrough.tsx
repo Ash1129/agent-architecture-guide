@@ -3,6 +3,7 @@ import { AnimatePresence, animate, m, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type BNode, type Blueprint, KIND_LABEL, outgoing } from "../lib/blueprint";
 import { ArchitectureMap, EngineChip, GateBadge, KIND_ICON, NODE_STYLE } from "./ArchitectureMap";
+import { ModelGuidance } from "./StepPanel";
 
 // A full-screen, self-running tour of the architecture. For each step the
 // camera zooms onto it and the step opens in place, flipping over to show
@@ -321,6 +322,7 @@ export function Walkthrough({ bp, onClose, startAt = 0 }: { bp: Blueprint; onClo
               ghost={node.id}
               expand={cam && openFor ? { id: openFor.id, w: openFor.w / cam.scale, h: openFor.h / cam.scale, t: openT } : null}
               onLayout={aim}
+              scroll={false}
             />
           </div>
         </div>
@@ -428,7 +430,7 @@ function FlipCard({
               {node.engine.kind === "model" ? node.engine.name.split(",")[0] : node.engine.name}
             </p>
             <p className="mt-1 text-[13.5px] leading-relaxed text-ink">{node.engine.kind === "model" ? node.engine.why : node.engine.how}</p>
-            {node.engine.kind === "model" && <p className="mt-1 text-[13px] leading-relaxed text-muted">{node.engine.prototype}</p>}
+            {node.engine.kind === "model" && <ModelGuidance engine={node.engine} className="mt-1 text-[13px] leading-relaxed" />}
           </div>
         )}
 

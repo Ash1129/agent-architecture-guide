@@ -1,7 +1,7 @@
 import { ArrowRight, ClockCounterClockwise, Moon, Scales, Sun } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type FocusEvent } from "react";
 import { LAST_REVIEWED } from "../lib/catalog";
-import { AI_TAILORING } from "../lib/features";
+import { AI_ENABLED } from "../lib/features";
 import { href, type Route } from "../lib/router";
 import { loadTheme, saveTheme, type ThemePref } from "../lib/storage";
 import { btn } from "./ui";
@@ -167,7 +167,7 @@ export function Footer() {
             </a>
           </li>
           <li className="text-muted">
-            No account, no tracking. Your answers stay in your browser{AI_TAILORING ? " unless you choose Tailor with AI" : ""}.
+            No account, no tracking. Your answers stay in your browser{AI_ENABLED ? " unless you choose Tailor with AI" : ""}.
           </li>
         </ul>
       </div>

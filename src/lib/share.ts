@@ -4,6 +4,7 @@
 
 import { type Answers, QUESTIONS, effectiveAnswers } from "./questions";
 import { AUTONOMY, TOOLS, TOPOLOGIES } from "./catalog";
+import { validateDetailAnswers } from "./interview";
 import type { Recommendation } from "./rules";
 
 const MAX_TASK = 200;
@@ -49,6 +50,8 @@ export function decodeAnswers(code: string): Answers | null {
       if (vals.length) out[q.id] = q.exclusive && vals.includes(q.exclusive) ? [q.exclusive] : vals;
     }
   }
+  const details = validateDetailAnswers(input.details);
+  if (details?.length) out.details = details;
   return out as Answers;
 }
 

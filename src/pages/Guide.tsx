@@ -1,8 +1,11 @@
-import { ArrowLeft, ArrowRight, CaretDown, Check } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CaretDown, Check, CircleNotch, Sparkle } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { PlanState } from "../App";
 import { TaskInput } from "../components/TaskInput";
 import { btn } from "../components/ui";
+import { AI_ENABLED } from "../lib/features";
+import { type Detail, type DetailQuestion, adaptQuestion } from "../lib/interview";
 import {
   type Answers,
   type Question,
@@ -17,14 +20,20 @@ type Props = {
   answers: Answers;
   editing: boolean;
   direction: 1 | -1;
+  /** The AI-adapted questions for this task, when AI is on. */
+  plan?: PlanState;
+  onUseStandard: () => void;
   onAnswer: (next: Answers, from: QuestionId) => void;
   onBack: (from: QuestionId) => void;
   onCancelEdit: () => void;
 };
 
-export function Guide({ qid, answers, editing, direction, onAnswer, onBack, onCancelEdit }: Props) {
+export function Guide({ qid, answers, editing, direction, plan, onUseStandard, onAnswer, onBack, onCancelEdit }: Props) {
   const reduce = useReducedMotion();
-  const q = QUESTION_BY_ID[qid];
+  const ready = plan?.status === "ready" ? plan.response : undefined;
+  const q = adaptQuestion(QUESTION_BY_ID[qid], ready?.plan);
+  // AI_ENABLED is fixed at build time, so the published build drops these screens entirely.
+  const adapting = AI_ENABLED && plan?.status === "loading" && qid !== "task";
   // Until the second answer says whether AI is involved, assume the longer
   // path, so the count never jumps up partway through.
   const active = activeQuestions(answers.shape ? answers : { ...answers, shape: "judgement" });
@@ -63,26 +72,73 @@ export function Guide({ qid, answers, editing, direction, onAnswer, onBack, onCa
         </div>
       </div>
 
+      {AI_ENABLED && qid !== "task" && <PlanNote plan={plan} />}
       <AnimatePresence mode="wait" initial={false} custom={direction}>
         <m.div
-          key={qid}
+          key={adapting ? "adapting" : `${qid}:${ready ? "ai" : "std"}`}
           custom={direction}
           initial={reduce ? { opacity: 0 } : { opacity: 0, x: 24 * direction }}
           animate={{ opacity: 1, x: 0 }}
           exit={reduce ? { opacity: 0 } : { opacity: 0, x: -16 * direction }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
-          <QuestionView
-            q={q}
-            answers={answers}
-            editing={editing}
-            onSubmit={(next) => onAnswer(next, qid)}
-            onBack={() => onBack(qid)}
-            isFirst={index === 0}
-          />
+          {adapting ? (
+            <Adapting task={plan!.task} onUseStandard={onUseStandard} />
+          ) : (
+            <QuestionView
+              q={q}
+              answers={answers}
+              editing={editing}
+              onSubmit={(next) => onAnswer(next, qid)}
+              onBack={() => onBack(qid)}
+              isFirst={index === 0}
+            />
+          )}
         </m.div>
       </AnimatePresence>
     </main>
+  );
+}
+
+function Adapting({ task, onUseStandard }: { task: string; onUseStandard: () => void }) {
+  const reduce = useReducedMotion();
+  return (
+    <div role="status" aria-live="polite">
+      <p className="flex items-center gap-2 text-[15px] font-medium text-accent">
+        <CircleNotch size={18} aria-hidden className={reduce ? "" : "animate-spin"} />
+        Adapting the questions to your task
+      </p>
+      <h1 className="mt-3 text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-ink sm:text-[2.125rem]">{task}</h1>
+      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">
+        The AI is rewording the questions in your terms and suggesting likely answers. You can change every one of them.
+      </p>
+      <button type="button" onClick={onUseStandard} className={`${btn.quiet} mt-6 -ml-3`}>
+        Use the standard questions instead
+      </button>
+    </div>
+  );
+}
+
+/** One quiet line saying where the questions came from. */
+function PlanNote({ plan }: { plan?: PlanState }) {
+  if (!plan || plan.status === "loading") return null;
+  const r = plan.response;
+  const text =
+    plan.status === "standard"
+      ? plan.note
+        ? `Standard questions. ${plan.note}`
+        : null
+      : r?.source === "similar"
+        ? `Adapted to your task, reusing the questions made for a very similar one ("${r.similarTo}").`
+        : r?.source === "cache"
+          ? "Adapted to your task (saved from an earlier run)."
+          : "Adapted to your task by AI. Suggested answers are pre-selected; change any of them.";
+  if (!text) return null;
+  return (
+    <p className="-mt-6 mb-8 flex items-start gap-1.5 text-[13px] leading-snug text-muted">
+      <Sparkle size={14} weight="fill" aria-hidden className="mt-0.5 shrink-0 text-accent" />
+      {text}
+    </p>
   );
 }
 
@@ -106,7 +162,7 @@ function QuestionView({
   onSubmit,
   onBack,
 }: {
-  q: Question;
+  q: Question & { suggested?: string | string[]; reason?: string };
   answers: Answers;
   editing: boolean;
   isFirst: boolean;
@@ -115,7 +171,8 @@ function QuestionView({
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const pointerPick = useRef(false);
-  const current = answers[q.id];
+  // An answer already given wins; otherwise the AI's suggestion starts selected.
+  const current = answers[q.id] ?? q.suggested;
   const [single, setSingleState] = useState<string | undefined>(typeof current === "string" ? current : undefined);
   const [multi, setMultiState] = useState<string[]>(Array.isArray(current) ? current : []);
   // Mirrors of the selection that update synchronously, so a fast "pick then
@@ -201,6 +258,14 @@ function QuestionView({
         {q.title}
       </h1>
       {q.help && q.kind !== "text" && <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">{q.help}</p>}
+      {q.suggested && q.reason && answers[q.id] === undefined && (
+        <p className="mt-3 flex max-w-[60ch] items-start gap-1.5 text-[14.5px] leading-relaxed text-accent">
+          <Sparkle size={15} weight="fill" aria-hidden className="mt-1 shrink-0" />
+          <span>
+            <span className="font-medium">Suggested:</span> {q.reason}
+          </span>
+        </p>
+      )}
     </>
   );
 
@@ -270,7 +335,12 @@ function QuestionView({
                   {checked && (q.kind === "multi" ? <Check size={13} weight="bold" /> : <span className="h-2 w-2 rounded-full bg-accent-ink" />)}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[16px] font-medium leading-snug text-ink">{o.label}</span>
+                  <span className="block text-[16px] font-medium leading-snug text-ink">
+                    {o.label}
+                    {answers[q.id] === undefined && (Array.isArray(q.suggested) ? q.suggested.includes(o.value) : q.suggested === o.value) && (
+                      <span className="ml-2 inline-block rounded-full bg-accent-soft px-2 py-0.5 align-middle text-[11.5px] font-medium text-accent">Suggested</span>
+                    )}
+                  </span>
                   {o.hint && <span className="mt-1 block text-[14.5px] leading-relaxed text-muted">{o.hint}</span>}
                 </span>
                 <span aria-hidden className="ml-auto hidden pt-0.5 font-mono text-[12px] text-muted sm:block">
@@ -297,5 +367,121 @@ function QuestionView({
       </p>
       <WhyWeAsk text={q.why} />
     </form>
+  );
+}
+
+/** The AI's task-specific questions. Optional: anything left blank is simply not sent. */
+export function Details({
+  questions,
+  answers,
+  ready,
+  onSubmit,
+  onBack,
+}: {
+  questions: DetailQuestion[];
+  answers: Answers;
+  /** False while the questions are still being made. */
+  ready: boolean;
+  onSubmit: (details: Detail[]) => void;
+  onBack: () => void;
+}) {
+  const previous = new Map((answers.details ?? []).map((d) => [d.q, d.a]));
+  const [values, setValues] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(questions.map((d) => [d.id, previous.get(d.title)?.split(", ").filter(Boolean) ?? []])),
+  );
+  const [notes, setNotes] = useState<Record<string, string>>(() =>
+    Object.fromEntries(questions.filter((d) => d.kind === "text").map((d) => [d.id, previous.get(d.title) ?? ""])),
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus({ preventScroll: true }), []);
+
+  // Nothing to ask (or AI is off): carry on to the result.
+  useEffect(() => {
+    if (ready && !questions.length) onSubmit(answers.details ?? []);
+  }, [ready, questions.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pick = (d: DetailQuestion, option: string) =>
+    setValues((v) => {
+      const cur = v[d.id] ?? [];
+      const next = d.kind === "multi" ? (cur.includes(option) ? cur.filter((x) => x !== option) : [...cur, option]) : cur[0] === option ? [] : [option];
+      return { ...v, [d.id]: next };
+    });
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const out: Detail[] = [];
+    for (const d of questions) {
+      const a = d.kind === "text" ? (notes[d.id] ?? "").trim() : (values[d.id] ?? []).join(", ");
+      if (a) out.push({ q: d.title, a });
+    }
+    onSubmit(out);
+  };
+
+  if (!questions.length) return null;
+  return (
+    <main id="main" className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12">
+      <form onSubmit={submit}>
+        <p className="mb-3 flex items-center gap-1.5 text-[14px] font-medium text-accent">
+          <Sparkle size={15} weight="fill" aria-hidden />
+          Last step, optional
+        </p>
+        <h1 ref={headingRef} tabIndex={-1} className="text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-ink outline-none sm:text-[2.125rem]">
+          A few details about your task
+        </h1>
+        <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">
+          The AI asked these because the answers change how this particular system is built. Skip any you're unsure of.
+        </p>
+        <div className="mt-8 grid gap-6">
+          {questions.map((d) => (
+            <fieldset key={d.id} className="rounded-2xl border border-line-strong/60 bg-surface px-4 py-4 sm:px-5">
+              <legend className="sr-only">{d.title}</legend>
+              <p aria-hidden className="text-[16px] font-medium leading-snug text-ink">
+                {d.title}
+              </p>
+              {d.help && <p className="mt-1 text-[14.5px] leading-relaxed text-muted">{d.help}</p>}
+              {d.kind === "text" ? (
+                <input
+                  type="text"
+                  aria-label={d.title}
+                  value={notes[d.id] ?? ""}
+                  maxLength={300}
+                  onChange={(e) => setNotes((n) => ({ ...n, [d.id]: e.target.value }))}
+                  className="mt-3 block w-full rounded-xl border border-line-strong bg-bg px-3 py-2.5 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+                  placeholder="Type a short answer"
+                />
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {d.options!.map((o) => {
+                    const on = (values[d.id] ?? []).includes(o);
+                    return (
+                      <button
+                        key={o}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => pick(d, o)}
+                        className={`rounded-full border px-3 py-1.5 text-[14px] transition-colors ${on ? "border-accent bg-accent-soft font-medium text-ink" : "border-line-strong/70 text-muted hover:border-line-strong hover:text-ink"}`}
+                      >
+                        {on && <Check size={13} weight="bold" aria-hidden className="mr-1 inline align-[-1px] text-accent" />}
+                        {o}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </fieldset>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" onClick={onBack} className={btn.quiet}>
+            <ArrowLeft size={16} weight="bold" aria-hidden />
+            Back
+          </button>
+          <button type="submit" className={btn.primary}>
+            See your result
+            <ArrowRight size={17} weight="bold" aria-hidden />
+          </button>
+        </div>
+      </form>
+    </main>
   );
 }

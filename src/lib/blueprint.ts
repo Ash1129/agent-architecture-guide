@@ -11,6 +11,9 @@ import type { Recommendation, Why } from "./rules";
 export type NodeKind = "start" | "ai" | "fixed" | "decision" | "human" | "tool" | "end";
 export type Gate = { kind: "human" | "stop"; text: string };
 
+/** The tool gate that means a person approves every change the agent makes. */
+export const OK_EVERY_ACTION = "You OK every action";
+
 export type BNode = {
   id: string;
   step: number;
@@ -28,6 +31,8 @@ export type BNode = {
   why: string;
   passes: string;
   rules: string[];
+  /** Knowledge-base chunks an AI-drafted step cites (see src/lib/design.ts). */
+  kb?: { id: string; title: string }[];
 };
 
 export type EdgeStyle = "flow" | "loop" | "assign";
@@ -580,7 +585,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
 
   const toolGate: Gate[] =
     a.systems === "act" && level <= 3
-      ? [{ kind: "human", text: level <= 2 ? "You OK every action" : "You OK risky actions" }]
+      ? [{ kind: "human", text: level <= 2 ? OK_EVERY_ACTION : "You OK risky actions" }]
       : [];
   const toolNode = (track: number, stage?: number): Draft =>
     g.add({

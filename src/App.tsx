@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Footer, Nav } from "./components/Shell";
-import { Guide } from "./pages/Guide";
+import { Details, Guide } from "./pages/Guide";
 import { History } from "./pages/History";
 import { HowItWorks } from "./pages/HowItWorks";
 import { Landing } from "./pages/Landing";
@@ -17,10 +17,17 @@ import { navigate, replaceHash, useRoute, type Route } from "./lib/router";
 import { decodeAnswers, resultCode } from "./lib/share";
 import { loadAnswers, saveAnswers } from "./lib/storage";
 import { type HistoryEntry, findByCode, loadHistory, loadSessionId, newSessionId, saveSessionId, upsertHistory } from "./lib/history";
+import { AI_ENABLED } from "./lib/features";
+import type { Detail, InterviewResponse } from "./lib/interview";
+import { fetchPlan, loadPlan, savePlan } from "./lib/plans";
+
+/** The adapted questions for the current task: being made, ready, or not used. */
+export type PlanState = { task: string; status: "loading" | "ready" | "standard"; response?: InterviewResponse; note?: string };
 
 const TITLES: Record<Route["name"], string> = {
   home: "Agent Architecture Guide",
   guide: "Guide | Agent Architecture Guide",
+  details: "Guide | Agent Architecture Guide",
   result: "Your result | Agent Architecture Guide",
   how: "How it decides | Agent Architecture Guide",
   history: "History | Agent Architecture Guide",
@@ -42,6 +49,35 @@ export default function App() {
   };
 
   useEffect(() => saveAnswers(answers), [answers]);
+
+  // While working through the guide, the questions are adapted to the task by
+  // the local AI server: once per task, then kept in the browser.
+  const [plan, setPlan] = useState<PlanState | undefined>(undefined);
+  const inGuide = route.name === "guide" || route.name === "details";
+  useEffect(() => {
+    const task = answers.task?.trim();
+    if (!AI_ENABLED || !task || !inGuide) return;
+    if (plan?.task === task) return;
+    const saved = loadPlan(task);
+    if (saved) {
+      setPlan({ task, status: "ready", response: saved });
+      return;
+    }
+    const ctl = new AbortController();
+    setPlan({ task, status: "loading" });
+    fetchPlan(task, ctl.signal)
+      .then((response) => {
+        savePlan(task, response);
+        setPlan({ task, status: "ready", response });
+      })
+      .catch((e: Error) => {
+        if (!ctl.signal.aborted) setPlan({ task, status: "standard", note: e.message });
+      });
+    return () => ctl.abort();
+  }, [answers.task, inGuide]); // eslint-disable-line react-hooks/exhaustive-deps -- plan is read only to skip a repeat fetch
+  const currentPlan = plan && plan.task === answers.task?.trim() ? plan : undefined;
+  const studio = route.name === "result" && isComplete(answers);
+  const planDetails = currentPlan?.status === "ready" ? (currentPlan.response?.plan.details ?? []) : [];
 
   // Every result reached is saved; edits update the same entry.
   useEffect(() => {
@@ -66,7 +102,7 @@ export default function App() {
 
   // Keep the result URL in step with the answers, so the address bar is always shareable.
   useEffect(() => {
-    if (route.name === "result" && isComplete(answers)) replaceHash({ name: "result", code: resultCode(answers) });
+    if (route.name === "result" && isComplete(answers)) replaceHash({ name: "result", code: resultCode(answers), view: route.view });
   }, [route.name, answers]);
 
   // Never show a question out of order or one that no longer applies.
@@ -109,10 +145,17 @@ export default function App() {
     const following = editing ? firstUnanswered(next) : active[active.findIndex((q) => q.id === from) + 1];
     const target = following ?? firstUnanswered(next);
     if (target) navigate({ name: "guide", q: target.id });
+    else if (!editing && planDetails.length && next.details === undefined) navigate({ name: "details" });
     else {
       setEditing(false);
       navigate({ name: "result" });
     }
+  };
+
+  const handleDetails = (details: Detail[]) => {
+    setAnswers((a) => ({ ...a, details }));
+    setDirection(1);
+    navigate({ name: "result" });
   };
 
   const handleBack = (from: QuestionId) => {
@@ -153,7 +196,8 @@ export default function App() {
       >
         Skip to content
       </a>
-      <Nav route={route} cta={cta} historyCount={history.length} />
+      {/* A finished result is its own workspace, with its own sidebar, so the top bar steps aside. */}
+      {!studio && <Nav route={route} cta={cta} historyCount={history.length} />}
       <div className="flex-1 [&>main]:outline-none">
         {route.name === "home" && (
           <Landing
@@ -173,11 +217,28 @@ export default function App() {
             answers={answers}
             editing={editing}
             direction={direction}
+            plan={currentPlan}
+            onUseStandard={() => answers.task && setPlan({ task: answers.task.trim(), status: "standard" })}
             onAnswer={handleAnswer}
             onBack={handleBack}
             onCancelEdit={() => {
               setEditing(false);
               navigate({ name: "result" });
+            }}
+          />
+        )}
+        {AI_ENABLED && route.name === "details" && (
+          <Details
+            key={currentPlan?.status ?? "none"}
+            questions={planDetails}
+            // Not ready until this task's plan has been looked up (it isn't, on the first render after a reload).
+            ready={!answers.task || (!!currentPlan && currentPlan.status !== "loading")}
+            answers={answers}
+            onSubmit={handleDetails}
+            onBack={() => {
+              setDirection(-1);
+              const active = activeQuestions(answers);
+              navigate({ name: "guide", q: active[active.length - 1].id });
             }}
           />
         )}
@@ -192,6 +253,9 @@ export default function App() {
               setDirection(1);
               navigate({ name: "guide", q });
             }}
+            view={route.view ?? "solution"}
+            onView={(view) => navigate({ name: "result", code: resultCode(answers), view })}
+            historyCount={history.length}
           />
         )}
         {route.name === "how" && <HowItWorks cta={cta} />}
@@ -214,7 +278,7 @@ export default function App() {
           />
         )}
       </div>
-      {route.name !== "guide" && <Footer />}
+      {!inGuide && !studio && <Footer />}
     </div>
   );
 }

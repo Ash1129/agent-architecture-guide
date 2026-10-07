@@ -1,9 +1,11 @@
-import { Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Package, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
+import { CaretDown, Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Package, PlayCircle, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { AI_TAILORING } from "../lib/features";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { AI_ENABLED } from "../lib/features";
 import { type Answers, effectiveAnswers } from "../lib/questions";
 import type { Kit, KitFile, KitTool } from "../lib/starter";
+import { loadTailored, saveTailored } from "../lib/tailored";
+import { BuildGuide, HermesGuide, N8nGuide } from "./BuildGuide";
 import { btn } from "./ui";
 
 // The starter kit panel: one file to paste into an AI coding assistant, plus
@@ -61,34 +63,62 @@ async function zipFiles(files: KitFile[], strip = "", into = "") {
 type Tailoring =
   | { state: "idle" }
   | { state: "working" }
-  | { state: "done"; content: string; model: string; using: "ai" | "generated" }
+  | { state: "done"; content: string; model: string }
   | { state: "error"; message: string; problems?: string[] };
 
 /** `rail`: a slim column beside the diagram. Otherwise a short strip under it. */
-export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slug: string; answers: Answers; rail?: boolean }) {
+/**
+ * `writing` says where the kit's task-specific text stands when AI is on:
+ * being written, written by AI, or the template.
+ */
+export function StarterKit({
+  kit,
+  slug,
+  answers,
+  rail = false,
+  writing,
+  studio = false,
+}: {
+  kit: Kit;
+  slug: string;
+  answers: Answers;
+  rail?: boolean;
+  writing?: "loading" | "ready" | "template";
+  /** Set out as the result workspace's Build view instead of a panel. */
+  studio?: boolean;
+}) {
   const [tailoring, setTailoring] = useState<Tailoring>({ state: "idle" });
   const request = useRef<AbortController | null>(null);
 
-  // A new design starts from its generated files again.
+  const generated = kit.files.find((f) => f.path === "n8n/workflow.json")?.content;
+
+  // A new design starts from its generated files again, unless this browser
+  // already tailored this exact design.
   useEffect(() => {
     request.current?.abort();
-    setTailoring({ state: "idle" });
-  }, [kit]);
+    const saved = AI_ENABLED && generated ? loadTailored(answers, generated) : undefined;
+    setTailoring(saved ? { state: "done", content: saved.content, model: saved.model } : { state: "idle" });
+  }, [kit]); // eslint-disable-line react-hooks/exhaustive-deps -- answers change only together with kit
   useEffect(() => () => request.current?.abort(), []);
 
-  // When the AI version is in use, it replaces the generated workflow everywhere, including inside BUILD.md.
+  // With AI tailoring on, the generated n8n workflow is only the AI's starting
+  // point and is never offered: the workflow appears, everywhere including inside
+  // BUILD.md, once it has been tailored.
   const files = useMemo(() => {
-    if (tailoring.state !== "done" || tailoring.using !== "ai") return kit.files;
-    const original = kit.files.find((f) => f.path === "n8n/workflow.json")?.content;
-    if (!original) return kit.files;
-    return kit.files.map((f) =>
-      f.path === "n8n/workflow.json" ? { ...f, content: tailoring.content } : f.path === "BUILD.md" ? { ...f, content: f.content.replace(original, tailoring.content) } : f,
-    );
-  }, [kit, tailoring]);
+    if (!AI_ENABLED || !generated) return kit.files;
+    if (tailoring.state === "done") {
+      return kit.files.map((f) =>
+        f.path === "n8n/workflow.json" ? { ...f, content: tailoring.content } : f.path === "BUILD.md" ? { ...f, content: f.content.replace(generated, tailoring.content) } : f,
+      );
+    }
+    return kit.files
+      .filter((f) => f.path !== "n8n/workflow.json")
+      .map((f) => (f.path === "BUILD.md" ? { ...f, content: f.content.replace("```json\n" + generated + "\n```", "_Not included yet. Use Tailor with AI on the n8n row of the starter kit, then copy BUILD.md again._") } : f));
+  }, [kit, generated, tailoring]);
   const tools = kit.tools;
 
   const tailor = async () => {
-    if (!AI_TAILORING) return;
+    if (!AI_ENABLED) return;
     request.current?.abort();
     const ctl = new AbortController();
     request.current = ctl;
@@ -109,13 +139,17 @@ export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slu
         });
         return;
       }
-      setTailoring({ state: "done", content: JSON.stringify(data.workflow, null, 2), model: data.model ?? "AI", using: "ai" });
+      const done = { content: JSON.stringify(data.workflow, null, 2), model: data.model ?? "AI" };
+      setTailoring({ state: "done", ...done });
+      if (generated) saveTailored(answers, generated, done);
     } catch (e) {
       if ((e as Error).name !== "AbortError") setTailoring({ state: "error", message: "Couldn't reach the tailoring service." });
     }
   };
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
+  // Which illustrated walkthrough is open, if any.
+  const [guide, setGuide] = useState<"build" | "n8n" | "hermes" | null>(null);
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -143,6 +177,9 @@ export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slu
     // The zip code is loaded on demand, so it only ships to people who use it.
     download(`${slug}-starter-kit.zip`, (await zipFiles(files, "", `${slug}/`)) as BlobPart, "application/zip");
   };
+
+  const n8nTool = tools.find((t): t is KitTool & { action: { kind: "copy" } } => t.id === "n8n" && t.action.kind === "copy");
+  const hermesTool = tools.find((t) => t.id === "hermes");
 
   const runTool = async (t: KitTool) => {
     const a = t.action;
@@ -172,34 +209,61 @@ export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slu
       {tools.map((t) => {
         const Icon = TOOL_ICON[t.id];
         const done = copied === t.id;
+        // With AI tailoring, the n8n copy button lives with the tailoring controls and appears once there is a workflow.
+        const tailored = AI_ENABLED && t.id === "n8n";
+        const action = (
+          <button
+            type="button"
+            // The tailored n8n copy button gets its own full-width row, centred like Copy BUILD.md.
+            className={`${btn.small} shrink-0 bg-surface px-3 py-1.5 text-[13px] ${tailored ? "w-full justify-center" : ""}`}
+            onClick={() => runTool(t)}
+          >
+            {done ? <Check size={14} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={14} aria-hidden /> : <DownloadSimple size={14} aria-hidden />}
+            {done ? "Copied" : t.action.label}
+          </button>
+        );
         return (
           <li key={t.id} className="rounded-xl bg-surface-2/70 p-3">
             <div className="flex items-center gap-2.5">
               <Icon size={17} aria-hidden className="shrink-0 text-accent" />
               <p className="min-w-0 flex-1 text-[14px] font-semibold leading-snug text-ink">{t.name}</p>
-              <button type="button" className={`${btn.small} shrink-0 bg-surface px-3 py-1.5 text-[13px]`} onClick={() => runTool(t)}>
-                {done ? <Check size={14} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={14} aria-hidden /> : <DownloadSimple size={14} aria-hidden />}
-                {done ? "Copied" : t.action.label}
-              </button>
+              {!tailored && action}
             </div>
-            {t.id === "n8n" && tailoring.state === "done" && tailoring.using === "ai" && (
+            {t.id === "n8n" && tailoring.state === "done" && (
               <span className="mt-2 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-medium text-accent">Tailored by {tailoring.model}</span>
             )}
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{t.how}</p>
-            {AI_TAILORING && t.id === "n8n" && <TailorControls tailoring={tailoring} onTailor={tailor} onUse={(using) => tailoring.state === "done" && setTailoring({ ...tailoring, using })} />}
+            {(!tailored || tailoring.state === "done") && <Instructions className="mt-1.5">{t.how}</Instructions>}
+            {tailored && <TailorControls tailoring={tailoring} copy={action} onTailor={tailor} waiting={writing === "loading"} />}
+            {(t.id === "n8n" || t.id === "hermes") && (
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setGuide(t.id === "n8n" ? "n8n" : "hermes")}
+                className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-bold italic text-accent underline-offset-4 hover:underline"
+              >
+                <PlayCircle size={14} weight="fill" aria-hidden />
+                {t.id === "n8n" ? "Walk me through n8n" : "Walk me through Hermes"}
+              </button>
+            )}
           </li>
         );
       })}
     </ul>
   );
 
+  const copyBrief = () => copyText(brief.content).then(() => flash("brief"));
+
   const actions = (
     <div className={rail ? "grid gap-2" : "flex flex-wrap items-center gap-2"}>
-      <button type="button" className={`${btn.primarySmall} ${rail ? "w-full" : ""}`} onClick={() => copyText(brief.content).then(() => flash("brief"))}>
+      <button type="button" className={`${btn.primarySmall} ${rail ? "w-full" : ""}`} onClick={copyBrief}>
         {copied === "brief" ? <Check size={16} weight="bold" aria-hidden /> : <Copy size={16} aria-hidden />}
         {copied === "brief" ? "Copied" : "Copy BUILD.md"}
       </button>
       <div className="flex flex-wrap items-center gap-1">
+        <button type="button" className="inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-[14px] font-bold italic text-accent transition-colors duration-200 hover:bg-surface-2" aria-haspopup="dialog" onClick={() => setGuide("build")}>
+          <PlayCircle size={16} weight="fill" aria-hidden />
+          Walk me through building it
+        </button>
         <button type="button" className={btn.quiet} onClick={downloadAll}>
           <DownloadSimple size={16} aria-hidden />
           Download all
@@ -212,34 +276,37 @@ export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slu
     </div>
   );
 
-  return (
-    <m.section
-      aria-labelledby="kit-title"
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-      className={`no-print shadow-soft overflow-hidden rounded-2xl border border-line bg-surface ${rail ? "sticky top-20 mouse:top-16" : ""}`}
-    >
-      <div className={rail ? "bg-accent-soft/70 px-4 pb-4 pt-5" : "flex flex-wrap items-center justify-between gap-x-8 gap-y-3 bg-accent-soft/70 px-5 py-4 sm:px-6"}>
-        <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-accent">
-            <Terminal size={14} weight="bold" aria-hidden />
-            Start building
-          </p>
-          <h2 id="kit-title" className="mt-1 text-[1.125rem] font-semibold leading-snug tracking-tight text-ink">
-            Build it with an AI coding assistant
-          </h2>
-          <p className="mt-1 text-[13.5px] leading-relaxed text-muted">
-            Paste <span className="font-mono text-[12.5px] text-ink">BUILD.md</span> into Claude Code, Codex or any AI assistant. It holds the plan
-            and all {files.length - 1} other files.
-          </p>
-        </div>
-        <div className={rail ? "mt-4" : ""}>{actions}</div>
-      </div>
-      {toolList && <div className={`border-t border-line ${rail ? "p-3" : "p-3 sm:px-4"}`}>{toolList}</div>}
+  const overlays = (
+    <>
       <p className="sr-only" aria-live="polite">
         {copied ? "Copied to clipboard" : ""}
       </p>
+
+      <BuildGuide
+        open={guide === "build"}
+        onClose={() => setGuide(null)}
+        slug={slug}
+        files={files}
+        copied={copied === "brief"}
+        onCopyBrief={copyBrief}
+        onDownloadAll={downloadAll}
+      />
+      {hermesTool && (
+        <HermesGuide open={guide === "hermes"} onClose={() => setGuide(null)} slug={slug} files={files} onDownload={() => runTool(hermesTool)} />
+      )}
+      {n8nTool && generated && (
+        <N8nGuide
+          open={guide === "n8n"}
+          onClose={() => setGuide(null)}
+          files={files}
+          workflow={tailoring.state === "done" ? tailoring.content : generated}
+          ready={files.some((f) => f.path === n8nTool.action.path)}
+          copied={copied === "n8n"}
+          onCopy={() => runTool(n8nTool)}
+          tailoring={tailoring.state === "working"}
+          onTailor={tailor}
+        />
+      )}
 
       <dialog
         ref={dialogRef}
@@ -323,41 +390,184 @@ export function StarterKit({ kit, slug, answers, rail = false }: { kit: Kit; slu
           </div>
         </div>
       </dialog>
+    </>
+  );
+
+  // The Build view of the result workspace: the same kit, set out as numbered build steps.
+  if (studio) {
+    return (
+      <section aria-labelledby="kit-title" className="no-print">
+        <div className="section-kicker studio-caption">Your build brief</div>
+        <div className="section-heading">
+          <div className="min-w-0">
+            <h1 id="kit-title">
+              Build your solution<span className="title-period">.</span>
+            </h1>
+            <p>
+              Build it with an AI coding assistant. <span className="font-mono text-[13.5px] text-ink">BUILD.md</span> brings your plan together.
+            </p>
+            {AI_ENABLED && writing && writing !== "template" && (
+              <p role="status" aria-live="polite" className="mt-2 flex items-start gap-1.5 text-[13.5px] leading-snug text-muted">
+                {writing === "loading" ? (
+                  <CircleNotch size={14} aria-hidden className={`mt-0.5 shrink-0 text-accent ${reduce ? "" : "animate-spin"}`} />
+                ) : (
+                  <Sparkle size={14} weight="fill" aria-hidden className="mt-0.5 shrink-0 text-accent" />
+                )}
+                {writing === "loading" ? "Writing the kit's text for your task." : "Prompts, notes and test cases written for your task by AI, checked against the design."}
+              </p>
+            )}
+          </div>
+          <button type="button" className="studio-btn" onClick={copyBrief}>
+            {copied === "brief" ? <Check size={17} weight="bold" aria-hidden /> : <Copy size={17} aria-hidden />}
+            {copied === "brief" ? "Copied" : "Copy BUILD.md"}
+          </button>
+        </div>
+
+        <ol className="build-checklist" aria-label="Build steps">
+          <li className="build-item">
+            <span className="step-number">01</span>
+            <div className="build-item-text">
+              <h3>Build it with an AI coding assistant</h3>
+              <p>Paste BUILD.md into Claude Code, Codex or any AI assistant. It explains each step and asks before it creates files, spends money or sends anything.</p>
+            </div>
+            <div className="build-item-actions">
+              <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide("build")}>
+                Walk me through it
+                <PlayCircle size={16} aria-hidden />
+              </button>
+            </div>
+          </li>
+          {tools.map((t, i) => {
+            const done = copied === t.id;
+            const tailored = AI_ENABLED && t.id === "n8n";
+            const action = (
+              <button type="button" className={tailored ? `${btn.small} w-full justify-center bg-surface px-3 py-1.5 text-[13px]` : "studio-quiet"} onClick={() => runTool(t)}>
+                {done ? "Copied" : t.action.label}
+                {done ? <Check size={15} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={15} aria-hidden /> : <DownloadSimple size={15} aria-hidden />}
+              </button>
+            );
+            return (
+              <li key={t.id} className="build-item">
+                <span className="step-number">{String(i + 2).padStart(2, "0")}</span>
+                <div className="build-item-text">
+                  <h3>{t.name}</h3>
+                  {t.id === "n8n" && tailoring.state === "done" && (
+                    <span className="mb-1.5 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-medium text-accent">Tailored by {tailoring.model}</span>
+                  )}
+                  {(!tailored || tailoring.state === "done") && <p>{t.how}</p>}
+                  {tailored && <TailorControls tailoring={tailoring} copy={action} onTailor={tailor} waiting={writing === "loading"} />}
+                </div>
+                <div className="build-item-actions">
+                  {!tailored && action}
+                  {(t.id === "n8n" || t.id === "hermes") && (
+                    <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide(t.id === "n8n" ? "n8n" : "hermes")}>
+                      Walk me through {t.id === "n8n" ? "n8n" : "Hermes"}
+                      <PlayCircle size={16} aria-hidden />
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className="build-detail">
+          <h2>A brief with the details that matter</h2>
+          <p>
+            The steps, models and safeguards of your design, the standing brief for every AI step, and a test set to check it against: {files.length} files in all. Add your
+            provider keys yourself, in the tool's own settings, never in chat.
+          </p>
+          <div className="build-detail-actions">
+            <button type="button" className="studio-outline" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+              <FileText size={18} aria-hidden />
+              Preview files
+            </button>
+            <button type="button" className="studio-quiet" onClick={downloadAll}>
+              <DownloadSimple size={16} aria-hidden />
+              Download all
+            </button>
+          </div>
+        </div>
+        {overlays}
+      </section>
+    );
+  }
+
+  return (
+    <m.section
+      aria-labelledby="kit-title"
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      className={`no-print shadow-soft overflow-hidden rounded-2xl border border-line bg-surface ${rail ? "sticky top-20 mouse:top-16" : ""}`}
+    >
+      <div className={rail ? "bg-accent-soft/70 px-4 pb-4 pt-5" : "flex flex-wrap items-center justify-between gap-x-8 gap-y-3 bg-accent-soft/70 px-5 py-4 sm:px-6"}>
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-[12.5px] font-medium text-accent">
+            <Terminal size={14} weight="bold" aria-hidden />
+            Start building
+          </p>
+          <h2 id="kit-title" className="mt-1 text-[1.125rem] font-semibold leading-snug tracking-tight text-ink">
+            Build it with an AI coding assistant
+          </h2>
+          <Instructions className="mt-1.5">
+            Paste <span className="font-mono text-[12.5px] text-ink">BUILD.md</span> into Claude Code, Codex or any AI assistant.
+          </Instructions>
+          {AI_ENABLED && writing && writing !== "template" && (
+            <p role="status" aria-live="polite" className="mt-1.5 flex items-start gap-1.5 text-[12.5px] leading-snug text-muted">
+              {writing === "loading" ? (
+                <CircleNotch size={13} aria-hidden className={`mt-0.5 shrink-0 text-accent ${reduce ? "" : "animate-spin"}`} />
+              ) : (
+                <Sparkle size={13} weight="fill" aria-hidden className="mt-0.5 shrink-0 text-accent" />
+              )}
+              {writing === "loading" ? "Writing the kit's text for your task." : "Prompts, notes and test cases written for your task by AI, checked against the design."}
+            </p>
+          )}
+        </div>
+        <div className={rail ? "mt-4" : ""}>{actions}</div>
+      </div>
+      {toolList && <div className={`border-t border-line ${rail ? "p-3" : "p-3 sm:px-4"}`}>{toolList}</div>}
+      {overlays}
     </m.section>
+  );
+}
+
+/** How-to text, folded away under an "Instructions" toggle so the panel stays short. */
+function Instructions({ className = "", children }: { className?: string; children: ReactNode }) {
+  return (
+    <details className={`group ${className}`}>
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-[14px] font-normal italic text-ink [&::-webkit-details-marker]:hidden">
+        Instructions
+        <CaretDown size={14} aria-hidden className="text-muted transition-transform duration-200 group-open:rotate-180" />
+      </summary>
+      <p className="mt-1 text-[13.5px] leading-relaxed text-muted">{children}</p>
+    </details>
   );
 }
 
 function TailorControls({
   tailoring,
+  copy,
   onTailor,
-  onUse,
+  waiting,
 }: {
   tailoring: Tailoring;
+  /** The copy button, shown once the workflow is tailored. */
+  copy: ReactNode;
   onTailor: () => void;
-  onUse: (using: "ai" | "generated") => void;
+  /** True while the kit's text is still being written; tailoring waits so both describe the same workflow. */
+  waiting?: boolean;
 }) {
   const reduce = useReducedMotion();
   return (
     <div className="mt-2.5">
       {tailoring.state === "done" ? (
-        <div role="group" aria-label="Which workflow to use" className="inline-flex rounded-full bg-surface p-0.5 ring-1 ring-line">
-          {(["ai", "generated"] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              aria-pressed={tailoring.using === v}
-              onClick={() => onUse(v)}
-              className={`rounded-full px-3 py-1 text-[12.5px] font-medium transition-colors ${tailoring.using === v ? "bg-accent text-accent-ink" : "text-muted hover:text-ink"}`}
-            >
-              {v === "ai" ? "AI-tailored" : "Generated"}
-            </button>
-          ))}
-        </div>
+        copy
       ) : (
         <button
           type="button"
           onClick={onTailor}
-          disabled={tailoring.state === "working"}
+          disabled={tailoring.state === "working" || waiting}
           className="inline-flex items-center gap-1.5 rounded-full px-0 py-1 text-[13px] font-medium text-accent underline-offset-4 hover:underline disabled:no-underline disabled:opacity-80"
         >
           {tailoring.state === "working" ? (
@@ -368,9 +578,7 @@ function TailorControls({
           {tailoring.state === "working" ? "Tailoring to your task. This can take a few minutes." : "Tailor with AI"}
         </button>
       )}
-      <p className="mt-1 text-[12px] leading-snug text-muted">
-        {tailoring.state === "done" ? "Checked before use: every step, branch and model is still there." : "Sends your task and answers to OpenAI through this site's server."}
-      </p>
+      {tailoring.state !== "done" && <p className="mt-1 text-[12px] leading-snug text-muted">Sends your task and answers to OpenAI through this site's server.</p>}
       <p role="status" aria-live="polite" className="sr-only">
         {tailoring.state === "working" ? "Tailoring the workflow" : tailoring.state === "done" ? "Tailored workflow ready" : ""}
       </p>

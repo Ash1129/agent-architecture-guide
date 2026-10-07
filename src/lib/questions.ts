@@ -2,6 +2,8 @@
 // says the earlier answers make it relevant, so a rules-based task skips
 // everything about AI behaviour.
 
+import type { Detail } from "./interview";
+
 export type Shape = "rules" | "judgement" | "varies";
 export type Kinds = "yes" | "no";
 export type Split = "sections" | "voting" | "sequential";
@@ -29,9 +31,11 @@ export type Answers = {
   risks?: Risk[];
   location?: Location;
   team?: Team;
+  /** Answers to the AI's task-specific questions. Optional; the rules don't read them. */
+  details?: Detail[];
 };
 
-export type QuestionId = keyof Answers;
+export type QuestionId = Exclude<keyof Answers, "details">;
 
 export type Option = {
   value: string;
@@ -385,6 +389,7 @@ export function effectiveAnswers(a: Answers): Answers {
   for (const q of activeQuestions(a)) {
     if (a[q.id] !== undefined) (out as Record<string, unknown>)[q.id] = a[q.id];
   }
+  if (a.details?.length) out.details = a.details;
   return out;
 }
 
