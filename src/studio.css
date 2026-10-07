@@ -60,7 +60,7 @@
 .studio-logo {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 2px;
   font-family: var(--font-serif);
   font-size: 26px;
   line-height: 1;
@@ -72,6 +72,9 @@
   width: auto;
   color: var(--ink);
   flex-shrink: 0;
+}
+.studio-logo-word {
+  transform: translateY(-1px);
 }
 .studio-logo small {
   display: block;
@@ -857,17 +860,6 @@
   padding: 110px 24px 100px;
   text-align: center;
 }
-.start-eyebrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  margin-bottom: 30px;
-}
 .studio .start-main h1 {
   font-size: 104px;
   line-height: 1.02;
@@ -1004,9 +996,6 @@
   }
   .studio .start-main h1 {
     font-size: 74px;
-  }
-  .start-eyebrow {
-    font-size: 10px;
   }
   .start-subtitle {
     font-size: 15.5px;

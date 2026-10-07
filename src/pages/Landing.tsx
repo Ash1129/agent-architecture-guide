@@ -52,10 +52,6 @@ export function Landing({
       </header>
 
       <main id="main" className="start-main">
-        <m.div {...rise(0)} className="start-eyebrow">
-          <span className="status-dot" aria-hidden />
-          YOUR BUSINESS PROBLEM. A CLEAR PATH FORWARD.
-        </m.div>
         {/* Hidden under the intro until its word lands here; it's the same drawing, so the hand-over doesn't show. */}
         <div style={{ opacity: introPlaying ? 0 : 1 }}>
           <m.h1 {...rise(0.05)} aria-label="Blueprint.">

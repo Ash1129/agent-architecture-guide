@@ -45,8 +45,8 @@ export function StudioShell({
         <div className="studio-rail">
           <a href={href({ name: "home" })} className="studio-logo" aria-label="blueprint, home">
             <BrandMark className="studio-logo-mark" />
-            <span className="rail-label">
-              blueprint
+            <span className="rail-label studio-logo-word">
+              lueprint
               <small>YOUR SOLUTION STUDIO</small>
             </span>
           </a>
