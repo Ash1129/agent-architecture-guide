@@ -1,4 +1,4 @@
-import { CheckCircle, ClockCounterClockwise, Code, GitBranch, Moon, Scales, Sun } from "@phosphor-icons/react";
+import { CheckCircle, CircleNotch, ClockCounterClockwise, Code, GitBranch, Moon, Scales, Sun } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { type ResultView, href } from "../lib/router";
 import { BrandMark } from "./Brand";
@@ -13,19 +13,23 @@ import { type ThemePref, loadTheme, saveTheme } from "../lib/storage";
 
 const VIEWS: { id: ResultView; label: string; Icon: typeof CheckCircle }[] = [
   { id: "solution", label: "Solution", Icon: CheckCircle },
-  { id: "build", label: "Build", Icon: Code },
+  // Workflow before Build: it can be read while the tools are still being built.
   { id: "workflow", label: "Workflow", Icon: GitBranch },
+  { id: "build", label: "Build", Icon: Code },
 ];
 
 export function StudioShell({
   view,
   onView,
   historyCount,
+  building = false,
   children,
 }: {
   view: ResultView;
   onView: (v: ResultView) => void;
   historyCount: number;
+  /** The tools are still being built in the background: the Build view opens once they're ready. */
+  building?: boolean;
   children: ReactNode;
 }) {
   const [theme, setTheme] = useState<ThemePref>(loadTheme);
@@ -50,13 +54,24 @@ export function StudioShell({
           </a>
           <p className="studio-caption rail-label">Your workspace</p>
           <nav aria-label="Result" className="studio-nav">
-            {VIEWS.map(({ id, label, Icon }) => (
-              <button key={id} type="button" aria-current={view === id ? "page" : undefined} aria-label={label} title={tip(label)} onClick={() => onView(id)}>
-                <Icon size={20} weight="light" aria-hidden />
-                <span className="rail-label">{label}</span>
-                {view === id && <span className="nav-dot rail-label" aria-hidden />}
-              </button>
-            ))}
+            {VIEWS.map(({ id, label, Icon }) => {
+              const locked = building && id === "build";
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-current={view === id ? "page" : undefined}
+                  aria-label={locked ? "Build, opens once your tools are built" : label}
+                  title={locked ? "Building your tools. This opens the moment they're ready." : tip(label)}
+                  disabled={locked}
+                  onClick={() => onView(id)}
+                >
+                  {locked ? <CircleNotch size={20} aria-hidden className="motion-safe:animate-spin" /> : <Icon size={20} weight="light" aria-hidden />}
+                  <span className="rail-label">{label}</span>
+                  {locked ? <span className="nav-building rail-label">Building…</span> : view === id && <span className="nav-dot rail-label" aria-hidden />}
+                </button>
+              );
+            })}
           </nav>
           <div className="studio-note rail-label">
             <span className="studio-caption">The recommendation</span>

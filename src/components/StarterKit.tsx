@@ -5,7 +5,7 @@ import { AI_ENABLED } from "../lib/features";
 import { type Answers, effectiveAnswers } from "../lib/questions";
 import type { Kit, KitFile, KitTool } from "../lib/starter";
 import { loadTailored, saveTailored } from "../lib/tailored";
-import { BuildGuide, HermesGuide, N8nGuide } from "./BuildGuide";
+import { BuildGuide, ClaudePluginGuide, HermesGuide, N8nGuide } from "./BuildGuide";
 import { btn } from "./ui";
 
 // The starter kit panel: one file to paste into an AI coding assistant, plus
@@ -60,6 +60,14 @@ async function zipFiles(files: KitFile[], strip = "", into = "") {
   return zipSync(Object.fromEntries(files.map((f) => [`${into}${f.path.slice(strip.length)}`, strToU8(f.content)])));
 }
 
+export type TailoringState = "idle" | "working" | "done" | "error";
+
+/** The tools with an illustrated walkthrough, and the link that opens it. */
+const GUIDE_FOR: Partial<Record<KitTool["id"], { guide: "n8n" | "hermes" | "plugin"; label: string }>> = {
+  n8n: { guide: "n8n", label: "Walk me through n8n" },
+  hermes: { guide: "hermes", label: "Walk me through Hermes" },
+  "claude-plugin": { guide: "plugin", label: "Walk me through the plugin" },
+};
 type Tailoring =
   | { state: "idle" }
   | { state: "working" }
@@ -78,6 +86,8 @@ export function StarterKit({
   rail = false,
   writing,
   studio = false,
+  autoTailor = false,
+  onTailoring,
 }: {
   kit: Kit;
   slug: string;
@@ -86,6 +96,10 @@ export function StarterKit({
   writing?: "loading" | "ready" | "template";
   /** Set out as the result workspace's Build view instead of a panel. */
   studio?: boolean;
+  /** Tailor the n8n workflow as soon as the kit's text is settled, without waiting for the button. */
+  autoTailor?: boolean;
+  /** Where tailoring stands; "done" straight away when there's no n8n workflow to tailor. */
+  onTailoring?: (state: TailoringState) => void;
 }) {
   const [tailoring, setTailoring] = useState<Tailoring>({ state: "idle" });
   const request = useRef<AbortController | null>(null);
@@ -100,6 +114,7 @@ export function StarterKit({
     setTailoring(saved ? { state: "done", content: saved.content, model: saved.model } : { state: "idle" });
   }, [kit]); // eslint-disable-line react-hooks/exhaustive-deps -- answers change only together with kit
   useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => onTailoring?.(AI_ENABLED && generated ? tailoring.state : "done"), [tailoring.state, generated]); // eslint-disable-line react-hooks/exhaustive-deps -- reports changes only
 
   // With AI tailoring on, the generated n8n workflow is only the AI's starting
   // point and is never offered: the workflow appears, everywhere including inside
@@ -146,10 +161,15 @@ export function StarterKit({
       if ((e as Error).name !== "AbortError") setTailoring({ state: "error", message: "Couldn't reach the tailoring service." });
     }
   };
+  // Built in the background after the survey: tailor once the kit's text is settled, as the button would.
+  useEffect(() => {
+    if (autoTailor && AI_ENABLED && generated && tailoring.state === "idle" && writing && writing !== "loading") void tailor();
+  }, [autoTailor, generated, tailoring.state, writing]); // eslint-disable-line react-hooks/exhaustive-deps -- tailor reads the latest kit itself
+
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   // Which illustrated walkthrough is open, if any.
-  const [guide, setGuide] = useState<"build" | "n8n" | "hermes" | null>(null);
+  const [guide, setGuide] = useState<"build" | "n8n" | "hermes" | "plugin" | null>(null);
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState<string | null>(null);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -190,6 +210,7 @@ export function StarterKit({
 
   const n8nTool = tools.find((t): t is KitTool & { action: { kind: "copy" } } => t.id === "n8n" && t.action.kind === "copy");
   const hermesTool = tools.find((t) => t.id === "hermes");
+  const pluginTool = tools.find((t) => t.id === "claude-plugin");
 
   const runTool = async (t: KitTool) => {
     const a = t.action;
@@ -244,15 +265,15 @@ export function StarterKit({
             )}
             {(!tailored || tailoring.state === "done") && <Instructions className="mt-1.5">{t.how}</Instructions>}
             {tailored && <TailorControls tailoring={tailoring} copy={action} onTailor={tailor} waiting={writing === "loading"} />}
-            {(t.id === "n8n" || t.id === "hermes") && (
+            {GUIDE_FOR[t.id] && (
               <button
                 type="button"
                 aria-haspopup="dialog"
-                onClick={() => setGuide(t.id === "n8n" ? "n8n" : "hermes")}
+                onClick={() => setGuide(GUIDE_FOR[t.id]!.guide)}
                 className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-bold italic text-accent underline-offset-4 hover:underline"
               >
                 <PlayCircle size={14} weight="fill" aria-hidden />
-                {t.id === "n8n" ? "Walk me through n8n" : "Walk me through Hermes"}
+                {GUIDE_FOR[t.id]!.label}
               </button>
             )}
           </li>
@@ -303,6 +324,9 @@ export function StarterKit({
       />
       {hermesTool && (
         <HermesGuide open={guide === "hermes"} onClose={() => setGuide(null)} slug={slug} files={files} onDownload={() => runTool(hermesTool)} />
+      )}
+      {pluginTool && (
+        <ClaudePluginGuide open={guide === "plugin"} onClose={() => setGuide(null)} slug={slug} files={files} onDownload={() => runTool(pluginTool)} />
       )}
       {n8nTool && generated && (
         <N8nGuide
@@ -478,9 +502,9 @@ export function StarterKit({
                 </div>
                 <div className="build-item-actions">
                   {!tailored && action}
-                  {(t.id === "n8n" || t.id === "hermes") && (
-                    <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide(t.id === "n8n" ? "n8n" : "hermes")}>
-                      Walk me through {t.id === "n8n" ? "n8n" : "Hermes"}
+                  {GUIDE_FOR[t.id] && (
+                    <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide(GUIDE_FOR[t.id]!.guide)}>
+                      {GUIDE_FOR[t.id]!.label}
                       <PlayCircle size={16} aria-hidden />
                     </button>
                   )}

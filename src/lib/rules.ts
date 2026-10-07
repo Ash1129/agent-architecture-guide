@@ -435,7 +435,7 @@ export const RULES: Rule[] = [
         agentic(a)
           ? "Runs the agent. You can point it at whichever model provider is available and approved for you."
           : "Where you do the task, with any model provider you're allowed to use.",
-        why(`You said ${said(a, "location")}. Hermes works much like Claude Cowork but isn't restricted to Anthropic's models, which avoids the ecosystem trap.`),
+        why(`You said ${said(a, "location")}. Hermes works much like Claude running a task as an agent, but isn't restricted to Anthropic's models, which avoids the ecosystem trap.`),
         true,
       );
     },
@@ -480,7 +480,7 @@ export const RULES: Rule[] = [
     id: "TL7",
     group: "Tools",
     if: "An agent is needed, started by you or on a schedule",
-    then: "Use Claude Cowork.",
+    then: "Use Claude, running the task as an agent.",
     basis: src("enmgt", "notes", "anthropicDocs"),
     kb: ["L04"],
     when: (a, d) => agentic(a) && !core(d),
@@ -493,8 +493,8 @@ export const RULES: Rule[] = [
           : "Runs the agent: you hand it the goal and it works through the steps on its own.",
         why(
           a.trigger === "schedule"
-            ? `You said ${said(a, "trigger")}. Cowork's scheduled tasks run in Anthropic's cloud, so they keep going while your computer is off.`
-            : "Cowork can act repeatedly and reason between steps, which makes it an agent, with no setup beyond a paid Claude plan. It runs in the desktop app, on the web and on mobile.",
+            ? `You said ${said(a, "trigger")}. Claude's scheduled tasks run in Anthropic's cloud, so they keep going while your computer is off.`
+            : "Claude can act repeatedly and reason between steps, which makes it an agent, with no setup beyond a paid Claude plan. Chat and agent work are one app now, in the desktop app, on the web and on mobile.",
         ),
         true,
       );
@@ -534,7 +534,7 @@ export const RULES: Rule[] = [
   {
     id: "TL10",
     group: "Tools",
-    if: "AI is used in Claude, Cowork or Hermes, and there's a playbook to follow or software to use",
+    if: "AI is used in Claude or Hermes, and there's a playbook to follow or software to use",
     then: "Write a Skill.",
     basis: src("enmgt", "notes"),
     kb: ["T05"],
@@ -558,7 +558,7 @@ export const RULES: Rule[] = [
   {
     id: "TL11",
     group: "Tools",
-    if: "The AI itself decides which tool to use (an agent, or Claude, Cowork or Hermes) and it needs your software",
+    if: "The AI itself decides which tool to use (an agent, or Claude or Hermes) and it needs your software",
     then: "Connect your software through MCP connectors.",
     basis: src("enmgt", "notes"),
     kb: ["T03", "T04"],
@@ -619,7 +619,7 @@ export const RULES: Rule[] = [
   {
     id: "TL15",
     group: "Tools",
-    if: "It should remember past work, and runs in Claude or Cowork",
+    if: "It should remember past work, and runs in Claude",
     then: "Keep shared context in a Claude Project.",
     basis: src("notes", "anthropicDocs"),
     kb: ["L04"],
@@ -853,7 +853,7 @@ export const RULES: Rule[] = [
     kb: ["D02"],
     when: (a) => ai(a) && risk(a, "personal"),
     apply: (d, _a, why) => {
-      d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the chat and Cowork apps, and which rules out Claude Fable 5.1.", why: why(`You said ${saidOption("risks", "personal")}.`) });
+      d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the Claude app, and which rules out Claude Fable 5.1.", why: why(`You said ${saidOption("risks", "personal")}.`) });
     },
   },
   {
@@ -1144,12 +1144,12 @@ export const RULES: Rule[] = [
   {
     id: "G7",
     group: "Gotchas",
-    if: "Claude Cowork is recommended",
-    then: "Warn not to confuse Cowork with the regular chat.",
+    if: "Claude is recommended to run the task as an agent",
+    then: "Warn that it only works on its own once the task is set up to run.",
     basis: src("notes", "enmgt", "anthropicDocs"),
     kb: ["L04"],
     when: (_a, d) => core(d) === "cowork",
-    apply: (d) => gotcha(d, { id: "G7", priority: 3, title: "Cowork isn't the regular chat", body: "In the regular Claude chat, nothing happens until you type a request. Scheduled and unattended work is set up in Cowork, where scheduled tasks run in the cloud even when your computer is off. Tasks that need files or apps on your computer still need the desktop app open." }, src("notes", "enmgt", "anthropicDocs")),
+    apply: (d) => gotcha(d, { id: "G7", priority: 3, title: "It only runs on its own once it's set up to", body: "Chat and agent work are one Claude app now, and nothing happens until something starts it. For unattended work, ask Claude to schedule the task: scheduled tasks run in the cloud even when your computer is off. Tasks that need files or apps on your computer still need the desktop app open." }, src("notes", "enmgt", "anthropicDocs")),
   },
   {
     id: "G8",
@@ -1204,7 +1204,7 @@ export const RULES: Rule[] = [
   {
     id: "G13",
     group: "Gotchas",
-    if: "It should remember past work but runs in Claude or Cowork",
+    if: "It should remember past work but runs in Claude",
     then: "Warn not to rely on Claude's general memory for this task's context.",
     basis: src("notes", "anthropicDocs"),
     kb: ["L04", "T05"],
@@ -1320,7 +1320,7 @@ export const RULES: Rule[] = [
     when: () => true,
     apply: (d, a) => {
       const home = d.tools.find((t) => t.core)?.tool;
-      const where = home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" ? "Claude Cowork" : home === "claude" ? "Claude" : "n8n";
+      const where = home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" || home === "claude" ? "Claude" : "n8n";
       const step =
         a.shape === "rules"
           ? `Build it in ${where} with a manual start button, and run it alongside the current process for two weeks before switching over.`

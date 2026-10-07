@@ -1,6 +1,6 @@
 # Agent Architecture Guide
 
-A short, plain-English guide that takes an experienced businessperson from one business task to a sensible starting AI architecture: whether an agent is needed at all, the tools (Skills, MCP, Claude Cowork, Hermes, n8n, Airflow or a hybrid), model capabilities, a level of autonomy, a topology, a simpler starting option, gotchas and a first step.
+A short, plain-English guide that takes an experienced businessperson from one business task to a sensible starting AI architecture: whether an agent is needed at all, the tools (Skills, MCP, Claude as an agent, Hermes, n8n, Airflow or a hybrid), model capabilities, a level of autonomy, a topology, a simpler starting option, gotchas and a first step.
 
 Built for AI Assignment 4 (ENMGT 5405, Cornell University). Every recommendation comes from fixed, published rules based on the assignment's research. No AI model generates results.
 

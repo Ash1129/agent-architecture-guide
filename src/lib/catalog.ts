@@ -46,18 +46,19 @@ export const TOOLS: Record<ToolId, Tool> = {
     product: true,
     link: "https://airflow.apache.org",
   },
+  // Formerly Claude Cowork: chat and agent work are now one Claude app. The id stays, so saved results and links still work.
   cowork: {
     id: "cowork",
-    name: "Claude Cowork",
+    name: "Claude, as an agent",
     plain:
-      "Claude working as an agent, in the desktop app, on the web or on mobile. It can take a multi-step task, work through it on its own, and run scheduled tasks in the cloud while your computer is off.",
+      "The Claude app working as an agent, in the desktop app, on the web or on mobile. It can take a multi-step task, work through it on its own, and run scheduled tasks in the cloud while your computer is off.",
     product: true,
     link: "https://claude.com",
   },
   claude: {
     id: "claude",
-    name: "Claude (chat or desktop app)",
-    plain: "The everyday Claude app. You start each task with a request, and it works on that request.",
+    name: "Claude",
+    plain: "The everyday Claude app, used on request. You start each task, and it works on that request.",
     product: true,
     link: "https://claude.ai",
   },

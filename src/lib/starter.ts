@@ -90,13 +90,13 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
     });
   }
 
-  // Claude (chat or Cowork): an installable plugin with the Skill, agents and connectors.
+  // Claude: an installable plugin with the Skill, agents and connectors.
   if (core === "claude" || core === "cowork") {
     for (const f of claudePlugin(r, bp, a, task, slug, prompt, text)) files.push(f);
     tools.push({
       id: "claude-plugin",
       name: "Claude plugin",
-      how: `Drag ${slug}.plugin into a Claude Cowork chat and press Install. In Claude Code, copy its skills folder into .claude/skills.`,
+      how: `Drag ${slug}.plugin into a Claude chat and press Install. In Claude Code, copy its skills folder into .claude/skills.`,
       action: { kind: "zip", label: "Download .plugin", prefix: "claude-plugin/", filename: `${slug}.plugin` },
     });
   }
@@ -285,10 +285,10 @@ function stepsForCore(r: Recommendation, a: Answers): string[] {
   } else if (core === "airflow") {
     out.push("Set up Airflow (a managed service or Docker), add the DAG file, and point the sensors at the real upstream jobs.");
   } else if (core === "cowork" || core === "claude") {
-    out.push("Package the `claude-plugin/` folder as a `.plugin` zip (or use the one downloaded from the guide) and install it in Claude Cowork; for Claude Code, copy its `skills` folder into `.claude/skills`.");
+    out.push("Package the `claude-plugin/` folder as a `.plugin` zip (or use the one downloaded from the guide) and install it in Claude by dragging it into a chat; for Claude Code, copy its `skills` folder into `.claude/skills`.");
     out.push("Fill in the House rules section of the Skill with the owner.");
     if (has(r, "mcp")) out.push("Replace the MCP server address in the plugin's `.mcp.json` with the owner's connector, read-only first.");
-    if (a.trigger === "schedule") out.push("Set up the schedule in Cowork by asking it to run the skill at the agreed time.");
+    if (a.trigger === "schedule") out.push("Set up the schedule in Claude by asking it to run the skill at the agreed time.");
     if (has(r, "project")) out.push("Create a Claude Project for this task and add the reference documents to it.");
   } else if (core === "hermes") {
     out.push("Install Hermes Agent, then run `hermes/setup.sh` and merge `hermes/config.yaml` into `~/.hermes/config.yaml`.");
@@ -527,14 +527,14 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
       "",
       "## Install",
       "",
-      `- **Claude Cowork:** drag \`${slug}.plugin\` into a chat and press Install.`,
+      `- **Claude:** drag \`${slug}.plugin\` into a chat and press Install.`,
       "- **Claude Code:** copy the `skills` folder into your project's `.claude/skills` folder" + (has(r, "mcp") ? ", and `.mcp.json` into the project root." : "."),
       "",
       "## Before first use",
       "",
       "- Open `skills/" + slug + "/SKILL.md` and fill in the House rules section.",
       ...(has(r, "mcp") ? ["- Replace the MCP server address in `.mcp.json` with your system's connector, read-only first."] : []),
-      ...(a.trigger === "schedule" ? [`- To run it on a schedule, ask Cowork: "Every weekday at 7am, use the ${slug} skill."`] : []),
+      ...(a.trigger === "schedule" ? [`- To run it on a schedule, ask Claude: "Every weekday at 7am, use the ${slug} skill."`] : []),
       ...(has(r, "project")
         ? ["", "## Claude Project instructions", "", "Create a Claude Project for this task, add your reference documents, and paste this into its instructions:", "", "> " + prompt.split("\n").filter((l) => l.startsWith("- ")).join(" ").slice(0, 900)]
         : []),

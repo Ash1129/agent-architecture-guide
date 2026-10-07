@@ -2,6 +2,7 @@ import {
   ArrowRight,
   ChatCircle,
   Check,
+  CircleNotch,
   Clock,
   FileText,
   FlagCheckered,
@@ -171,7 +172,7 @@ function n8nScene(kit: Kit): Scene {
   };
 }
 
-// ---- Claude plugin: the .plugin drops into a Cowork chat and installs.
+// ---- Claude plugin: the .plugin drops into a Claude chat and installs.
 
 function pluginScene(kit: Kit, tool: KitTool): Scene {
   const parts = kit.files
@@ -190,8 +191,8 @@ function pluginScene(kit: Kit, tool: KitTool): Scene {
   return {
     id: "claude-plugin",
     icon: ChatCircle,
-    title: "Claude Cowork",
-    caption: "Drop the plugin into a Claude Cowork chat and press Install.",
+    title: "Claude",
+    caption: "Drop the plugin into a Claude chat and press Install.",
     length: 1.9 + rows.length * 0.2 + 0.3,
     body: (
       <span className="build-invite-chat">
@@ -343,7 +344,7 @@ function scenesFor(kit: Kit): Scene[] {
   return scenes;
 }
 
-export function BuildInvite({ kit, href, onOpen }: { kit: Kit; href: string; onOpen: () => void }) {
+export function BuildInvite({ kit, href, onOpen, building = false }: { kit: Kit; href: string; onOpen: () => void; building?: boolean }) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLAnchorElement>(null);
   const visible = useInView(ref, { amount: 0.4 });
@@ -369,6 +370,8 @@ export function BuildInvite({ kit, href, onOpen }: { kit: Kit; href: string; onO
   }, [reduce, started, visible, scene, scenes.length, round]);
 
   const open = (e: MouseEvent<HTMLAnchorElement>) => {
+    // While the tools are built the Build view isn't open yet.
+    if (building) return e.preventDefault();
     // A plain click switches views in place; a modified click opens the link as usual.
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
@@ -383,8 +386,13 @@ export function BuildInvite({ kit, href, onOpen }: { kit: Kit; href: string; onO
       ref={ref}
       href={href}
       onClick={open}
-      className={`build-invite${reduce ? " is-still" : ""}`}
-      aria-label={`Build it: open your starter kit (${names.join(", ")}), ${kit.files.length} files ready for an AI coding assistant`}
+      className={`build-invite${reduce ? " is-still" : ""}${building ? " is-building" : ""}`}
+      aria-disabled={building || undefined}
+      aria-label={
+        building
+          ? "Your starter kit is being built. The Build view opens once it's ready."
+          : `Build it: open your starter kit (${names.join(", ")}), ${kit.files.length} files ready for an AI coding assistant`
+      }
     >
       <span aria-hidden className="build-invite-window">
         <span className="build-invite-bar">
@@ -434,8 +442,17 @@ export function BuildInvite({ kit, href, onOpen }: { kit: Kit; href: string; onO
           </m.span>
         </AnimatePresence>
         <span className="build-invite-go">
-          Start building
-          <ArrowRight size={16} aria-hidden />
+          {building ? (
+            <>
+              <CircleNotch size={16} aria-hidden className="motion-safe:animate-spin" />
+              Building your tools
+            </>
+          ) : (
+            <>
+              Start building
+              <ArrowRight size={16} aria-hidden />
+            </>
+          )}
         </span>
       </span>
     </a>

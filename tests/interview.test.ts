@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import { CACHE_LIMIT, fileCache, memoryCache } from "../server/cache";
 import { INSTRUCTIONS, PLAN_VERSION, REUSE_SIMILARITY, handleInterview, questionBank } from "../server/interview";
 import { type Complete, handleTailor } from "../server/tailor";
-import { ADAPTABLE, MAX_DETAILS, adaptQuestion, normaliseTask, validatePlan } from "../src/lib/interview";
-import { type Answers, QUESTION_BY_ID, effectiveAnswers } from "../src/lib/questions";
+import { ADAPTABLE, MAX_DESCRIPTION, MAX_DETAILS, adaptQuestion, fillFromPlan, normaliseTask, taskTitle, validatePlan } from "../src/lib/interview";
+import { type Answers, QUESTION_BY_ID, activeQuestions, effectiveAnswers, firstUnanswered } from "../src/lib/questions";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 
 /** A plan the model might return: every question reworded, with suggestions. */
@@ -102,6 +102,48 @@ describe("plan validation (the rules layer for the AI's questions)", () => {
 
   it("treats case, spacing and punctuation as the same task", () => {
     expect(normaliseTask("  Answer routine customer e-mails! ")).toBe(normaliseTask("answer routine customer e mails"));
+  });
+});
+
+describe("a problem described on the start page", () => {
+  const withSuggestions = (s: Record<string, string | string[] | null>) =>
+    validatePlan({ ...goodPlan(), questions: goodPlan().questions.map((q) => ({ ...q, suggested: s[q.id] ?? null, reason: s[q.id] ? "From the description." : undefined })) });
+
+  it("answers what the description settles and leaves the rest to ask", () => {
+    const plan = withSuggestions({ shape: "varies", trigger: "event", risks: ["visible"] });
+    const { answers, filled } = fillFromPlan("Answer routine customer emails", plan);
+    expect(answers).toMatchObject({ task: "Answer routine customer emails", shape: "varies", trigger: "event", risks: ["visible"] });
+    expect(filled.sort()).toEqual(["risks", "shape", "trigger"]);
+    // Everything not settled is still asked, in the guide's order.
+    expect(firstUnanswered(answers)?.id).toBe(activeQuestions(answers).find((q) => q.id !== "task" && !(q.id in answers))?.id);
+  });
+
+  it("never keeps an answer to a question that doesn't apply", () => {
+    // "kinds" is only asked when the work needs judgement; with fixed rules it doesn't apply.
+    const { answers, filled } = fillFromPlan("Send overdue invoice reminders", withSuggestions({ shape: "rules", kinds: "yes" }));
+    expect(answers.kinds).toBeUndefined();
+    expect(filled).toEqual(["shape"]);
+  });
+
+  it("fills nothing when the description is too vague to suggest anything", () => {
+    const { answers, filled } = fillFromPlan("Help with my business", withSuggestions({}));
+    expect(answers).toEqual({ task: "Help with my business" });
+    expect(filled).toEqual([]);
+  });
+
+  it("titles a long description with the AI's summary, and a short one with itself", () => {
+    const long = "We get about two hundred emails a day about orders, refunds and delivery dates. ".repeat(4);
+    expect(long.length).toBeLessThanOrEqual(MAX_DESCRIPTION);
+    expect(taskTitle("Answer routine customer emails", validatePlan(goodPlan()))).toBe("Answer routine customer emails");
+    expect(taskTitle(long, validatePlan(goodPlan()))).toBe("Reply to routine customer emails.");
+    expect(taskTitle(long).length).toBeLessThanOrEqual(200);
+  });
+
+  it("reads the whole description, not just its first 200 characters", async () => {
+    const f = fakeModel(JSON.stringify(goodPlan()));
+    const description = `${"We answer customer emails about orders. ".repeat(6)}Every reply is checked by a person before it goes out.`;
+    await handleInterview({ task: description }, env, { complete: f.complete });
+    expect(f.calls[0]).toContain("checked by a person before it goes out");
   });
 });
 

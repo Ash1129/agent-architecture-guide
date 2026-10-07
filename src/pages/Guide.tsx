@@ -1,10 +1,10 @@
-import { ArrowLeft, ArrowRight, CaretDown, Check, CircleNotch, Sparkle } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CaretDown, Check, CircleNotch, PencilSimple, Sparkle } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { PlanState } from "../App";
 import { TaskInput } from "../components/TaskInput";
 import { AI_ENABLED } from "../lib/features";
-import { type Detail, type DetailQuestion, adaptQuestion } from "../lib/interview";
+import { type Detail, type DetailQuestion, type InterviewPlan, adaptQuestion } from "../lib/interview";
 import {
   type Answers,
   type Question,
@@ -21,13 +21,17 @@ type Props = {
   direction: 1 | -1;
   /** The AI-adapted questions for this task, when AI is on. */
   plan?: PlanState;
+  /** A problem described on the start page, while the AI reads it. */
+  reading?: string;
+  /** The questions the AI answered from that description; only the others are asked. */
+  described?: QuestionId[];
   onUseStandard: () => void;
   onAnswer: (next: Answers, from: QuestionId) => void;
   onBack: (from: QuestionId) => void;
   onCancelEdit: () => void;
 };
 
-export function Guide({ qid, answers, editing, direction, plan, onUseStandard, onAnswer, onBack, onCancelEdit }: Props) {
+export function Guide({ qid, answers, editing, direction, plan, reading, described, onUseStandard, onAnswer, onBack, onCancelEdit }: Props) {
   const reduce = useReducedMotion();
   const ready = plan?.status === "ready" ? plan.response : undefined;
   const q = adaptQuestion(QUESTION_BY_ID[qid], ready?.plan);
@@ -35,13 +39,17 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
   const adapting = AI_ENABLED && plan?.status === "loading" && qid !== "task";
   // Until the second answer says whether AI is involved, assume the longer
   // path, so the count never jumps up partway through.
-  const active = activeQuestions(answers.shape ? answers : { ...answers, shape: "judgement" });
+  const all = activeQuestions(answers.shape ? answers : { ...answers, shape: "judgement" });
+  // After a description, count only the questions it left open, so the count reads "1 of 3", not "6 of 12".
+  const open = described ? all.filter((x) => x.id !== "task" && !described.includes(x.id)) : all;
+  const active = open.some((x) => x.id === qid) ? open : all;
   const index = Math.max(0, active.findIndex((x) => x.id === qid));
   const total = active.length;
 
   return (
     <main id="main" className="survey-main">
-      <div className="mb-10">
+      {/* While a description is being read nothing is being asked yet, so there's no count to show. */}
+      <div className={`mb-10${adapting && reading ? " hidden" : ""}`}>
         <div className="mb-3 flex items-center justify-between gap-4">
           <p className="section-kicker studio-caption !mb-0" aria-live="polite">
             <span className="status-dot" aria-hidden />
@@ -49,7 +57,7 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
           </p>
           {editing ? (
             <button type="button" onClick={onCancelEdit} className="studio-quiet">
-              Back to your result
+              {described ? "Back to your answers" : "Back to your result"}
             </button>
           ) : (
             <p className="text-[13px] text-muted">About {Math.max(1, Math.ceil(((total - index) * 12) / 60))} min left</p>
@@ -72,7 +80,7 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
         </div>
       </div>
 
-      {AI_ENABLED && qid !== "task" && <PlanNote plan={plan} />}
+      {AI_ENABLED && qid !== "task" && <PlanNote plan={plan} described={described?.length} />}
       <AnimatePresence mode="wait" initial={false} custom={direction}>
         <m.div
           key={adapting ? "adapting" : `${qid}:${ready ? "ai" : "std"}`}
@@ -83,7 +91,7 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
           {adapting ? (
-            <Adapting task={plan!.task} onUseStandard={onUseStandard} />
+            <Adapting task={plan!.task} reading={reading} onUseStandard={onUseStandard} />
           ) : (
             <QuestionView
               q={q}
@@ -100,18 +108,30 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
   );
 }
 
-function Adapting({ task, onUseStandard }: { task: string; onUseStandard: () => void }) {
+function Adapting({ task, reading, onUseStandard }: { task: string; reading?: string; onUseStandard: () => void }) {
   const reduce = useReducedMotion();
   return (
     <div role="status" aria-live="polite">
       <p className="flex items-center gap-2 text-[15px] font-medium text-accent">
         <CircleNotch size={18} aria-hidden className={reduce ? "" : "animate-spin"} />
-        Adapting the questions to your task
+        {reading ? "Reading your description" : "Adapting the questions to your task"}
       </p>
-      <h1 className="survey-title mt-4">{task}</h1>
-      <p className="survey-help">
-        The AI is rewording the questions in your terms and suggesting likely answers. You can change every one of them.
-      </p>
+      {reading ? (
+        <>
+          <h1 className="survey-title mt-4">Your problem, in your words.</h1>
+          <blockquote className="survey-quote">{reading}</blockquote>
+          <p className="survey-help">
+            The AI is answering the questions your description already settles. You'll only be asked the rest, then you can check every answer.
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className="survey-title mt-4">{task}</h1>
+          <p className="survey-help">
+            The AI is rewording the questions in your terms and suggesting likely answers. You can change every one of them.
+          </p>
+        </>
+      )}
       <button type="button" onClick={onUseStandard} className="studio-quiet !mt-8">
         Use the standard questions instead
       </button>
@@ -120,11 +140,13 @@ function Adapting({ task, onUseStandard }: { task: string; onUseStandard: () => 
 }
 
 /** One quiet line saying where the questions came from. */
-function PlanNote({ plan }: { plan?: PlanState }) {
+function PlanNote({ plan, described }: { plan?: PlanState; described?: number }) {
   if (!plan || plan.status === "loading") return null;
   const r = plan.response;
   const text =
-    plan.status === "standard"
+    described
+      ? `Your description answered ${described} question${described === 1 ? "" : "s"}. These are the ones it left open; you'll see every answer before your result.`
+      : plan.status === "standard"
       ? plan.note
         ? `Standard questions. ${plan.note}`
         : null
@@ -475,6 +497,104 @@ export function Details({
           </button>
         </div>
       </form>
+    </main>
+  );
+}
+
+/**
+ * After a problem was described on the start page: every answer at a glance,
+ * the ones read from the description marked (with the words that settled
+ * them), each one changeable, before the result.
+ */
+export function Review({
+  answers,
+  plan,
+  described,
+  onChange,
+  onBack,
+  onConfirm,
+}: {
+  answers: Answers;
+  plan?: InterviewPlan;
+  described: QuestionId[];
+  onChange: (q: QuestionId) => void;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus({ preventScroll: true }), []);
+  const rows = activeQuestions(answers).filter((q) => q.id !== "task");
+  const fromWords = rows.filter((q) => described.includes(q.id)).length;
+
+  return (
+    <main id="main" className="survey-main">
+      <p className="section-kicker studio-caption">
+        <span className="status-dot" aria-hidden />
+        Here's what we understood
+      </p>
+      <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
+        Check your answers<span className="title-period">.</span>
+      </h1>
+      <p className="survey-help">
+        {answers.task}
+        {fromWords > 0 && (
+          <>
+            {" "}
+            <span className="whitespace-nowrap">
+              {fromWords} of {rows.length} answered from your description.
+            </span>
+          </>
+        )}
+      </p>
+
+      <ul className="review-list" aria-label="Your answers">
+        {rows.map((bank) => {
+          const q = adaptQuestion(bank, plan);
+          const v = answers[q.id];
+          const values = Array.isArray(v) ? v : typeof v === "string" ? [v] : [];
+          const labels = values.map((x) => q.options?.find((o) => o.value === x)?.label ?? x);
+          const read = described.includes(q.id);
+          return (
+            <li key={q.id} className="review-row">
+              <div className="min-w-0">
+                <p className="review-question">{q.title}</p>
+                <p className="review-answer">{labels.join(", ")}</p>
+                {read && (
+                  <p className="review-source">
+                    <Sparkle size={13} weight="fill" aria-hidden />
+                    <span>
+                      From your description{q.reason ? <>: {q.reason}</> : "."}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <button type="button" className="studio-quiet shrink-0" onClick={() => onChange(q.id)} aria-label={`Change: ${q.title}`}>
+                <PencilSimple size={15} aria-hidden />
+                Change
+              </button>
+            </li>
+          );
+        })}
+        {(answers.details ?? []).map((d) => (
+          <li key={d.q} className="review-row">
+            <div className="min-w-0">
+              <p className="review-question">{d.q}</p>
+              <p className="review-answer">{d.a}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onClick={onBack} className="studio-quiet">
+          <ArrowLeft size={16} aria-hidden />
+          Back
+        </button>
+        <button type="button" className="start-build" onClick={onConfirm}>
+          See your result
+          <ArrowRight size={17} aria-hidden />
+        </button>
+      </div>
     </main>
   );
 }

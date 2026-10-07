@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Footer, Nav } from "./components/Shell";
 import { BrandIntro, shouldPlayIntro } from "./components/Brand";
+import { BuildOverlay } from "./components/BuildOverlay";
 import { SurveyFrame } from "./components/StudioShell";
-import { Details, Guide } from "./pages/Guide";
+import { Details, Guide, Review } from "./pages/Guide";
 import { History } from "./pages/History";
 import { HowItWorks } from "./pages/HowItWorks";
 import { Landing } from "./pages/Landing";
@@ -17,10 +18,10 @@ import {
 } from "./lib/questions";
 import { navigate, replaceHash, useRoute, type Route } from "./lib/router";
 import { decodeAnswers, resultCode } from "./lib/share";
-import { loadAnswers, saveAnswers } from "./lib/storage";
+import { loadAnswers, loadDescribed, saveAnswers, saveDescribed } from "./lib/storage";
 import { type HistoryEntry, findByCode, loadHistory, loadSessionId, newSessionId, saveSessionId, upsertHistory } from "./lib/history";
 import { AI_ENABLED } from "./lib/features";
-import type { Detail, InterviewResponse } from "./lib/interview";
+import { type Detail, type InterviewResponse, MAX_TASK_TITLE, fillFromPlan, taskTitle } from "./lib/interview";
 import { fetchPlan, loadPlan, savePlan } from "./lib/plans";
 
 /** The adapted questions for the current task: being made, ready, or not used. */
@@ -30,6 +31,7 @@ const TITLES: Record<Route["name"], string> = {
   home: "Agent Architecture Guide",
   guide: "Guide | Agent Architecture Guide",
   details: "Guide | Agent Architecture Guide",
+  review: "Your answers | Agent Architecture Guide",
   result: "Your result | Agent Architecture Guide",
   how: "How it decides | Agent Architecture Guide",
   history: "History | Agent Architecture Guide",
@@ -73,10 +75,20 @@ export default function App() {
 
   useEffect(() => saveAnswers(answers), [answers]);
 
+  // After a problem is described on the start page: the questions the AI
+  // answered from the description (null on every other path), and the
+  // description while it's being read.
+  const [described, setDescribedState] = useState<QuestionId[] | null>(() => loadDescribed() as QuestionId[] | null);
+  const setDescribed = (ids: QuestionId[] | null) => {
+    setDescribedState(ids);
+    saveDescribed(ids);
+  };
+  const [reading, setReading] = useState<string | null>(null);
+
   // While working through the guide, the questions are adapted to the task by
   // the local AI server: once per task, then kept in the browser.
   const [plan, setPlan] = useState<PlanState | undefined>(undefined);
-  const inGuide = route.name === "guide" || route.name === "details";
+  const inGuide = route.name === "guide" || route.name === "details" || route.name === "review";
   useEffect(() => {
     const task = answers.task?.trim();
     if (!AI_ENABLED || !task || !inGuide) return;
@@ -99,6 +111,34 @@ export default function App() {
     return () => ctl.abort();
   }, [answers.task, inGuide]); // eslint-disable-line react-hooks/exhaustive-deps -- plan is read only to skip a repeat fetch
   const currentPlan = plan && plan.task === answers.task?.trim() ? plan : undefined;
+
+  // Read a described problem: answer what it settles, then ask only the rest
+  // (and, after any task-specific questions, show the answers for review).
+  useEffect(() => {
+    if (!reading) return;
+    const ctl = new AbortController();
+    fetchPlan(reading, ctl.signal)
+      .then((response) => {
+        const task = taskTitle(reading, response.plan);
+        savePlan(task, response);
+        const { answers: filled, filled: ids } = fillFromPlan(task, response.plan);
+        setPlan({ task, status: "ready", response });
+        setAnswers(filled);
+        setDescribed(ids);
+        setReading(null);
+        setDirection(1);
+        const next = firstUnanswered(filled);
+        if (next) navigate({ name: "guide", q: next.id });
+        else navigate(response.plan.details.length ? { name: "details" } : { name: "review" });
+      })
+      .catch((e: Error) => {
+        if (ctl.signal.aborted) return;
+        // It couldn't be read: carry on with the questions, the description as the task.
+        setPlan({ task: taskTitle(reading), status: "standard", note: e.message });
+        setReading(null);
+      });
+    return () => ctl.abort();
+  }, [reading]); // eslint-disable-line react-hooks/exhaustive-deps -- runs once per description
   // The start page and a finished result have their own header and footer, so the app's step aside.
   // The full-screen logo intro plays on a visitor's first open only, and ends by revealing the start page's heading.
   const [intro, setIntro] = useState<"playing" | "revealing" | "done">(() => (shouldPlayIntro() ? "playing" : "done"));
@@ -133,8 +173,12 @@ export default function App() {
     if (route.name === "result" && isComplete(answers)) replaceHash({ name: "result", code: resultCode(answers), view: route.view });
   }, [route.name, answers]);
 
-  // Never show a question out of order or one that no longer applies.
+  // Never show a question out of order or one that no longer applies, nor the review before every question is answered.
   useEffect(() => {
+    if (route.name === "review" && !isComplete(answers)) {
+      navigate({ name: "guide", q: (firstUnanswered(answers) ?? activeQuestions(answers)[0]).id });
+      return;
+    }
     if (route.name !== "guide") return;
     const active = activeQuestions(answers);
     const idx = active.findIndex((q) => q.id === route.q);
@@ -160,47 +204,69 @@ export default function App() {
     return { label: "Start the guide", to: { name: "guide", q: "task" } };
   }, [answers]);
 
+  // Finishing the survey hands over to the result with a few lines on screen,
+  // while the result, open underneath, starts building the tools with AI.
+  const [handover, setHandover] = useState(false);
+  const endHandover = useCallback(() => setHandover(false), []);
+  const toResult = () => {
+    if (AI_ENABLED) setHandover(true);
+    navigate({ name: "result" });
+  };
+  // A described problem ends on the review of its answers; the survey goes straight to the result.
+  const finish = () => (described ? navigate({ name: "review" }) : toResult());
+  // After a description, only the questions it didn't settle are asked; these are the ones to step back through.
+  const asked = (a: Answers) => activeQuestions(a).filter((q) => q.id !== "task" && !(described ?? []).includes(q.id));
+
   const handleAnswer = (next: Answers, from: QuestionId) => {
     setAnswers(next);
     setInvalidLink(false);
     setDirection(1);
+    // An answer given here is the owner's own, not one read from their description.
+    if (described?.includes(from)) setDescribed(described.filter((id) => id !== from));
     if (editing && isComplete(next)) {
       setEditing(false);
-      navigate({ name: "result" });
+      finish();
       return;
     }
     const active = activeQuestions(next);
-    const following = editing ? firstUnanswered(next) : active[active.findIndex((q) => q.id === from) + 1];
+    const following = editing || described ? firstUnanswered(next) : active[active.findIndex((q) => q.id === from) + 1];
     const target = following ?? firstUnanswered(next);
     if (target) navigate({ name: "guide", q: target.id });
     else if (!editing && planDetails.length && next.details === undefined) navigate({ name: "details" });
     else {
       setEditing(false);
-      navigate({ name: "result" });
+      finish();
     }
   };
 
   const handleDetails = (details: Detail[]) => {
     setAnswers((a) => ({ ...a, details }));
     setDirection(1);
-    navigate({ name: "result" });
+    finish();
   };
 
   const handleBack = (from: QuestionId) => {
     setDirection(-1);
     if (editing) {
       setEditing(false);
-      navigate({ name: "result" });
+      navigate(described ? { name: "review" } : { name: "result" });
       return;
     }
     const active = activeQuestions(answers);
     const idx = active.findIndex((q) => q.id === from);
+    if (described) {
+      const prev = asked(answers).filter((q) => active.indexOf(q) < idx).pop();
+      navigate(prev ? { name: "guide", q: prev.id } : { name: "home" });
+      return;
+    }
     if (idx <= 0) navigate({ name: "home" });
     else navigate({ name: "guide", q: active[idx - 1].id });
   };
 
   const startOver = () => {
     setSession(newSessionId());
+    setDescribed(null);
+    setReading(null);
     setAnswers({});
     setEditing(false);
     setInvalidLink(false);
@@ -230,19 +296,28 @@ export default function App() {
         {route.name === "home" && (
           <Landing
             introPlaying={intro === "playing"}
-            onTask={(task) => {
-              // A problem typed on the start page begins a new entry, unless it's the unfinished one already under way.
-              if (isComplete(answers) || answers.task?.trim() !== task) {
-                setSession(newSessionId());
-                setAnswers({ task });
-              }
+            onTask={(text) => {
+              // A described problem begins a new entry. With AI it's read first
+              // (see the reading effect); without, it becomes the first answer.
+              setSession(newSessionId());
               setEditing(false);
+              setInvalidLink(false);
               setDirection(1);
+              setDescribed(null);
+              if (AI_ENABLED) {
+                const task = taskTitle(text);
+                setAnswers({ task });
+                setPlan({ task, status: "loading" });
+                setReading(text);
+              } else {
+                setAnswers({ task: text.slice(0, MAX_TASK_TITLE) });
+              }
               navigate({ name: "guide", q: "shape" });
             }}
             onSurvey={startOver}
             onExample={() => {
               setSession(findByCode(resultCode(EXAMPLE))?.id ?? newSessionId());
+              setDescribed(null);
               setAnswers(EXAMPLE);
               setEditing(false);
               setInvalidLink(false);
@@ -258,12 +333,17 @@ export default function App() {
               editing={editing}
               direction={direction}
               plan={currentPlan}
-              onUseStandard={() => answers.task && setPlan({ task: answers.task.trim(), status: "standard" })}
+              reading={reading ?? undefined}
+              described={described ?? undefined}
+              onUseStandard={() => {
+                setReading(null);
+                if (answers.task) setPlan({ task: answers.task.trim(), status: "standard" });
+              }}
               onAnswer={handleAnswer}
               onBack={handleBack}
               onCancelEdit={() => {
                 setEditing(false);
-                navigate({ name: "result" });
+                navigate(described ? { name: "review" } : { name: "result" });
               }}
             />
           </SurveyFrame>
@@ -279,8 +359,33 @@ export default function App() {
               onSubmit={handleDetails}
               onBack={() => {
                 setDirection(-1);
-                const active = activeQuestions(answers);
-                navigate({ name: "guide", q: active[active.length - 1].id });
+                const last = described ? asked(answers).pop() : activeQuestions(answers).pop();
+                navigate(last ? { name: "guide", q: last.id } : { name: "home" });
+              }}
+            />
+          </SurveyFrame>
+        )}
+        {AI_ENABLED && route.name === "review" && (
+          <SurveyFrame>
+            <Review
+              answers={answers}
+              plan={currentPlan?.response?.plan}
+              described={described ?? []}
+              onChange={(q) => {
+                setEditing(true);
+                setDirection(1);
+                navigate({ name: "guide", q });
+              }}
+              onBack={() => {
+                setDirection(-1);
+                if (planDetails.length) return navigate({ name: "details" });
+                const last = asked(answers).pop();
+                navigate(last ? { name: "guide", q: last.id } : { name: "home" });
+              }}
+              onConfirm={() => {
+                setDescribed(null);
+                setDirection(1);
+                toResult();
               }}
             />
           </SurveyFrame>
@@ -311,6 +416,7 @@ export default function App() {
               const decoded = decodeAnswers(entry.code);
               if (!decoded) return;
               setSession(entry.id);
+              setDescribed(null);
               setAnswers(decoded);
               setEditing(false);
               setInvalidLink(false);
@@ -322,6 +428,7 @@ export default function App() {
         )}
       </div>
       {!inGuide && !studio && <Footer />}
+      {handover && route.name === "result" && <BuildOverlay onDone={endHandover} />}
       {intro !== "done" && <BrandIntro onReveal={revealAfterIntro} onDone={endIntro} />}
     </div>
   );

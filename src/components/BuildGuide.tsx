@@ -12,9 +12,13 @@ import {
   FileText,
   FolderOpen,
   Key,
+  Asterisk,
   Lightbulb,
+  Package,
   Play,
+  Plug,
   Plus,
+  Robot,
   Sparkle,
   Warning,
   X,
@@ -23,6 +27,7 @@ import { m, useReducedMotion } from "motion/react";
 import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { KitFile } from "../lib/starter";
 import { BuildVideo } from "./BuildVideo";
+import { ClaudePluginVideo, pluginParts } from "./ClaudePluginVideo";
 import { HermesVideo, hermesFiles } from "./HermesVideo";
 import { N8nVideo } from "./N8nVideo";
 import { btn } from "./ui";
@@ -507,6 +512,92 @@ export function HermesGuide({
   );
 }
 
+// ------------------------------------------------------------------ Claude plugin
+
+export function ClaudePluginGuide({
+  open,
+  onClose,
+  slug,
+  files,
+  onDownload,
+}: {
+  open: boolean;
+  onClose: () => void;
+  slug: string;
+  files: KitFile[];
+  onDownload: () => void;
+}) {
+  const [section, setSection] = useState(0);
+  const parts = pluginParts(files);
+  const file = `${slug}.plugin`;
+
+  const steps: Step[] = [
+    {
+      title: "Download the plugin",
+      screen: <PluginFileScreen file={file} />,
+      body: (
+        <>
+          Press <B>Download .plugin</B>. You get one file, <Mono>{file}</Mono>, in your Downloads folder. There's nothing to unzip.
+        </>
+      ),
+      action: (
+        <button type="button" className={stepBtn} onClick={onDownload}>
+          <DownloadSimple size={14} aria-hidden />
+          Download .plugin
+        </button>
+      ),
+    },
+    {
+      title: "Open Claude",
+      screen: <ClaudeOpenScreen />,
+      body: <>Open the Claude desktop app from your dock and start a new chat. Plugins install from any chat.</>,
+    },
+    {
+      title: "Drop it in and install",
+      screen: <PluginInstallScreen file={file} />,
+      body: (
+        <>
+          Drag <Mono>{file}</Mono> into the chat and press <B>Install</B>. The plugin stays installed, so you do this once.
+        </>
+      ),
+    },
+    {
+      title: "Check what it added",
+      screen: <PluginPartsScreen parts={parts} />,
+      body: (
+        <>
+          The Skill is your playbook, used whenever this task comes up{parts.agents.length ? "; the agents take the specialist steps" : ""}.
+          {parts.connectors ? " Connect the apps it lists in Claude's settings. Keys stay there, never in chat." : ""}
+        </>
+      ),
+    },
+    {
+      title: "Try it on a real case",
+      // The full prompt is long with the Skill's name in it; the picture shows the gist, and names the Skill on the reply.
+      screen: <PluginTryScreen skill={parts.skill} prompt="Use the Skill on one real past case." />,
+      body: <>Ask Claude to do the task for one real past case, and check its work before anything is sent or changed. Then use it on new cases.</>,
+    },
+  ];
+
+  return (
+    <GuideDialog
+      open={open}
+      onClose={onClose}
+      title="From starter kit to a Claude plugin"
+      subtitle="Watch it once, then follow the five steps below. You need the Claude desktop app."
+      steps={steps}
+      video={<ClaudePluginVideo slug={slug} files={files} onSection={setSection} />}
+      active={section}
+      tip={
+        <>
+          Working in Claude Code instead? Unzip <Mono>{file}</Mono> and copy its <Mono>skills</Mono> folder into <Mono>.claude/skills</Mono> in your project, or use{" "}
+          <B>Walk me through building it</B> and let Claude Code set it up with you.
+        </>
+      }
+    />
+  );
+}
+
 // ------------------------------------------------------------------ mock-ups
 
 /** A small app window: title bar with traffic lights, then content. */
@@ -847,5 +938,139 @@ function SafetyScreen({ scheduled }: { scheduled: boolean }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+// Claude's warm off-white, used only inside the Claude mock-ups so they read as Claude.
+const CLAUDE_BG = "#faf9f5";
+const PLUGIN_ORANGE = "#c4623f";
+
+function PluginChip({ file }: { file: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span className="grid size-6 shrink-0 place-items-center rounded-md" style={{ background: "#f6e3da" }}>
+        <Package size={13} color={PLUGIN_ORANGE} />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-mono text-[9.5px] text-ink">{file}</span>
+        <span className="block text-[8.5px] text-muted">Claude plugin</span>
+      </span>
+    </span>
+  );
+}
+
+function PluginFileScreen({ file }: { file: string }) {
+  return (
+    <div className="flex w-full flex-col items-center gap-1.5">
+      <BuildItemMock n="02" title="Claude plugin" action="Download .plugin" icon={<DownloadSimple size={10} />} />
+      <ArrowDown size={11} className="text-line-strong" />
+      <div className="w-full rounded-lg border border-line bg-surface px-2.5 py-2 shadow-sm">
+        <PluginChip file={file} />
+      </div>
+      <p className="font-mono text-[9px] text-muted">saved to Downloads</p>
+    </div>
+  );
+}
+
+/** A small Claude window: a sidebar with New chat, and the conversation. */
+function ClaudeMini({ children }: { children: ReactNode }) {
+  return (
+    <div className="w-full overflow-hidden rounded-lg border border-line shadow-sm" style={{ background: CLAUDE_BG }}>
+      <div className="flex items-center gap-1 bg-[#f0eee6] px-2 py-1.5">
+        <span className="size-1.5 rounded-full bg-[#ec6a5e]" />
+        <span className="size-1.5 rounded-full bg-[#f4bf4f]" />
+        <span className="size-1.5 rounded-full bg-[#61c554]" />
+        <span className="ml-1.5 font-mono text-[9.5px] text-[#6b6a63]">Claude</span>
+      </div>
+      <div className="flex">
+        {/* A slim sidebar: New chat as its + button, then recent chats. */}
+        <div className="flex w-[26px] shrink-0 flex-col items-center gap-1 border-r border-black/10 bg-[#f4f2ea] py-1.5" title="New chat">
+          <span className="grid size-[16px] place-items-center rounded bg-[#e6e2d4]">
+            <Plus size={8} weight="bold" color={PLUGIN_ORANGE} />
+          </span>
+          {[14, 11, 15].map((w, i) => (
+            <span key={i} className="block h-[3px] rounded bg-black/10" style={{ width: w }} />
+          ))}
+        </div>
+        <div className="min-w-0 flex-1 p-2">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/** The dock with Claude's app (its coral tile and starburst), the cursor on it, and the window it opens. */
+function ClaudeOpenScreen() {
+  return (
+    <div className="flex w-full flex-col items-center gap-2">
+      <ClaudeMini>
+        <p className="py-2 text-center text-[13px] text-ink" style={{ fontFamily: "var(--font-serif)" }}>
+          How can I help you today?
+        </p>
+      </ClaudeMini>
+      <div className="flex items-center gap-1.5 rounded-xl border border-white/40 bg-ink/10 px-2 py-1.5">
+        {["#2f6fde", "#ffffff", "#1f2422"].map((c) => (
+          <span key={c} className="size-5 rounded-md border border-black/10" style={{ background: c }} />
+        ))}
+        <span className="relative grid size-6 place-items-center rounded-md shadow" style={{ background: "#d97757" }}>
+          <Asterisk size={14} weight="bold" color="#fff" />
+          <Cursor />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function PluginInstallScreen({ file }: { file: string }) {
+  return (
+    <ClaudeMini>
+      <div className="flex items-center gap-1.5 rounded-md border border-black/10 bg-white p-1.5">
+        <PluginChip file={file} />
+        <span className="relative ml-auto shrink-0 rounded-full bg-ink px-2 py-0.5 text-[9px] font-medium text-bg">
+          Install
+          <Cursor />
+        </span>
+      </div>
+      <div className="mt-2 rounded-md border border-dashed px-2 py-1.5 text-center text-[9px]" style={{ borderColor: PLUGIN_ORANGE, color: PLUGIN_ORANGE }}>
+        Dropped in from your desktop
+      </div>
+    </ClaudeMini>
+  );
+}
+
+function PluginPartsScreen({ parts }: { parts: ReturnType<typeof pluginParts> }) {
+  const rows: { icon: ReactNode; kind: string; name: string }[] = [
+    { icon: <Sparkle size={10} weight="fill" />, kind: "Skill", name: parts.skill },
+    ...parts.agents.slice(0, 2).map((a) => ({ icon: <Robot size={10} />, kind: "Agent", name: a })),
+    ...(parts.connectors ? [{ icon: <Plug size={10} />, kind: "Apps", name: "connect in settings" }] : []),
+  ];
+  return (
+    <ClaudeMini>
+      <p className="mb-1.5 flex items-center gap-1 text-[9.5px] font-medium text-accent">
+        <Check size={10} weight="bold" />
+        Installed
+      </p>
+      <ul className="space-y-1">
+        {rows.map((r) => (
+          <li key={r.kind + r.name} className="flex min-w-0 items-center gap-1.5 text-[9px]">
+            <span className="shrink-0 text-accent">{r.icon}</span>
+            <span className="w-[34px] shrink-0 text-[8px] uppercase tracking-[0.06em] text-muted">{r.kind}</span>
+            <span className="truncate font-mono text-ink">{r.name}</span>
+          </li>
+        ))}
+      </ul>
+    </ClaudeMini>
+  );
+}
+
+function PluginTryScreen({ skill, prompt }: { skill: string; prompt: string }) {
+  return (
+    <ClaudeMini>
+      <p className="ml-auto w-fit max-w-[90%] rounded-md bg-[#e9e6dc] px-1.5 py-1 text-[8.5px] leading-snug text-ink">{prompt}</p>
+      <span className="mt-1.5 inline-flex max-w-full items-center gap-1 rounded border border-black/10 bg-white px-1.5 py-0.5 text-[8px] text-[#4d5b55]">
+        <Sparkle size={8} weight="fill" color={PLUGIN_ORANGE} className="shrink-0" />
+        <span className="truncate">Using the {skill} Skill</span>
+      </span>
+      <p className="mt-1 text-[8.5px] leading-snug text-ink">Here's a draft. Check it before anything is sent.</p>
+    </ClaudeMini>
   );
 }

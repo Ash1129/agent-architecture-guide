@@ -3,14 +3,16 @@ import { m, useReducedMotion } from "motion/react";
 import { useState, type FormEvent } from "react";
 import workspaceImage from "../assets/workspace.jpg";
 import { BrandMark, BrandWord } from "../components/Brand";
+import { AI_ENABLED } from "../lib/features";
+import { MAX_DESCRIPTION, MAX_TASK_TITLE } from "../lib/interview";
 
 // The public starting point ("blueprint studio"). Two ways in: describe the
-// problem in your own words and press Build, or take the short survey (the
-// guide's questions) when you're not sure where to start. Styles live in
-// src/studio.css under .start-page.
+// problem in your own words and press Build (the AI answers what the
+// description settles and asks only the rest), or take the short survey when
+// you're not sure where to start. Styles live in src/studio.css under .start-page.
 
-/** The longest task the guide keeps (share links carry it). */
-const MAX_TASK = 200;
+/** With AI, a few sentences are read; without, the text is the survey's first answer, a short title. */
+const MAX_LENGTH = AI_ENABLED ? MAX_DESCRIPTION : MAX_TASK_TITLE;
 
 export function Landing({
   introPlaying = false,
@@ -71,7 +73,7 @@ export function Landing({
               aria-label="Your business problem"
               placeholder="What business problem would you like to solve?"
               rows={1}
-              maxLength={MAX_TASK}
+              maxLength={MAX_LENGTH}
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
               onKeyDown={(e) => {

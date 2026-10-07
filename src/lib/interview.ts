@@ -8,7 +8,7 @@
 // enforces this: anything the model returns that doesn't fit falls back,
 // question by question, to the standard wording.
 
-import { type Answers, type Question, type QuestionId, QUESTIONS } from "./questions";
+import { type Answers, type Question, type QuestionId, QUESTIONS, effectiveAnswers } from "./questions";
 
 export type AdaptedOption = { value: string; label: string; hint?: string };
 
@@ -161,6 +161,38 @@ export function validateDetailAnswers(v: unknown): Detail[] | undefined {
     if (q && a) out.push({ q, a });
   }
   return out;
+}
+
+/** The longest problem description the start page sends to be read (the survey's task stays a short title). */
+export const MAX_DESCRIPTION = 600;
+/** The longest task title, as carried in answers and share links. */
+export const MAX_TASK_TITLE = 200;
+
+/**
+ * The task title for a description: the description itself when it's short
+ * enough, otherwise the AI's one-sentence summary of it.
+ */
+export function taskTitle(description: string, plan?: InterviewPlan): string {
+  const text = description.replace(/\s+/g, " ").trim();
+  if (text.length <= MAX_TASK_TITLE) return text;
+  return plan?.summary?.trim() || `${text.slice(0, MAX_TASK_TITLE - 1).trimEnd()}…`;
+}
+
+/**
+ * Answers every question the plan's suggestions settle, for a problem the owner
+ * described in their own words. Suggestions are only made where the description
+ * makes the answer clearly likely (see the interview instructions), so the rest
+ * stay open to be asked. Answers to questions that don't apply are dropped.
+ */
+export function fillFromPlan(task: string, plan: InterviewPlan): { answers: Answers; filled: QuestionId[] } {
+  const all: Answers = { task };
+  for (const q of ADAPTABLE) {
+    const s = plan.questions[q.id]?.suggested;
+    if (s !== undefined && (!Array.isArray(s) || s.length > 0)) (all as Record<string, unknown>)[q.id] = s;
+  }
+  const answers = { ...effectiveAnswers(all), task };
+  const filled = (Object.keys(answers) as QuestionId[]).filter((id) => id !== "task" && (id as string) !== "details");
+  return { answers, filled };
 }
 
 /** The task as a cache key: case, spacing and punctuation don't make a new task. */

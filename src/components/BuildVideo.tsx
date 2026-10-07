@@ -127,12 +127,14 @@ export function SitePage({
   brief,
   copiedN8n = false,
   hermes,
+  plugin,
 }: {
   task: string;
   downloaded?: boolean;
   brief?: { open: boolean; copied: boolean; lines: string[] };
   copiedN8n?: boolean;
   hermes?: { downloaded: boolean };
+  plugin?: { downloaded: boolean };
 }) {
   const action = (top: number, label: ReactNode, icon: ReactNode, on = false) => (
     <span className="absolute flex items-center gap-1 text-[9.5px] font-medium" style={{ right: 32, top, color: ACCENT, fontWeight: on ? 600 : 500 }}>
@@ -198,7 +200,9 @@ export function SitePage({
         { n: "01", title: "Build it with an AI coding assistant", body: "Paste BUILD.md into Claude Code, Codex or any AI assistant. It explains each step and asks before it acts.", top: 120 },
         hermes
           ? { n: "02", title: "Hermes Agent setup", body: "Unzip, read setup.sh, then run it. It installs the skill and persona into ~/.hermes.", top: 200 }
-          : { n: "02", title: "n8n workflow", body: "Open a new workflow in n8n and press Cmd+V. Then add your credentials to the highlighted nodes.", top: 200 },
+          : plugin
+            ? { n: "02", title: "Claude plugin", body: "Drag the .plugin into a Claude chat and press Install. In Claude Code, copy its skills folder.", top: 200 }
+            : { n: "02", title: "n8n workflow", body: "Open a new workflow in n8n and press Cmd+V. Then add your credentials to the highlighted nodes.", top: 200 },
       ].map((item) => (
         <div key={item.n} className="absolute left-[180px] h-[70px] w-[620px] rounded-[8px] bg-white" style={{ top: item.top, border: `1px solid ${HAIR}` }}>
           <span className="absolute left-[14px] top-[12px] grid size-[18px] place-items-center rounded-full border border-[#d6ddd9] text-[6.5px] text-[#7f8d87]">{item.n}</span>
@@ -210,8 +214,10 @@ export function SitePage({
       {action(153, "Download all", downloaded ? <Check size={10} weight="bold" /> : <DownloadSimple size={10} />, downloaded)}
       {hermes
         ? action(213, "Download setup", hermes.downloaded ? <Check size={10} weight="bold" /> : <DownloadSimple size={10} />, hermes.downloaded)
-        : action(213, copiedN8n ? "Copied" : "Copy for n8n", copiedN8n ? <Check size={10} weight="bold" /> : <Copy size={10} />, copiedN8n)}
-      {action(233, hermes ? "Walk me through Hermes" : "Walk me through n8n", <PlayCircle size={10} />)}
+        : plugin
+          ? action(213, "Download .plugin", plugin.downloaded ? <Check size={10} weight="bold" /> : <DownloadSimple size={10} />, plugin.downloaded)
+          : action(213, copiedN8n ? "Copied" : "Copy for n8n", copiedN8n ? <Check size={10} weight="bold" /> : <Copy size={10} />, copiedN8n)}
+      {action(233, hermes ? "Walk me through Hermes" : plugin ? "Walk me through the plugin" : "Walk me through n8n", <PlayCircle size={10} />)}
 
       {/* The BUILD.md pop-up */}
       {brief?.open && (

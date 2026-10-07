@@ -64,7 +64,7 @@ export const KIND_LABEL: Record<NodeKind, string> = {
 const TOOL_SHORT: Record<string, string> = {
   n8n: "n8n",
   airflow: "Airflow",
-  cowork: "Claude Cowork",
+  cowork: "Claude",
   claude: "Claude",
   hermes: "Hermes Agent",
   "n8n-agent": "n8n",

@@ -22,13 +22,14 @@ import {
   GitBranch,
   ArrowLeft,
   Play,
+  X,
 } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArchitectureMap, GateBadge, KIND_ICON } from "../components/ArchitectureMap";
 import { DiagramBoundary } from "../components/DiagramBoundary";
 import { Walkthrough } from "../components/Walkthrough";
-import { StarterKit } from "../components/StarterKit";
+import { StarterKit, type TailoringState } from "../components/StarterKit";
 import { keySteps, leadStep } from "../components/ArchitectureArt";
 import { BuildInvite } from "../components/BuildInvite";
 import { StudioShell } from "../components/StudioShell";
@@ -510,6 +511,39 @@ function Ready({
   const text = kitText.status === "ready" && kitText.response.design === shownDesign ? kitText.response.text : undefined;
   const simple = useMemo(() => buildSimplerBlueprint(r, answers), [r, answers]);
   const kit = useMemo(() => buildStarterKit(r, full, answers, text), [r, full, answers, text]);
+
+  // The tools are built in the background as soon as the result opens: the AI
+  // design, the kit's text and, when there's an n8n workflow, its tailoring.
+  // Until all of them have settled the Build view stays shut; once it opens,
+  // it stays open for these answers.
+  const [tailorState, setTailorState] = useState<TailoringState>("idle");
+  const [built, setBuilt] = useState(!AI_ENABLED);
+  useEffect(() => setBuilt(!AI_ENABLED), [answers]);
+  const settling = (x: { status: string }) => x.status === "off" || x.status === "loading";
+  const building = AI_ENABLED && !built && (settling(design) || settling(kitText) || tailorState === "idle" || tailorState === "working");
+  const buildStage = settling(design) ? "Drafting your design" : settling(kitText) ? "Writing your kit" : "Tailoring your n8n workflow";
+  // A short note when the tools finish while someone is reading elsewhere.
+  const sawBuilding = useRef(false);
+  const [readyNote, setReadyNote] = useState(false);
+  useEffect(() => {
+    if (building) {
+      sawBuilding.current = true;
+      return;
+    }
+    if (built) return;
+    setBuilt(true);
+    if (sawBuilding.current) setReadyNote(true);
+  }, [building, built]);
+  useEffect(() => {
+    if (!readyNote) return;
+    const t = window.setTimeout(() => setReadyNote(false), 12000);
+    return () => window.clearTimeout(t);
+  }, [readyNote]);
+  const go = (v: ResultView) => {
+    if (v === "build" && building) return;
+    if (v === "build") setReadyNote(false);
+    onView(v);
+  };
   const reduce = useReducedMotion();
   const panelId = useId();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -694,7 +728,7 @@ function Ready({
         )}
         <div className="architecture-grid">
           <figure>
-            <BuildInvite kit={kit} href={href({ name: "result", code: resultCode(answers), view: "build" })} onOpen={() => onView("build")} />
+            <BuildInvite kit={kit} href={href({ name: "result", code: resultCode(answers), view: "build" })} onOpen={() => go("build")} building={building} />
             <figcaption>
               <span>01 — BUILD IT</span>
               <span>Your starter kit, ready to hand over.</span>
@@ -1168,7 +1202,7 @@ function Ready({
   );
 
   return (
-    <StudioShell view={view} onView={onView} historyCount={historyCount}>
+    <StudioShell view={view} onView={go} historyCount={historyCount} building={building}>
       {walking && <Walkthrough bp={bp} onClose={endWalk} />}
       <main id="main" className={`studio-page${view === "workflow" ? " is-wide" : ""}`}>
         {/* A new view swaps in at once and fades up; it never waits on the old one to leave. */}
@@ -1176,16 +1210,50 @@ function Ready({
           {view === "solution" && solutionView}
           {view === "workflow" && workflowView}
         </m.div>
+        {view === "build" && building && (
+          <section className="build-pending" role="status" aria-live="polite">
+            <div className="section-kicker studio-caption">Your build brief</div>
+            <h1>
+              Building your tools<span className="title-period">.</span>
+            </h1>
+            <p className="studio-intro">
+              The design, your starter kit and each tool are being made for your task. It takes a few minutes, and this page opens the moment they're ready.
+            </p>
+            <p className="flex items-center gap-2 text-[14.5px] font-medium text-accent">
+              <CircleNotch size={17} aria-hidden className={reduce ? "" : "animate-spin"} />
+              {buildStage}
+            </p>
+            <button type="button" className="studio-quiet mt-8" onClick={() => go("solution")}>
+              Explore your solution meanwhile
+              <ArrowRight size={16} aria-hidden />
+            </button>
+          </section>
+        )}
         {/* The kit stays mounted on every view, so a tailoring request or open guide survives switching views. */}
-        <div hidden={view !== "build"}>
+        <div hidden={view !== "build" || building}>
           <StarterKit
             kit={kit}
             slug={slugify(r.task)}
             answers={answers}
             studio
             writing={!AI_ENABLED ? undefined : design.status === "loading" || kitText.status === "loading" ? "loading" : text ? "ready" : "template"}
+            autoTailor={building}
+            onTailoring={setTailorState}
           />
         </div>
+        {readyNote && view !== "build" && (
+          <div className="build-ready-toast no-print" role="status">
+            <Check size={16} weight="bold" aria-hidden className="text-accent" />
+            Your tools are ready.
+            <button type="button" className="studio-btn" onClick={() => go("build")}>
+              Open Build
+              <ArrowRight size={15} aria-hidden />
+            </button>
+            <button type="button" className="studio-quiet" aria-label="Dismiss" onClick={() => setReadyNote(false)}>
+              <X size={15} aria-hidden />
+            </button>
+          </div>
+        )}
         <footer className="studio-footer no-print">
           <span>BLUEPRINT STUDIO</span>
           <span>A solution shaped around your request.</span>

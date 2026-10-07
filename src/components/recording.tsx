@@ -1,4 +1,4 @@
-import { ArrowClockwise, Gear, Globe, NotePencil, Pause, Play, PlayCircle, Smiley, TerminalWindow } from "@phosphor-icons/react";
+import { ArrowClockwise, Asterisk, Gear, Globe, NotePencil, Pause, Play, PlayCircle, Smiley, TerminalWindow } from "@phosphor-icons/react";
 import { useReducedMotion } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { btn } from "./ui";
@@ -169,8 +169,8 @@ export function Lights() {
   );
 }
 
-/** Dock icon centres, for cursor paths. */
-export const DOCK = { finder: [384, 499], browser: [432, 499], terminal: [480, 499] } as const;
+/** Dock icon centres, for cursor paths. Claude, when a recording has it, takes the fourth place. */
+export const DOCK = { finder: [384, 499], browser: [432, 499], terminal: [480, 499], claude: [528, 499] } as const;
 
 /** Wallpaper, menu bar, dock, key badges, click ripples and the pointer, around the app windows. */
 export function Desktop({
@@ -188,8 +188,8 @@ export function Desktop({
   path: Path;
   clicks: Clicks;
   keys: Keys;
-  /** When Finder or Terminal is opened from the dock. */
-  opened?: { finder?: number; terminal?: number };
+  /** When Finder, Terminal or Claude is opened from the dock. Claude is only in the dock when it's given. */
+  opened?: { finder?: number; terminal?: number; claude?: number };
   children: ReactNode;
 }) {
   const [cx, cy] = cursorAt(path, t);
@@ -241,13 +241,16 @@ export function Desktop({
   );
 }
 
-function Dock({ t, opened }: { t: number; opened: { finder?: number; terminal?: number } }) {
+function Dock({ t, opened }: { t: number; opened: { finder?: number; terminal?: number; claude?: number } }) {
   const at = (x?: number) => x ?? Infinity;
   const apps = [
     { name: "Finder", icon: <Smiley size={22} weight="fill" color="#fff" />, bg: "linear-gradient(#5aa9e6,#2f6fde)", click: at(opened.finder) },
     { name: "Browser", icon: <Globe size={22} color="#2f6fde" />, bg: "#fff", click: -Infinity },
     { name: "Terminal", icon: <TerminalWindow size={22} color="#d7e0db" />, bg: "#1f2422", click: at(opened.terminal) },
-    { name: "Notes", icon: <NotePencil size={22} color="#7a5b00" />, bg: "#f4d35e", click: Infinity },
+    opened.claude !== undefined
+      ? // Claude's app: its coral tile with a starburst, so it reads as Claude at a glance.
+        { name: "Claude", icon: <Asterisk size={24} weight="bold" color="#fff" />, bg: "#d97757", click: opened.claude }
+      : { name: "Notes", icon: <NotePencil size={22} color="#7a5b00" />, bg: "#f4d35e", click: Infinity },
     { name: "Settings", icon: <Gear size={22} color="#4d5b55" />, bg: "#dfe4e1", click: Infinity },
   ];
   return (

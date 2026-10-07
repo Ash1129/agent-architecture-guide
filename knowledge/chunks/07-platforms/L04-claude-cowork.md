@@ -3,7 +3,7 @@ id: L04
 title: Claude Cowork - Claude as an agent for knowledge work
 topic: platforms
 sources: [anthropic-help-cowork, anthropic-help-cowork-scheduled, anthropic-help-cowork-team, pabani-2026-openclaw-hermes-cowork, team-2026-assignment4]
-last_verified: 2026-10-05
+last_verified: 2026-10-07
 ---
 
 ## Claims
@@ -21,9 +21,12 @@ last_verified: 2026-10-05
   app open and connected. From 2026-10-06, new Pro and Max tasks run in the
   cloud and the "only on your computer" option is removed.
   [anthropic-help-cowork §How Claude Cowork runs your tasks; §Requirements; heads-up note]
-- Anthropic is merging chat and Cowork into "one Claude" for Pro and Max
-  plans; Team and Enterprise keep them separate for now.
-  [anthropic-help-cowork note; anthropic-help-cowork-team note]
+- Chat and Cowork have merged into "one Claude": agent work, scheduled
+  tasks and plugins are part of the Claude app itself, with no separate
+  Cowork. Anthropic announced the merge for Pro and Max plans, with Team and
+  Enterprise kept separate at first; the owner confirmed on 2026-10-07 that
+  the two have merged. Re-check the Team and Enterprise position.
+  [anthropic-help-cowork note; anthropic-help-cowork-team note; owner, 2026-10-07]
 - **Scheduled tasks run in the cloud**, so they run "even when your computer
   is asleep or the Claude Desktop app is closed". Cadence options are
   hourly, daily, weekly, weekdays or manual. A task that needs local files

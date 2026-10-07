@@ -166,13 +166,13 @@ describe("decision paths", () => {
     expect(r.simpler.title).toBe("One agent first");
   });
 
-  it("scheduled agent without restrictions uses Claude Cowork", () => {
+  it("scheduled agent without restrictions uses Claude as an agent", () => {
     const a: Answers = { ...marketResearch, location: "open", knowledge: ["none"], roles: "one" };
     expect(coreTool(a)).toBe("cowork");
     expect(recommend(a).gotchas.map((g) => g.id)).toContain("G7");
   });
 
-  it("memory need in Cowork adds a Project and a warning not to rely on general memory", () => {
+  it("memory need in Claude as an agent adds a Project and a warning not to rely on general memory", () => {
     const a: Answers = { ...marketResearch, location: "open", roles: "one", team: "small" };
     expect(coreTool(a)).toBe("cowork");
     expect(tools(a)).toContain("project");

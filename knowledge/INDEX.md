@@ -70,7 +70,7 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | L01 | [n8n](chunks/07-platforms/L01-n8n.md) | AI Agent node (Tools Agent); MCP client and server nodes; Wait node resumes on time, callback or form, not on data; 4 GB RAM for Docker Compose; Sustainable Use License is internal-use, not open source. |
 | L02 | [Apache Airflow](chunks/07-platforms/L02-airflow.md) | Python workflows with a clear start and end; not for "clicking over coding"; asset-aware scheduling; 4 GB memory floor, production needs continuous tuning. |
 | L03 | [Hermes Agent](chunks/07-platforms/L03-hermes-agent.md) | MIT, any model, seven backends; small memory; self-written Skills unreviewed by default; command approval modes; cron needs the gateway; Kumar's security advice and the "successor to OpenClaw" claim. |
-| L04 | [Claude Cowork](chunks/07-platforms/L04-claude-cowork.md) | Runs in the cloud; scheduled tasks no longer need the computer on; memory shared with chat; Manual/Auto/Skip; admin and HIPAA limits; Pabani outdated. |
+| L04 | [Claude Cowork](chunks/07-platforms/L04-claude-cowork.md) | Now merged into one Claude app; runs in the cloud; scheduled tasks no longer need the computer on; memory shared with chat; Manual/Auto/Skip; admin and HIPAA limits; Pabani outdated. |
 | L05 | [Claude Code](chunks/07-platforms/L05-claude-code.md) | Surfaces; CLAUDE.md, Skills, hooks, MCP, sub-agents; Routines vs desktop tasks; Agent SDK. |
 | L06 | [Combining platforms](chunks/07-platforms/L06-combining-platforms.md) | MCP and Skills as portable joints; plugins; where scheduled work runs; n8n + agent hybrid; short chooser. |
 

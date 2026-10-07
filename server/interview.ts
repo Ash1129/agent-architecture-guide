@@ -1,4 +1,5 @@
-// The adaptive interview endpoint. Takes a task, returns the guide's questions
+// The adaptive interview endpoint. Takes a task (a short title from the survey,
+// or a few sentences from the start page's box), returns the guide's questions
 // adapted to it (see src/lib/interview.ts). Cheapest path first:
 //   1. the same task asked before          -> cached plan, no model call
 //   2. a near-duplicate task (by meaning)  -> its cached plan, one embedding call
@@ -7,7 +8,7 @@
 // Every plan is validated against the question bank before it's returned or cached.
 
 import OpenAI from "openai";
-import { ADAPTABLE, type InterviewPlan, type InterviewResponse, normaliseTask, validatePlan } from "../src/lib/interview";
+import { ADAPTABLE, type InterviewPlan, type InterviewResponse, MAX_DESCRIPTION, normaliseTask, validatePlan } from "../src/lib/interview";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Complete, extractJson, openAIComplete } from "./ai";
@@ -20,7 +21,6 @@ export type InterviewResult = { status: number; body: Record<string, unknown> };
 export const REUSE_SIMILARITY = 0.92;
 /** Above this, an earlier plan is shown to the model as a reference. */
 export const REFERENCE_SIMILARITY = 0.6;
-const MAX_TASK = 200;
 
 const WHEN: Partial<Record<string, string>> = {
   kinds: "asked only when shape is judgement or varies",
@@ -88,7 +88,7 @@ export async function handleInterview(
 ): Promise<InterviewResult> {
   if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI questions aren't set up. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
   const raw = (body as { task?: unknown })?.task;
-  const task = typeof raw === "string" ? raw.replace(/\s+/g, " ").trim().slice(0, MAX_TASK) : "";
+  const task = typeof raw === "string" ? raw.replace(/\s+/g, " ").trim().slice(0, MAX_DESCRIPTION) : "";
   if (task.length < 3) return { status: 400, body: { error: "Send the task as a short sentence." } };
 
   const ns = "interview";
