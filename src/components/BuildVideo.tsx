@@ -1,6 +1,7 @@
-import { Check, Copy, DownloadSimple, FileZip, Folder, PlayCircle } from "@phosphor-icons/react";
+import { Check, CheckCircle, ClockCounterClockwise, Code, Copy, DownloadSimple, FileZip, Folder, GitBranch, Moon, PlayCircle, Scales } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { KitFile } from "../lib/starter";
+import { BrandMark } from "./Brand";
 import { ACCENT, BrowserFrame, Desktop, DOCK, Lights, MONO, VideoPlayer, ease, seg, typed, type Clicks, type Keys, type Path, type Section } from "./recording";
 
 // A scripted "screen recording" of going from the starter kit to Claude Code:
@@ -144,37 +145,29 @@ export function SitePage({
   );
   return (
     <div className="absolute inset-x-0 bottom-0 top-[66px] bg-[#f3f5f4]" style={{ fontFamily: SANS }}>
-      {/* Sidebar */}
-      <div className="absolute left-0 top-0 h-full w-[150px]" style={{ borderRight: `1px solid ${HAIR}` }}>
-        <span className="absolute left-[14px] top-[14px] grid size-[22px] place-items-center rounded-[4px]" style={{ background: ACCENT }}>
-          <span className="size-[9px] rounded-[2px] border-2 border-white" />
+      {/* Sidebar: the slim rail of icons the result's sidebar rests as (see .studio-rail). The page's
+          colours are pinned, so the logo reads the same in either theme. */}
+      <div className="absolute left-0 top-0 h-full w-[48px]" style={{ borderRight: `1px solid ${HAIR}`, ["--ink" as string]: "#13201b", ["--accent" as string]: ACCENT }}>
+        <span className="absolute left-[15px] top-[14px]">
+          <BrandMark className="h-[20px] w-auto" />
         </span>
-        <span className="absolute left-[42px] top-[12px] text-[17px] leading-none text-[#13201b]" style={{ fontFamily: SERIF }}>
-          blueprint
-        </span>
-        <span className="absolute left-[42px] top-[30px] text-[5px] tracking-[0.06em] text-[#7f8d87]">YOUR SOLUTION STUDIO</span>
-        <span className="absolute left-[14px] top-[56px] text-[6px] tracking-[0.06em] text-[#7f8d87]">YOUR WORKSPACE</span>
-        {["Solution", "Build", "Workflow"].map((label, i) => (
+        {[
+          { label: "Solution", Icon: CheckCircle },
+          { label: "Workflow", Icon: GitBranch },
+          { label: "Build", Icon: Code },
+        ].map(({ label, Icon }, i) => (
           <span
             key={label}
-            className="absolute left-[10px] flex h-[22px] w-[130px] items-center rounded-[5px] px-[8px] text-[9.5px]"
-            style={{ top: 68 + i * 26, background: label === "Build" ? "#e1ede7" : "transparent", color: label === "Build" ? ACCENT : "#4d5b55", fontWeight: label === "Build" ? 500 : 400 }}
+            className="absolute left-[8px] grid size-[32px] place-items-center rounded-[6px]"
+            style={{ top: 64 + i * 38, background: label === "Build" ? "#e1ede7" : "transparent", color: label === "Build" ? ACCENT : "#4d5b55" }}
           >
-            {label}
-            {label === "Build" && <span className="ml-auto size-[3px] rounded-full" style={{ background: ACCENT }} />}
+            <Icon size={14} weight="light" />
           </span>
         ))}
-        <span className="absolute left-[14px] top-[262px] w-[120px] text-[11px] leading-[1.3] text-[#4d5b55]" style={{ fontFamily: SERIF }}>
-          A considered path from request to working system.
-        </span>
-      </div>
-
-      {/* Facts strip */}
-      <div className="absolute left-[150px] right-0 top-0 flex h-[34px] items-center gap-[22px] px-[30px]" style={{ borderBottom: `1px solid ${HAIR}` }}>
-        {["Agents", "Model", "Main tool", "Autonomy", "Runs on"].map((label) => (
-          <span key={label} className="flex flex-col gap-[3px]">
-            <span className="text-[6px] text-[#7f8d87]">{label}</span>
-            <span className="h-[5px] w-[70px] rounded bg-[#13201b]/25" />
+        <span className="absolute bottom-[96px] left-[8px] h-px w-[32px]" style={{ background: HAIR }} />
+        {[ClockCounterClockwise, Scales, Moon].map((Icon, i) => (
+          <span key={i} className="absolute left-[14px] grid size-[20px] place-items-center rounded-full bg-[#e8ece9]" style={{ bottom: 64 - i * 26, color: ACCENT }}>
+            <Icon size={10} />
           </span>
         ))}
       </div>
