@@ -1,7 +1,7 @@
 import { CaretDown, Check, CheckCircle, Envelope, FlowArrow, GitBranch, House, Key, PencilSimple, Play, Plus, Robot, Sparkle, Users, Warning, X } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { KitFile } from "../lib/starter";
-import { SITE_TAB, SitePage, taskOf } from "./BuildVideo";
+import { SITE, SITE_TAB, SitePage, taskOf } from "./BuildVideo";
 import { BrowserFrame, Desktop, VideoPlayer, ease, seg, type Clicks, type Keys, type Path, type Section } from "./recording";
 
 // A scripted "screen recording" of moving the workflow into n8n: copy it from
@@ -26,7 +26,7 @@ const OK = "#2e9e5b";
 // Stage coordinates of everything the cursor touches.
 const AT = {
   rest: [480, 420],
-  copy: [798, 399],
+  copy: SITE.toolAction,
   tab: [500, 61],
   create: [807, 137],
   canvas: [640, 400],

@@ -1,6 +1,6 @@
 import { Check, CheckCircle, FileZip, GithubLogo, ShieldCheck } from "@phosphor-icons/react";
 import type { KitFile } from "../lib/starter";
-import { SITE_TAB, SitePage, taskOf } from "./BuildVideo";
+import { SITE, SITE_TAB, SitePage, taskOf } from "./BuildVideo";
 import { ACCENT, BrowserFrame, Desktop, DOCK, Lights, MONO, VideoPlayer, ease, seg, typed, type Clicks, type Keys, type Path, type Section } from "./recording";
 
 // A scripted "screen recording" of setting up Hermes Agent from the starter
@@ -23,7 +23,7 @@ const SECTIONS: Section[] = [
 // Stage coordinates of everything the cursor touches.
 const AT = {
   rest: [480, 420],
-  download: [798, 399],
+  download: SITE.toolAction,
   tab: [500, 61],
   terminal: DOCK.terminal,
   aside: [900, 300],

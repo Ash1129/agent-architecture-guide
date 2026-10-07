@@ -1,10 +1,10 @@
-import { Check, Copy, DownloadSimple, Eye, FileZip, Folder, FlowArrow, PlayCircle, Robot } from "@phosphor-icons/react";
+import { Check, Copy, DownloadSimple, FileZip, Folder, PlayCircle } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import type { KitFile } from "../lib/starter";
 import { ACCENT, BrowserFrame, Desktop, DOCK, Lights, MONO, VideoPlayer, ease, seg, typed, type Clicks, type Keys, type Path, type Section } from "./recording";
 
 // A scripted "screen recording" of going from the starter kit to Claude Code:
-// download the kit, copy BUILD.md, minimise the browser, unzip, open Terminal,
+// download the kit, open BUILD.md and copy it, minimise the browser, unzip, open Terminal,
 // start Claude Code, paste and approve the first step. It shows this person's
 // own folder, file names and task.
 
@@ -18,11 +18,24 @@ const SECTIONS: Section[] = [
   { until: Infinity, caption: "Claude explains each step and asks before it acts" },
 ];
 
+/**
+ * Stage coordinates of the controls on SitePage, for the recordings' cursors.
+ * The page is laid out at fixed positions inside the browser window (which
+ * sits at 70, 40 on the stage), so these stay exact.
+ */
+export const SITE = {
+  downloadAll: [823, 265],
+  buildLink: [450, 209],
+  briefCopy: [598, 170],
+  toolAction: [821, 325],
+} as const;
+
 // Stage coordinates of everything the cursor touches.
 const AT = {
   rest: [480, 420],
-  download: [656, 286],
-  copy: [735, 250],
+  download: SITE.downloadAll,
+  brief: SITE.buildLink,
+  copy: SITE.briefCopy,
   minimise: [104, 57],
   finder: DOCK.finder,
   zip: [372, 160],
@@ -33,9 +46,11 @@ const AT = {
 const PATH: Path = [
   [0, AT.rest],
   [0.6, AT.rest],
-  [1.6, AT.download],
-  [2.4, AT.download],
-  [3.2, AT.copy],
+  [1.5, AT.download],
+  [2.0, AT.download],
+  [2.6, AT.brief],
+  [2.9, AT.brief],
+  [3.4, AT.copy],
   [3.9, AT.copy],
   [4.6, AT.minimise],
   [5.6, AT.minimise],
@@ -49,8 +64,9 @@ const PATH: Path = [
 ];
 
 const CLICKS: Clicks = [
-  [1.7, AT.download],
-  [3.3, AT.copy],
+  [1.6, AT.download],
+  [2.7, AT.brief],
+  [3.45, AT.copy],
   [4.7, AT.minimise],
   [6.5, AT.finder],
   [7.9, AT.zip],
@@ -59,6 +75,7 @@ const CLICKS: Clicks = [
 ];
 
 const KEYS: Keys = [
+  [3.95, "esc"],
   [12.4, "⏎ Return"],
   [13.5, "⏎ Return"],
   [14.6, "⌘ V"],
@@ -76,11 +93,11 @@ export function BuildVideo({ slug, files, onSection }: { slug: string; files: Ki
       seconds={SECONDS}
       sections={SECTIONS}
       onSection={onSection}
-      description={`A screen recording: on this page, Download all and Copy BUILD.md are clicked and the browser is minimised. In Finder the kit is unzipped into the folder ${slug}. In Terminal, cd ~/Downloads/${slug} and claude are typed, BUILD.md is pasted and Return pressed, and Claude asks to create ${file}, which is approved.`}
+      description={`A screen recording: on this page's Build view, Download all is clicked, BUILD.md is clicked to open it and its Copy button is pressed, and the browser is minimised. In Finder the kit is unzipped into the folder ${slug}. In Terminal, cd ~/Downloads/${slug} and claude are typed, BUILD.md is pasted and Return pressed, and Claude asks to create ${file}, which is approved.`}
     >
       {(t) => (
         <Desktop t={t} front={t < 5.5 ? "Browser" : t < 9.75 ? "Finder" : "Terminal"} path={PATH} clicks={CLICKS} keys={KEYS} opened={{ finder: 6.5, terminal: 9.7 }}>
-          <BrowserWindow t={t} slug={slug} task={task} />
+          <BrowserWindow t={t} slug={slug} task={task} brief={files[0]?.content.split("\n").slice(0, 14) ?? []} />
           <FinderWindow t={t} slug={slug} />
           <TerminalApp t={t} slug={slug} task={task} file={file} lines={lines} />
         </Desktop>
@@ -93,89 +110,144 @@ export const taskOf = (files: KitFile[]) => files[0]?.content.match(/^# Build br
 
 export const SITE_TAB = { title: "Your result | Agent Architecture Guide", color: ACCENT };
 
+
+const SERIF = "'Instrument Serif', ui-serif, Georgia, serif";
+const SANS = "'Work Sans Variable', ui-sans-serif, system-ui, sans-serif";
+const HAIR = "rgba(19,32,27,0.09)";
+
 /**
- * This site's result page, with the starter kit panel on the right, as it sits
- * in the browser window. `hermes` shows the Hermes Agent row in place of n8n's.
+ * This site's result page as it sits in the browser window: the blueprint
+ * workspace on its Build view, with the starter kit's build steps. `hermes`
+ * shows the Hermes Agent step in place of n8n's; `brief` opens the BUILD.md
+ * pop-up.
  */
 export function SitePage({
   task,
-  copiedBrief = false,
+  downloaded = false,
+  brief,
   copiedN8n = false,
   hermes,
 }: {
   task: string;
-  copiedBrief?: boolean;
+  downloaded?: boolean;
+  brief?: { open: boolean; copied: boolean; lines: string[] };
   copiedN8n?: boolean;
   hermes?: { downloaded: boolean };
 }) {
+  const action = (top: number, label: ReactNode, icon: ReactNode, on = false) => (
+    <span className="absolute flex items-center gap-1 text-[9.5px] font-medium" style={{ right: 32, top, color: ACCENT, fontWeight: on ? 600 : 500 }}>
+      {label}
+      {icon}
+    </span>
+  );
   return (
-    <>
-      <div className="absolute left-[20px] top-[86px] w-[490px]">
-        <p className="text-[11px] text-[#4d5b55]">Recommended setup for {task}</p>
-        <div className="mt-2 h-[18px] w-[300px] rounded bg-[#13201b]/80" />
-        <div className="mt-4 h-[250px] rounded-xl border border-[#d6ddd9] bg-white p-4">
-          <div className="flex items-center gap-3 pt-16">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3">
-                {i > 0 && <span className="h-px w-5 bg-[#7f8d87]" />}
-                <span className="h-[54px] w-[86px] rounded-lg border border-[#d6ddd9] bg-[#f3f5f4]" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="absolute left-[530px] top-[76px] h-[340px] w-[270px] overflow-hidden rounded-xl border border-[#d6ddd9] bg-white">
-        <div className="bg-[#e1ede7] px-[14px] pb-3 pt-[12px]">
-          <p className="text-[10.5px] font-medium" style={{ color: ACCENT }}>
-            {">_"} Start building
-          </p>
-          <p className="mt-1 text-[15px] font-semibold leading-tight text-[#13201b]">Build it with an AI coding assistant</p>
-          <p className="mt-1.5 text-[10.5px] leading-snug text-[#4d5b55]">Paste BUILD.md into Claude Code, Codex or any AI assistant.</p>
-          <span className="mt-3 flex h-[32px] items-center justify-center gap-1.5 rounded-full text-[12px] font-medium text-white" style={{ background: ACCENT }}>
-            {copiedBrief ? <Check size={13} weight="bold" /> : <Copy size={13} />}
-            {copiedBrief ? "Copied" : "Copy BUILD.md"}
+    <div className="absolute inset-x-0 bottom-0 top-[66px] bg-[#f3f5f4]" style={{ fontFamily: SANS }}>
+      {/* Sidebar */}
+      <div className="absolute left-0 top-0 h-full w-[150px]" style={{ borderRight: `1px solid ${HAIR}` }}>
+        <span className="absolute left-[14px] top-[14px] grid size-[22px] place-items-center rounded-[4px]" style={{ background: ACCENT }}>
+          <span className="size-[9px] rounded-[2px] border-2 border-white" />
+        </span>
+        <span className="absolute left-[42px] top-[12px] text-[17px] leading-none text-[#13201b]" style={{ fontFamily: SERIF }}>
+          blueprint
+        </span>
+        <span className="absolute left-[42px] top-[30px] text-[5px] tracking-[0.06em] text-[#7f8d87]">YOUR SOLUTION STUDIO</span>
+        <span className="absolute left-[14px] top-[56px] text-[6px] tracking-[0.06em] text-[#7f8d87]">YOUR WORKSPACE</span>
+        {["Solution", "Build", "Workflow"].map((label, i) => (
+          <span
+            key={label}
+            className="absolute left-[10px] flex h-[22px] w-[130px] items-center rounded-[5px] px-[8px] text-[9.5px]"
+            style={{ top: 68 + i * 26, background: label === "Build" ? "#e1ede7" : "transparent", color: label === "Build" ? ACCENT : "#4d5b55", fontWeight: label === "Build" ? 500 : 400 }}
+          >
+            {label}
+            {label === "Build" && <span className="ml-auto size-[3px] rounded-full" style={{ background: ACCENT }} />}
           </span>
-          <div className="mt-2 space-y-[4px] text-[11.5px] text-[#4d5b55]">
-            <p className="flex h-[24px] items-center gap-1.5">
-              <DownloadSimple size={13} /> Download all
-            </p>
-            <p className="flex h-[24px] items-center gap-1.5">
-              <Eye size={13} /> Preview files
-            </p>
-            <p className="flex h-[24px] items-center gap-1.5">
-              <PlayCircle size={13} /> Walk me through building it
-            </p>
-          </div>
-        </div>
-        {hermes ? (
-          <div className="m-2.5 flex items-center gap-2 rounded-lg bg-[#eaeeec] px-2.5 py-2.5">
-            <Robot size={14} color={ACCENT} />
-            <span className="flex-1 text-[11.5px] font-semibold text-[#13201b]">Hermes Agent setup</span>
-            <span className="flex h-[26px] items-center gap-1 rounded-full border border-[#7f8d87] bg-white px-2.5 text-[11px] font-medium text-[#13201b]">
-              {hermes.downloaded ? <Check size={11} weight="bold" /> : <DownloadSimple size={11} />}
-              Download setup
-            </span>
-          </div>
-        ) : (
-          <div className="m-2.5 flex items-center gap-2 rounded-lg bg-[#eaeeec] px-2.5 py-2.5">
-            <FlowArrow size={14} color={ACCENT} />
-            <span className="flex-1 text-[11.5px] font-semibold text-[#13201b]">n8n workflow</span>
-            <span className="flex h-[26px] items-center gap-1 rounded-full border border-[#7f8d87] bg-white px-2.5 text-[11px] font-medium text-[#13201b]">
-              {copiedN8n ? <Check size={11} weight="bold" /> : <Copy size={11} />}
-              {copiedN8n ? "Copied" : "Copy for n8n"}
-            </span>
-          </div>
-        )}
+        ))}
+        <span className="absolute left-[14px] top-[262px] w-[120px] text-[11px] leading-[1.3] text-[#4d5b55]" style={{ fontFamily: SERIF }}>
+          A considered path from request to working system.
+        </span>
       </div>
-    </>
+
+      {/* Facts strip */}
+      <div className="absolute left-[150px] right-0 top-0 flex h-[34px] items-center gap-[22px] px-[30px]" style={{ borderBottom: `1px solid ${HAIR}` }}>
+        {["Agents", "Model", "Main tool", "Autonomy", "Runs on"].map((label) => (
+          <span key={label} className="flex flex-col gap-[3px]">
+            <span className="text-[6px] text-[#7f8d87]">{label}</span>
+            <span className="h-[5px] w-[70px] rounded bg-[#13201b]/25" />
+          </span>
+        ))}
+      </div>
+
+      {/* Build view: heading */}
+      <span className="absolute left-[180px] top-[48px] text-[6px] tracking-[0.06em] text-[#7f8d87]">YOUR BUILD BRIEF · {task.toUpperCase()}</span>
+      <span className="absolute left-[180px] top-[58px] text-[28px] leading-none text-[#13201b]" style={{ fontFamily: SERIF }}>
+        Build your solution<span style={{ color: ACCENT }}>.</span>
+      </span>
+      <span className="absolute left-[180px] top-[96px] whitespace-nowrap text-[10px] text-[#4d5b55]">
+        Build it with an AI coding assistant.
+      </span>
+      <span
+        className="absolute left-[357px] top-[96px] font-mono text-[9.5px] text-[#13201b]"
+        style={{ textDecoration: brief?.open ? "underline dotted" : undefined, color: brief?.open ? ACCENT : undefined, textUnderlineOffset: 3 }}
+      >
+        BUILD.md
+      </span>
+      <span className="absolute left-[408px] top-[96px] whitespace-nowrap text-[10px] text-[#4d5b55]">brings your plan together.</span>
+
+      {/* Build steps */}
+      {[
+        { n: "01", title: "Build it with an AI coding assistant", body: "Paste BUILD.md into Claude Code, Codex or any AI assistant. It explains each step and asks before it acts.", top: 120 },
+        hermes
+          ? { n: "02", title: "Hermes Agent setup", body: "Unzip, read setup.sh, then run it. It installs the skill and persona into ~/.hermes.", top: 200 }
+          : { n: "02", title: "n8n workflow", body: "Open a new workflow in n8n and press Cmd+V. Then add your credentials to the highlighted nodes.", top: 200 },
+      ].map((item) => (
+        <div key={item.n} className="absolute left-[180px] h-[70px] w-[620px] rounded-[8px] bg-white" style={{ top: item.top, border: `1px solid ${HAIR}` }}>
+          <span className="absolute left-[14px] top-[12px] grid size-[18px] place-items-center rounded-full border border-[#d6ddd9] text-[6.5px] text-[#7f8d87]">{item.n}</span>
+          <span className="absolute left-[44px] top-[13px] text-[10.5px] font-medium text-[#13201b]">{item.title}</span>
+          <span className="absolute left-[44px] top-[30px] w-[380px] text-[8.5px] leading-[1.45] text-[#4d5b55]">{item.body}</span>
+        </div>
+      ))}
+      {action(133, "Walk me through it", <PlayCircle size={10} />)}
+      {action(153, "Download all", downloaded ? <Check size={10} weight="bold" /> : <DownloadSimple size={10} />, downloaded)}
+      {hermes
+        ? action(213, "Download setup", hermes.downloaded ? <Check size={10} weight="bold" /> : <DownloadSimple size={10} />, hermes.downloaded)
+        : action(213, copiedN8n ? "Copied" : "Copy for n8n", copiedN8n ? <Check size={10} weight="bold" /> : <Copy size={10} />, copiedN8n)}
+      {action(233, hermes ? "Walk me through Hermes" : "Walk me through n8n", <PlayCircle size={10} />)}
+
+      {/* The BUILD.md pop-up */}
+      {brief?.open && (
+        <>
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute overflow-hidden rounded-[10px] bg-white shadow-2xl" style={{ left: 250, top: 46, width: 360, height: 240, border: `1px solid ${HAIR}` }}>
+            <div className="flex h-[34px] items-center px-[14px]" style={{ borderBottom: `1px solid ${HAIR}` }}>
+              <span className="font-mono text-[10px] font-semibold text-[#13201b]">BUILD.md</span>
+              <span
+                className="absolute flex h-[22px] w-[72px] items-center justify-center gap-1 rounded-[6px] bg-white text-[9px] font-medium text-[#13201b]"
+                style={{ right: 46, top: 6, border: "1px solid #d6ddd9" }}
+              >
+                {brief.copied ? <Check size={10} weight="bold" /> : <Copy size={10} />}
+                {brief.copied ? "Copied" : "Copy"}
+              </span>
+              <span className="absolute right-[16px] top-[10px] text-[10px] text-[#4d5b55]">✕</span>
+            </div>
+            <div className="h-full space-y-[3px] bg-[#f3f5f4]/60 px-[14px] py-[10px] font-mono text-[7.5px] leading-[1.4] text-[#13201b]">
+              {brief.lines.map((l, i) => (
+                <p key={i} className="truncate">
+                  {l || " "}
+                </p>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
-function BrowserWindow({ t, slug, task }: { t: number; slug: string; task: string }) {
+function BrowserWindow({ t, slug, task, brief }: { t: number; slug: string; task: string; brief: string[] }) {
   // Minimising: the window shrinks into the browser's dock icon.
   const m = ease(seg(t, 4.75, 5.45));
   if (t > 5.5) return null;
-  const bubble = t >= 1.8 && t < 3.1;
+  const bubble = t >= 1.8 && t < 2.7;
 
   return (
     <BrowserFrame
@@ -185,11 +257,11 @@ function BrowserWindow({ t, slug, task }: { t: number; slug: string; task: strin
       toolbar={<DownloadSimple size={16} weight={t >= 1.8 ? "bold" : "regular"} color={t >= 1.8 ? ACCENT : "#4d5b55"} />}
       style={{ transform: `translate(${-48 * m}px, ${244 * m}px) scale(${1 - 0.95 * m})`, opacity: 1 - seg(t, 5.2, 5.5) }}
     >
-      <SitePage task={task} copiedBrief={t >= 3.35} />
+      <SitePage task={task} downloaded={t >= 1.65} brief={{ open: t >= 2.75 && t < 4.0, copied: t >= 3.5, lines: brief }} />
       {bubble && (
         <div
           className="absolute right-[10px] top-[60px] flex w-[270px] items-center gap-2.5 rounded-xl border border-black/10 bg-white p-3 shadow-xl"
-          style={{ opacity: seg(t, 1.8, 2.0) * (1 - seg(t, 2.9, 3.1)) }}
+          style={{ opacity: seg(t, 1.8, 2.0) * (1 - seg(t, 2.5, 2.7)) }}
         >
           <FileZip size={26} color={ACCENT} />
           <span className="min-w-0">

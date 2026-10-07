@@ -168,6 +168,16 @@ export function StarterKit({
   const brief = files[0];
   const current = files[active];
 
+  // BUILD.md on its own, opened from the Build view's subtitle.
+  const [briefOpen, setBriefOpen] = useState(false);
+  const briefRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = briefRef.current;
+    if (!d) return;
+    if (briefOpen && !d.open) d.showModal();
+    else if (!briefOpen && d.open) d.close();
+  }, [briefOpen]);
+
   const flash = (key: string) => {
     setCopied(key);
     window.setTimeout(() => setCopied((c) => (c === key ? null : c)), 2000);
@@ -404,7 +414,16 @@ export function StarterKit({
               Build your solution<span className="title-period">.</span>
             </h1>
             <p>
-              Build it with an AI coding assistant. <span className="font-mono text-[13.5px] text-ink">BUILD.md</span> brings your plan together.
+              Build it with an AI coding assistant.{" "}
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setBriefOpen(true)}
+                className="font-mono text-[13.5px] text-ink decoration-dotted underline-offset-4 hover:text-accent hover:underline focus-visible:underline"
+              >
+                BUILD.md
+              </button>{" "}
+              brings your plan together.
             </p>
             {AI_ENABLED && writing && writing !== "template" && (
               <p role="status" aria-live="polite" className="mt-2 flex items-start gap-1.5 text-[13.5px] leading-snug text-muted">
@@ -417,10 +436,6 @@ export function StarterKit({
               </p>
             )}
           </div>
-          <button type="button" className="studio-btn" onClick={copyBrief}>
-            {copied === "brief" ? <Check size={17} weight="bold" aria-hidden /> : <Copy size={17} aria-hidden />}
-            {copied === "brief" ? "Copied" : "Copy BUILD.md"}
-          </button>
         </div>
 
         <ol className="build-checklist" aria-label="Build steps">
@@ -434,6 +449,10 @@ export function StarterKit({
               <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide("build")}>
                 Walk me through it
                 <PlayCircle size={16} aria-hidden />
+              </button>
+              <button type="button" className="studio-quiet" onClick={downloadAll}>
+                Download all
+                <DownloadSimple size={16} aria-hidden />
               </button>
             </div>
           </li>
@@ -482,13 +501,39 @@ export function StarterKit({
               <FileText size={18} aria-hidden />
               Preview files
             </button>
-            <button type="button" className="studio-quiet" onClick={downloadAll}>
-              <DownloadSimple size={16} aria-hidden />
-              Download all
-            </button>
           </div>
         </div>
         {overlays}
+        <dialog
+          ref={briefRef}
+          aria-labelledby={`${panelId}-brief`}
+          onClose={() => setBriefOpen(false)}
+          onClick={(e) => e.target === e.currentTarget && setBriefOpen(false)}
+          className="m-auto h-[min(760px,88vh)] w-[min(900px,calc(100%-2rem))] max-w-none overflow-hidden rounded-2xl border border-line bg-surface p-0 text-ink shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-[2px]"
+        >
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-3.5">
+              <div className="min-w-0">
+                <h2 id={`${panelId}-brief`} className="font-mono text-[15px] font-semibold text-ink">
+                  BUILD.md
+                </h2>
+                <p className="text-[13px] text-muted">Paste it into Claude Code, Codex or any AI assistant.</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <button type="button" className="studio-outline" onClick={copyBrief}>
+                  {copied === "brief" ? <Check size={18} weight="bold" aria-hidden /> : <Copy size={18} aria-hidden />}
+                  {copied === "brief" ? "Copied" : "Copy"}
+                </button>
+                <button type="button" className={btn.quiet} onClick={() => setBriefOpen(false)} aria-label="Close">
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+            </div>
+            <pre tabIndex={0} aria-label="Contents of BUILD.md" className="min-h-0 flex-1 overflow-auto bg-surface-2/50 px-5 py-4 font-mono text-[12.5px] leading-relaxed text-ink">
+              <code>{brief.content}</code>
+            </pre>
+          </div>
+        </dialog>
       </section>
     );
   }
