@@ -3,7 +3,6 @@ import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { PlanState } from "../App";
 import { TaskInput } from "../components/TaskInput";
-import { btn } from "../components/ui";
 import { AI_ENABLED } from "../lib/features";
 import { type Detail, type DetailQuestion, adaptQuestion } from "../lib/interview";
 import {
@@ -41,22 +40,23 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
   const total = active.length;
 
   return (
-    <main id="main" className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12">
+    <main id="main" className="survey-main">
       <div className="mb-10">
-        <div className="mb-3 flex items-center justify-between text-[14px]">
-          <p className="font-medium text-ink" aria-live="polite">
-            Question {index + 1} <span className="text-muted">of {total}</span>
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <p className="section-kicker studio-caption !mb-0" aria-live="polite">
+            <span className="status-dot" aria-hidden />
+            Question {index + 1} of {total}
           </p>
           {editing ? (
-            <button type="button" onClick={onCancelEdit} className="text-muted underline-offset-4 hover:text-ink hover:underline">
+            <button type="button" onClick={onCancelEdit} className="studio-quiet">
               Back to your result
             </button>
           ) : (
-            <p className="text-muted">About {Math.max(1, Math.ceil(((total - index) * 12) / 60))} min left</p>
+            <p className="text-[13px] text-muted">About {Math.max(1, Math.ceil(((total - index) * 12) / 60))} min left</p>
           )}
         </div>
         <div
-          className="flex gap-1"
+          className="survey-bar"
           role="progressbar"
           aria-label="Progress through the guide"
           aria-valuemin={1}
@@ -66,7 +66,7 @@ export function Guide({ qid, answers, editing, direction, plan, onUseStandard, o
           {active.map((x, i) => (
             <span
               key={x.id}
-              className={`h-1 flex-1 rounded-full transition-colors duration-500 ${i <= index ? "bg-accent" : "bg-line"}`}
+              className={i <= index ? "is-done" : undefined}
             />
           ))}
         </div>
@@ -108,11 +108,11 @@ function Adapting({ task, onUseStandard }: { task: string; onUseStandard: () => 
         <CircleNotch size={18} aria-hidden className={reduce ? "" : "animate-spin"} />
         Adapting the questions to your task
       </p>
-      <h1 className="mt-3 text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-ink sm:text-[2.125rem]">{task}</h1>
-      <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">
+      <h1 className="survey-title mt-4">{task}</h1>
+      <p className="survey-help">
         The AI is rewording the questions in your terms and suggesting likely answers. You can change every one of them.
       </p>
-      <button type="button" onClick={onUseStandard} className={`${btn.quiet} mt-6 -ml-3`}>
+      <button type="button" onClick={onUseStandard} className="studio-quiet !mt-8">
         Use the standard questions instead
       </button>
     </div>
@@ -144,7 +144,7 @@ function PlanNote({ plan }: { plan?: PlanState }) {
 
 function WhyWeAsk({ text }: { text: string }) {
   return (
-    <details className="group mt-8 rounded-2xl border border-line bg-surface/60 px-4 py-3 open:bg-surface">
+    <details className="survey-why group">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-medium text-ink [&::-webkit-details-marker]:hidden">
         Why we ask
         <CaretDown size={16} aria-hidden className="text-muted transition-transform duration-200 group-open:rotate-180" />
@@ -250,14 +250,10 @@ function QuestionView({
 
   const header = (
     <>
-      <h1
-        ref={headingRef}
-        tabIndex={-1}
-        className="text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-ink outline-none sm:text-[2.125rem]"
-      >
+      <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
         {q.title}
       </h1>
-      {q.help && q.kind !== "text" && <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">{q.help}</p>}
+      {q.help && q.kind !== "text" && <p className="survey-help">{q.help}</p>}
       {q.suggested && q.reason && answers[q.id] === undefined && (
         <p className="mt-3 flex max-w-[60ch] items-start gap-1.5 text-[14.5px] leading-relaxed text-accent">
           <Sparkle size={15} weight="fill" aria-hidden className="mt-1 shrink-0" />
@@ -280,8 +276,8 @@ function QuestionView({
             onSubmit={(task) => onSubmit({ ...answers, task })}
           />
         </div>
-        <button type="button" onClick={onBack} className={`${btn.quiet} mt-6 -ml-3`}>
-          <ArrowLeft size={16} weight="bold" aria-hidden />
+        <button type="button" onClick={onBack} className="studio-quiet !mt-7">
+          <ArrowLeft size={16} aria-hidden />
           {editing ? "Back to your result" : "Back to start"}
         </button>
         <WhyWeAsk text={q.why} />
@@ -300,9 +296,8 @@ function QuestionView({
               <label
                 key={o.value}
                 onPointerDown={() => (pointerPick.current = true)}
-                className={`group flex cursor-pointer items-start gap-4 rounded-2xl border bg-surface px-4 py-4 transition-[border-color,background-color,transform] duration-200 active:scale-[0.995] sm:px-5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
-                  checked ? "border-accent bg-accent-soft" : "border-line-strong/60 hover:border-line-strong"
-                }`}
+                data-checked={checked || undefined}
+                className="survey-option group"
               >
                 <input
                   type={q.kind === "multi" ? "checkbox" : "radio"}
@@ -328,9 +323,7 @@ function QuestionView({
                 />
                 <span
                   aria-hidden
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border transition-colors ${
-                    q.kind === "multi" ? "rounded-md" : "rounded-full"
-                  } ${checked ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface"}`}
+                  className={`survey-mark ${q.kind === "multi" ? "rounded-[5px]" : "rounded-full"}`}
                 >
                   {checked && (q.kind === "multi" ? <Check size={13} weight="bold" /> : <span className="h-2 w-2 rounded-full bg-accent-ink" />)}
                 </span>
@@ -338,12 +331,12 @@ function QuestionView({
                   <span className="block text-[16px] font-medium leading-snug text-ink">
                     {o.label}
                     {answers[q.id] === undefined && (Array.isArray(q.suggested) ? q.suggested.includes(o.value) : q.suggested === o.value) && (
-                      <span className="ml-2 inline-block rounded-full bg-accent-soft px-2 py-0.5 align-middle text-[11.5px] font-medium text-accent">Suggested</span>
+                      <span className="survey-suggested">Suggested</span>
                     )}
                   </span>
                   {o.hint && <span className="mt-1 block text-[14.5px] leading-relaxed text-muted">{o.hint}</span>}
                 </span>
-                <span aria-hidden className="ml-auto hidden pt-0.5 font-mono text-[12px] text-muted sm:block">
+                <span aria-hidden className="survey-key">
                   {i + 1}
                 </span>
               </label>
@@ -353,13 +346,13 @@ function QuestionView({
       </fieldset>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={onBack} className={btn.quiet}>
-          <ArrowLeft size={16} weight="bold" aria-hidden />
+        <button type="button" onClick={onBack} className="studio-quiet">
+          <ArrowLeft size={16} aria-hidden />
           {isFirst ? "Back to start" : "Back"}
         </button>
-        <button type="submit" disabled={!answered} className={btn.primary}>
+        <button type="submit" disabled={!answered} className="start-build">
           {finishing ? "Save and see result" : "Continue"}
-          <ArrowRight size={17} weight="bold" aria-hidden />
+          <ArrowRight size={17} aria-hidden />
         </button>
       </div>
       <p className="mt-3 hidden text-right text-[13px] text-muted sm:block">
@@ -419,21 +412,21 @@ export function Details({
 
   if (!questions.length) return null;
   return (
-    <main id="main" className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12">
+    <main id="main" className="survey-main">
       <form onSubmit={submit}>
-        <p className="mb-3 flex items-center gap-1.5 text-[14px] font-medium text-accent">
-          <Sparkle size={15} weight="fill" aria-hidden />
+        <p className="section-kicker studio-caption">
+          <span className="status-dot" aria-hidden />
           Last step, optional
         </p>
-        <h1 ref={headingRef} tabIndex={-1} className="text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-ink outline-none sm:text-[2.125rem]">
+        <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
           A few details about your task
         </h1>
-        <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">
+        <p className="survey-help">
           The AI asked these because the answers change how this particular system is built. Skip any you're unsure of.
         </p>
         <div className="mt-8 grid gap-6">
           {questions.map((d) => (
-            <fieldset key={d.id} className="rounded-2xl border border-line-strong/60 bg-surface px-4 py-4 sm:px-5">
+            <fieldset key={d.id} className="survey-card">
               <legend className="sr-only">{d.title}</legend>
               <p aria-hidden className="text-[16px] font-medium leading-snug text-ink">
                 {d.title}
@@ -446,7 +439,7 @@ export function Details({
                   value={notes[d.id] ?? ""}
                   maxLength={300}
                   onChange={(e) => setNotes((n) => ({ ...n, [d.id]: e.target.value }))}
-                  className="mt-3 block w-full rounded-xl border border-line-strong bg-bg px-3 py-2.5 text-[15px] text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+                  className="survey-input mt-3"
                   placeholder="Type a short answer"
                 />
               ) : (
@@ -459,7 +452,7 @@ export function Details({
                         type="button"
                         aria-pressed={on}
                         onClick={() => pick(d, o)}
-                        className={`rounded-full border px-3 py-1.5 text-[14px] transition-colors ${on ? "border-accent bg-accent-soft font-medium text-ink" : "border-line-strong/70 text-muted hover:border-line-strong hover:text-ink"}`}
+                        className="survey-chip"
                       >
                         {on && <Check size={13} weight="bold" aria-hidden className="mr-1 inline align-[-1px] text-accent" />}
                         {o}
@@ -472,13 +465,13 @@ export function Details({
           ))}
         </div>
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-          <button type="button" onClick={onBack} className={btn.quiet}>
-            <ArrowLeft size={16} weight="bold" aria-hidden />
+          <button type="button" onClick={onBack} className="studio-quiet">
+            <ArrowLeft size={16} aria-hidden />
             Back
           </button>
-          <button type="submit" className={btn.primary}>
+          <button type="submit" className="start-build">
             See your result
-            <ArrowRight size={17} weight="bold" aria-hidden />
+            <ArrowRight size={17} aria-hidden />
           </button>
         </div>
       </form>

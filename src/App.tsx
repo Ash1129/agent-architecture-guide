@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Footer, Nav } from "./components/Shell";
+import { SurveyFrame } from "./components/StudioShell";
 import { Details, Guide } from "./pages/Guide";
 import { History } from "./pages/History";
 import { HowItWorks } from "./pages/HowItWorks";
@@ -31,6 +32,27 @@ const TITLES: Record<Route["name"], string> = {
   result: "Your result | Agent Architecture Guide",
   how: "How it decides | Agent Architecture Guide",
   history: "History | Agent Architecture Guide",
+};
+
+/** The finished example behind "Explore an example" on the start page. */
+const EXAMPLE: Answers = {
+  task: "Tailor resumes to job descriptions",
+  shape: "varies",
+  kinds: "yes",
+  roles: "specialists",
+  quality: "partly",
+  knowledge: ["playbook", "reference", "memory"],
+  systems: "none",
+  trigger: "schedule",
+  volume: "occasional",
+  risks: ["visible", "irreversible", "personal"],
+  location: "independence",
+  team: "small",
+  details: [
+    { q: "What format should the tailored resume be delivered in?", a: "PDF" },
+    { q: "What changes may it make to the source resume?", a: "Add facts from other supplied materials" },
+    { q: "What should happen before a tailored resume is used?", a: "A person reviews every resume" },
+  ],
 };
 
 export default function App() {
@@ -76,7 +98,8 @@ export default function App() {
     return () => ctl.abort();
   }, [answers.task, inGuide]); // eslint-disable-line react-hooks/exhaustive-deps -- plan is read only to skip a repeat fetch
   const currentPlan = plan && plan.task === answers.task?.trim() ? plan : undefined;
-  const studio = route.name === "result" && isComplete(answers);
+  // The start page and a finished result have their own header and footer, so the app's step aside.
+  const studio = route.name === "home" || inGuide || (route.name === "result" && isComplete(answers));
   const planDetails = currentPlan?.status === "ready" ? (currentPlan.response?.plan.details ?? []) : [];
 
   // Every result reached is saved; edits update the same entry.
@@ -196,51 +219,65 @@ export default function App() {
       >
         Skip to content
       </a>
-      {/* A finished result is its own workspace, with its own sidebar, so the top bar steps aside. */}
+      {/* The start page, the survey and a finished result have their own studio frames, so the top bar steps aside. */}
       {!studio && <Nav route={route} cta={cta} historyCount={history.length} />}
       <div className="flex-1 [&>main]:outline-none">
         {route.name === "home" && (
           <Landing
-            cta={cta}
             onTask={(task) => {
-              // A new task typed on the home page is a new entry, unless it's unfinished work being renamed.
-              if (isComplete(answers)) setSession(newSessionId());
-              setAnswers((a) => ({ ...a, task }));
+              // A problem typed on the start page begins a new entry, unless it's the unfinished one already under way.
+              if (isComplete(answers) || answers.task?.trim() !== task) {
+                setSession(newSessionId());
+                setAnswers({ task });
+              }
+              setEditing(false);
               setDirection(1);
               navigate({ name: "guide", q: "shape" });
+            }}
+            onSurvey={startOver}
+            onExample={() => {
+              setSession(findByCode(resultCode(EXAMPLE))?.id ?? newSessionId());
+              setAnswers(EXAMPLE);
+              setEditing(false);
+              setInvalidLink(false);
+              navigate({ name: "result", code: resultCode(EXAMPLE) });
             }}
           />
         )}
         {route.name === "guide" && (
-          <Guide
-            qid={route.q}
-            answers={answers}
-            editing={editing}
-            direction={direction}
-            plan={currentPlan}
-            onUseStandard={() => answers.task && setPlan({ task: answers.task.trim(), status: "standard" })}
-            onAnswer={handleAnswer}
-            onBack={handleBack}
-            onCancelEdit={() => {
-              setEditing(false);
-              navigate({ name: "result" });
-            }}
-          />
+          <SurveyFrame>
+            <Guide
+              qid={route.q}
+              answers={answers}
+              editing={editing}
+              direction={direction}
+              plan={currentPlan}
+              onUseStandard={() => answers.task && setPlan({ task: answers.task.trim(), status: "standard" })}
+              onAnswer={handleAnswer}
+              onBack={handleBack}
+              onCancelEdit={() => {
+                setEditing(false);
+                navigate({ name: "result" });
+              }}
+            />
+          </SurveyFrame>
         )}
         {AI_ENABLED && route.name === "details" && (
-          <Details
-            key={currentPlan?.status ?? "none"}
-            questions={planDetails}
-            // Not ready until this task's plan has been looked up (it isn't, on the first render after a reload).
-            ready={!answers.task || (!!currentPlan && currentPlan.status !== "loading")}
-            answers={answers}
-            onSubmit={handleDetails}
-            onBack={() => {
-              setDirection(-1);
-              const active = activeQuestions(answers);
-              navigate({ name: "guide", q: active[active.length - 1].id });
-            }}
-          />
+          <SurveyFrame>
+            <Details
+              key={currentPlan?.status ?? "none"}
+              questions={planDetails}
+              // Not ready until this task's plan has been looked up (it isn't, on the first render after a reload).
+              ready={!answers.task || (!!currentPlan && currentPlan.status !== "loading")}
+              answers={answers}
+              onSubmit={handleDetails}
+              onBack={() => {
+                setDirection(-1);
+                const active = activeQuestions(answers);
+                navigate({ name: "guide", q: active[active.length - 1].id });
+              }}
+            />
+          </SurveyFrame>
         )}
         {route.name === "result" && (
           <Result

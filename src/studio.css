@@ -772,3 +772,420 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------- the public starting point */
+
+.studio.start-page {
+  flex-direction: column;
+  min-height: 100dvh;
+  background:
+    radial-gradient(1100px 480px at 50% -12%, color-mix(in oklab, var(--accent-soft) 70%, transparent), transparent 72%),
+    radial-gradient(800px 380px at 88% 18%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
+    radial-gradient(700px 360px at 8% 42%, color-mix(in oklab, var(--accent-soft) 50%, transparent), transparent 68%),
+    var(--bg);
+}
+.start-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 44px;
+}
+.start-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+}
+.start-brand span {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  line-height: 1;
+  color: var(--ink);
+}
+.start-main {
+  flex: 1;
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 110px 24px 100px;
+  text-align: center;
+}
+.start-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 30px;
+}
+.studio .start-main h1 {
+  font-size: 104px;
+  line-height: 1.02;
+  margin: 0 0 26px;
+}
+.start-subtitle {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.8;
+  margin: 0 0 40px;
+}
+.problem-form {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.problem-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid color-mix(in oklab, var(--surface) 75%, transparent);
+  border-radius: 18px;
+  padding: 14px 18px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 50%, transparent),
+    0 10px 32px -14px color-mix(in oklab, var(--ink) 22%, transparent),
+    0 2px 8px -4px color-mix(in oklab, var(--ink) 10%, transparent);
+  transition: border-color 180ms, box-shadow 180ms, background-color 180ms;
+}
+.problem-field:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  background: color-mix(in oklab, var(--surface) 75%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 60%, transparent),
+    0 14px 40px -14px color-mix(in oklab, var(--accent) 30%, transparent),
+    0 2px 10px -4px color-mix(in oklab, var(--ink) 10%, transparent);
+}
+.problem-field > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.problem-field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 30px;
+  max-height: 180px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.problem-field textarea::placeholder {
+  color: var(--muted);
+}
+.start-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+}
+.start-build {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 132px;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 15px;
+  font-weight: 500;
+  transition: opacity 150ms;
+}
+.start-build:hover {
+  opacity: 0.92;
+}
+.start-build:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.survey-hint {
+  margin: 30px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+.survey-hint .studio-quiet {
+  margin: 0;
+  padding: 2px 6px;
+  vertical-align: baseline;
+}
+.start-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 44px;
+  border-top: 1px solid var(--studio-hairline);
+  color: var(--studio-caption);
+  font-size: 12px;
+}
+.start-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.6;
+}
+.start-footer-note img {
+  object-fit: cover;
+  border-radius: 5px;
+}
+.start-footer-note strong {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .studio.start-page {
+    display: flex;
+  }
+  .start-header {
+    padding: 20px 22px;
+  }
+  .start-brand span {
+    font-size: 23px;
+  }
+  .start-main {
+    padding: 72px 22px 80px;
+  }
+  .studio .start-main h1 {
+    font-size: 74px;
+  }
+  .start-eyebrow {
+    font-size: 10px;
+  }
+  .start-subtitle {
+    font-size: 15.5px;
+  }
+  .start-footer {
+    padding: 18px 22px;
+  }
+  .start-footer > span {
+    max-width: 140px;
+    text-align: right;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 400px) {
+  .studio .start-main h1 {
+    font-size: 62px;
+  }
+  .start-header .studio-quiet {
+    font-size: 13px;
+  }
+}
+
+/* ---------------------------------------------------------------- the survey */
+
+.survey-main {
+  flex: 1;
+  width: min(100%, 680px);
+  margin: 0 auto;
+  padding: 48px 24px 110px;
+  outline: none;
+}
+.survey-bar {
+  display: flex;
+  gap: 4px;
+}
+.survey-bar > * {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--studio-hairline);
+  transition: background-color 500ms;
+}
+.survey-bar > .is-done {
+  background: var(--accent);
+}
+.studio h1.survey-title {
+  font-size: 46px;
+  line-height: 1.08;
+  margin: 0;
+}
+.survey-help {
+  max-width: 60ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 16.5px;
+  line-height: 1.75;
+}
+
+/* Answer cards: frosted like the start page's field, accent when picked. */
+.survey-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 17px 20px;
+  cursor: pointer;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 6px 22px -16px color-mix(in oklab, var(--ink) 25%, transparent);
+  transition: border-color 180ms, background-color 180ms, box-shadow 180ms, transform 180ms;
+}
+.survey-option:hover {
+  border-color: var(--line-strong);
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+}
+.survey-option:active {
+  transform: scale(0.996);
+}
+.survey-option:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.survey-option[data-checked] {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  background: color-mix(in oklab, var(--accent-soft) 75%, transparent);
+  box-shadow: 0 10px 30px -16px color-mix(in oklab, var(--accent) 40%, transparent);
+}
+.survey-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  transition: background-color 150ms, border-color 150ms;
+}
+.survey-option[data-checked] .survey-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.survey-suggested {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+.survey-key {
+  display: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid var(--studio-hairline);
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--studio-caption);
+}
+@media (min-width: 640px) {
+  .survey-key {
+    display: grid;
+  }
+}
+
+.survey-why {
+  margin-top: 32px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 45%, transparent);
+}
+.survey-why[open] {
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+}
+
+/* The optional details step. */
+.survey-card {
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.survey-input {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: 0;
+  transition: border-color 180ms, box-shadow 180ms;
+}
+.survey-input::placeholder {
+  color: var(--muted);
+}
+.survey-input:focus {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  box-shadow: 0 8px 26px -14px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.survey-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  color: var(--ink);
+  font-size: 14px;
+  transition: border-color 150ms, background-color 150ms;
+}
+.survey-chip:hover {
+  border-color: var(--line-strong);
+}
+.survey-chip[aria-pressed="true"] {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+}
+
+/* The first question's field reuses the start page's frosted box. */
+.survey-field {
+  align-items: center;
+}
+.survey-field > svg {
+  margin-top: 0;
+}
+.survey-field input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.survey-field input::placeholder {
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  .survey-main {
+    padding: 28px 22px 80px;
+  }
+  .studio h1.survey-title {
+    font-size: 36px;
+  }
+}

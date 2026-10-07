@@ -103,3 +103,18 @@ export function StudioShell({
     </div>
   );
 }
+
+/** The survey's frame: the start page's background and "blueprint studio" header around the questions. */
+export function SurveyFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="studio start-page survey-page">
+      <header className="start-header">
+        <a href={href({ name: "home" })} className="start-brand" aria-label="blueprint studio, home">
+          <TreeStructure size={22} aria-hidden />
+          <span>blueprint studio</span>
+        </a>
+      </header>
+      {children}
+    </div>
+  );
+}
