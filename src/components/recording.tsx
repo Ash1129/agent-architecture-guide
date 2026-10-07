@@ -108,7 +108,9 @@ export function VideoPlayer({
   const ended = t >= seconds;
 
   return (
-    <figure className="mx-auto w-full max-w-[860px]">
+    // As wide as the dialog allows, but never so tall that the controls and step caption drop out of view.
+    // Margins are inline so the studio's figure reset can't pin it to the left.
+    <figure className="w-full" style={{ marginInline: "auto", maxWidth: "min(100%, max(560px, calc((88vh - 190px) * 16 / 9)))" }}>
       <div
         ref={boxRef}
         onClick={toggle}

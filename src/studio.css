@@ -73,16 +73,28 @@
   color: var(--ink);
   flex-shrink: 0;
 }
+/* "lueprint" and the caption span exactly the B's height: the top of the "l"
+   meets the top of the B, the foot of the caption meets its foot. */
 .studio-logo-word {
-  transform: translateY(-1px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 34px; /* the B's height (.studio-logo-mark) */
+}
+.studio-logo-word > span {
+  line-height: 1;
+  /* Instrument Serif's "l" starts 0.10 em below the top of its line; pulling up a little less (about 1.5px)
+     sets its thin, pointed top just under the B's heavy flat one, which reads as level. */
+  margin-top: -0.04em;
 }
 .studio-logo small {
   display: block;
   font-family: var(--font-studio);
   font-size: 8.5px;
+  line-height: 1;
   letter-spacing: 0.06em;
   color: var(--studio-caption);
-  margin-top: 5px;
+  margin-bottom: -0.15em; /* Work Sans capitals sit 0.15 em above the bottom of their line */
 }
 .studio-caption {
   font-size: 11px;
@@ -238,36 +250,44 @@
   min-width: 0;
   flex: 1;
 }
-.fact-strip {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr 0.9fr 1.15fr 1.1fr;
-  padding: 22px 40px;
-  gap: 20px;
-  border-bottom: 1px solid var(--studio-hairline);
-  margin: 0;
+/* The Solution view's byline: the key facts in one quiet, wrapping line under the title. */
+/* Every fact has a separator in front. The list starts one separator to the left
+   and the wrapper clips at the page edge, so the dot that begins each line,
+   however it wraps, is hidden. */
+.studio-byline {
+  --sep: 26px;
+  overflow: hidden;
+  margin: -6px 0 26px;
+  font-size: 13.5px;
+  color: var(--muted);
 }
-.fact-strip dt {
-  font-size: 12px;
-  color: var(--studio-caption);
-  margin-bottom: 6px;
-}
-.fact-strip dd {
+.studio-byline dl {
   display: flex;
-  gap: 7px;
-  align-items: baseline;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 6px;
+  margin: 0 0 0 calc(-1 * var(--sep));
+}
+.studio-byline dl > div {
+  display: inline-flex;
+  align-items: center;
+}
+.studio-byline dl > div::before {
+  content: "·";
+  width: var(--sep);
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--studio-caption);
+}
+.studio-byline dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
 }
-.fact-strip dd::before {
-  content: "";
-  background: var(--accent);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+.studio-byline dd svg {
+  color: var(--accent);
   flex-shrink: 0;
-  transform: translateY(-2px);
 }
 .studio-page {
   max-width: 1080px;
@@ -740,10 +760,6 @@
   .studio-page {
     padding: 50px 38px 32px;
   }
-  .fact-strip {
-    padding: 20px 26px;
-    gap: 14px;
-  }
   .studio h1 {
     font-size: 48px;
   }
@@ -794,10 +810,6 @@
   }
   .studio-nav .nav-dot {
     display: none;
-  }
-  .fact-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    padding: 18px 20px;
   }
   .studio-page {
     padding: 34px 20px 28px;
@@ -1406,4 +1418,575 @@
 .studio-outline:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- the invitation to build (BuildInvite) */
+
+.build-invite {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  overflow: hidden;
+  color: var(--ink);
+  text-decoration: none;
+  background-color: var(--surface);
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 10%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  box-shadow: 0 18px 46px -34px color-mix(in oklab, var(--ink) 45%, transparent);
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms,
+    border-color 260ms;
+}
+.build-invite:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  box-shadow: 0 26px 56px -30px color-mix(in oklab, var(--accent) 45%, transparent);
+}
+.build-invite:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The project window. */
+.build-invite-window {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 22px 24px 0;
+  border-radius: 12px 12px 0 0;
+  border: 1px solid var(--studio-hairline);
+  border-bottom: 0;
+  background: color-mix(in oklab, var(--bg) 70%, var(--surface));
+  overflow: hidden;
+}
+.build-invite-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--studio-hairline);
+  font-size: 12px;
+  color: var(--studio-caption);
+}
+.build-invite-lights {
+  display: flex;
+  gap: 6px;
+}
+.build-invite-lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--ink) 14%, transparent);
+}
+.build-invite-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+.build-invite-title svg {
+  color: var(--accent);
+}
+/* The scenes take turns in the stage, cross-fading. */
+.build-invite-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.build-invite-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.build-invite-progress {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.build-invite-progress > span {
+  position: relative;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--ink) 12%, transparent);
+}
+.build-invite-progress > span.is-done {
+  background: color-mix(in oklab, var(--accent) 55%, transparent);
+}
+.build-invite-progress i {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left;
+  animation: build-invite-fill linear forwards;
+}
+@keyframes build-invite-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.build-invite-files {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 10px;
+  overflow: hidden;
+}
+.build-invite-file {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+.build-invite-file > svg:first-child {
+  color: var(--studio-caption);
+  flex-shrink: 0;
+}
+.build-invite-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.build-invite-file.is-brief {
+  background: var(--accent-soft);
+}
+.build-invite-file.is-brief > svg:first-child {
+  color: var(--accent);
+}
+.build-invite-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  font-family: var(--font-studio);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.build-invite-tick {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.build-invite-more {
+  padding: 2px 10px 0 33px;
+  font-size: 12px;
+  color: var(--studio-caption);
+}
+
+/* The prompt types itself out once the files are in, then the caret blinks. */
+.build-invite-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.build-invite-chevron {
+  color: var(--accent);
+  font-weight: 600;
+}
+.build-invite-typed {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  max-width: max-content;
+  animation: build-invite-type var(--type-time, 1.4s) steps(var(--type-chars)) var(--type-delay, 0s) forwards;
+}
+.build-invite-caret {
+  width: 7px;
+  height: 15px;
+  margin-left: -6px;
+  background: var(--accent);
+  animation: build-invite-blink 1s steps(1) infinite;
+}
+@keyframes build-invite-type {
+  to {
+    width: calc(var(--type-chars) * 1ch);
+  }
+}
+@keyframes build-invite-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.build-invite.is-still .build-invite-typed {
+  width: auto;
+  animation: none;
+}
+.build-invite.is-still .build-invite-caret {
+  animation: none;
+}
+
+/* n8n: the canvas, a paste toast, nodes joined by wires, then green ticks as it runs. */
+.build-invite-canvas {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 22px 18px;
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 13%, transparent) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+}
+.build-invite-toast {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-size: 11.5px;
+  color: var(--muted);
+  box-shadow: 0 8px 20px -14px color-mix(in oklab, var(--ink) 50%, transparent);
+}
+.build-invite-toast kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink);
+}
+.build-invite-flow,
+.build-invite-dag {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+}
+.build-invite-flow-step {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  max-width: 150px;
+}
+.build-invite-flow-step:first-child {
+  flex: 0 0 auto;
+}
+.build-invite-wire {
+  flex: 1;
+  min-width: 14px;
+  height: 2px;
+  margin-top: 26px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--ink) 30%, transparent);
+  transform-origin: left;
+}
+.build-invite-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 82px;
+  flex-shrink: 0;
+}
+.build-invite-node-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  border: 1.5px solid color-mix(in oklab, var(--ink) 22%, transparent);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 8px 18px -14px color-mix(in oklab, var(--ink) 60%, transparent);
+}
+.build-invite-node-ok {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #1f7a5c;
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.build-invite-node-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--muted);
+}
+.build-invite-node-more {
+  align-self: flex-start;
+  margin: 18px 0 0 10px;
+  font-size: 12px;
+  color: var(--studio-caption);
+}
+
+/* Claude plugin: the file drops into a chat, Install is pressed, then what it added. */
+.build-invite-chat {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px 26px;
+}
+.build-invite-attachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  box-shadow: 0 10px 26px -18px color-mix(in oklab, var(--ink) 55%, transparent);
+}
+.build-invite-attachment small {
+  display: block;
+  font-family: var(--font-studio);
+  font-size: 11.5px;
+  color: var(--studio-caption);
+}
+.build-invite-attachment-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: color-mix(in oklab, #d97757 16%, var(--surface));
+  color: #c4623f;
+}
+.build-invite-install {
+  position: relative;
+  display: grid;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.build-invite-install > span {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-studio);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.build-invite-install > span.is-done {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.build-invite-press {
+  position: absolute;
+  right: 52px;
+  top: calc(50% - 30px);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+}
+.build-invite-chat-rows {
+  display: grid;
+  gap: 6px;
+  padding: 0 4px;
+}
+.build-invite-chat-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.build-invite-chat-row .build-invite-tick {
+  margin-left: 0;
+}
+.build-invite-chat-kind {
+  width: 74px;
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--studio-caption);
+}
+.build-invite-chat-row .build-invite-path {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+/* Hermes: a terminal running setup.sh. Dark in both themes, like a real terminal. */
+.build-invite-scene.is-hermes {
+  background: #141a17;
+}
+.build-invite-term {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 20px 22px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #e3ebe6;
+}
+.build-invite-term-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.build-invite-term-line.is-out {
+  padding-left: 2px;
+}
+.build-invite-term .build-invite-chevron {
+  color: #79cbab;
+}
+.build-invite-term .build-invite-tick {
+  margin-left: 0;
+  color: #79cbab;
+}
+.build-invite-term .build-invite-caret {
+  background: #79cbab;
+}
+.build-invite-path.is-dim {
+  color: #8a968f;
+}
+
+/* Airflow: the sensors wait, then each task goes queued → running → success. */
+.build-invite-dag {
+  flex: 1;
+  align-items: center;
+  padding: 18px 20px;
+}
+.build-invite-dag .build-invite-flow-step {
+  align-items: center;
+  max-width: none;
+}
+.build-invite-dag .build-invite-wire {
+  margin-top: 0;
+}
+.build-invite-dag-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.build-invite-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 176px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.build-invite-task-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.build-invite-dag .build-invite-node-more {
+  align-self: center;
+  margin-top: 0;
+}
+
+/* The call to action along the bottom. */
+.build-invite-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 24px 16px;
+  border-top: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.build-invite-cta strong {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--ink);
+}
+.build-invite-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.build-invite-go svg {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.build-invite:hover .build-invite-go svg {
+  transform: translateX(3px);
+}
+@media (max-width: 760px) {
+  .build-invite {
+    aspect-ratio: auto;
+  }
+  .build-invite-window {
+    margin: 16px 16px 0;
+  }
+  /* Without the card's fixed proportions, the scenes (stacked on top of each other) need a set height. */
+  .build-invite-stage {
+    min-height: 270px;
+  }
+  .build-invite-cta {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px 16px;
+  }
 }

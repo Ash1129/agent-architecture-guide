@@ -29,7 +29,8 @@ import { ArchitectureMap, GateBadge, KIND_ICON } from "../components/Architectur
 import { DiagramBoundary } from "../components/DiagramBoundary";
 import { Walkthrough } from "../components/Walkthrough";
 import { StarterKit } from "../components/StarterKit";
-import { ArchitectureArt, keySteps, leadStep } from "../components/ArchitectureArt";
+import { keySteps, leadStep } from "../components/ArchitectureArt";
+import { BuildInvite } from "../components/BuildInvite";
 import { StudioShell } from "../components/StudioShell";
 import { buildStarterKit, slugify } from "../lib/starter";
 import { AutonomyScale, Ladder } from "../components/Scales";
@@ -58,7 +59,7 @@ import {
 } from "../lib/questions";
 import { type ResultView, href } from "../lib/router";
 import { RULES, recommend, type Recommendation } from "../lib/rules";
-import { resultAsText, resultUrl } from "../lib/share";
+import { resultAsText, resultCode, resultUrl } from "../lib/share";
 import { SOURCES, type SourceId } from "../lib/sources";
 import { type DesignState, type KitTextState, fetchDesign, fetchKitText, rememberedDesign } from "../lib/designs";
 import { AI_ENABLED } from "../lib/features";
@@ -599,7 +600,7 @@ function Ready({
 
   const plan = modelPlan(full);
   const SHORT_TITLE = { automation: "Plain automation, no AI", workflow: "A workflow with AI steps", agent: "One AI agent", multi: "A coordinator with specialist agents" };
-  const facts: { label: string; value: string; icon: ReactNode; strong?: boolean }[] = [
+  const facts: { label: string; value: string; icon: ReactNode }[] = [
     { label: "Agents", value: r.approach.agents, icon: <Robot size={15} aria-hidden /> },
     {
       label: plan.models.length > 1 ? "Models" : plan.models.length ? "Model" : "Method",
@@ -607,7 +608,6 @@ function Ready({
         ? plan.models.map((g) => g.engine.short).join(" + ")
         : `No AI: ${(plan.methods.find((g) => g.engine.short !== "Scripted action") ?? plan.methods[0])?.engine.short ?? "fixed rules"}`,
       icon: <Cpu size={15} aria-hidden />,
-      strong: true,
     },
     { label: "Main tool", value: TOOLS[core.tool].name, icon: <Toolbox size={15} aria-hidden /> },
     { label: "Autonomy", value: `Level ${r.autonomy.level}: ${AUTONOMY[r.autonomy.level].name}`, icon: <UserCheck size={15} aria-hidden /> },
@@ -672,6 +672,20 @@ function Ready({
           {SHORT_TITLE[r.approach.id]}
           <span className="title-period">.</span>
         </h1>
+        {/* The key facts, as a byline under the title: each named on hover and for screen readers. */}
+        <div className="studio-byline">
+          <dl aria-label="Key facts">
+            {facts.map((f) => (
+              <div key={f.label} title={f.label}>
+                <dt className="sr-only">{f.label}</dt>
+                <dd>
+                  {f.icon}
+                  {f.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
         <p className="studio-intro">{full.summary || r.approach.summary}</p>
         {AI_ENABLED && (
           <div className="-mt-4 mb-8 max-w-[70ch]">
@@ -680,10 +694,10 @@ function Ready({
         )}
         <div className="architecture-grid">
           <figure>
-            <ArchitectureArt bp={full} />
+            <BuildInvite kit={kit} href={href({ name: "result", code: resultCode(answers), view: "build" })} onOpen={() => onView("build")} />
             <figcaption>
-              <span>01 — THE ARCHITECTURE</span>
-              <span>{TOPOLOGIES[r.topology.primary].name}.</span>
+              <span>01 — BUILD IT</span>
+              <span>Your starter kit, ready to hand over.</span>
             </figcaption>
           </figure>
           <div className="priorities">
@@ -1154,7 +1168,7 @@ function Ready({
   );
 
   return (
-    <StudioShell view={view} onView={onView} facts={facts.map(({ label, value }) => ({ label, value }))} historyCount={historyCount}>
+    <StudioShell view={view} onView={onView} historyCount={historyCount}>
       {walking && <Walkthrough bp={bp} onClose={endWalk} />}
       <main id="main" className={`studio-page${view === "workflow" ? " is-wide" : ""}`}>
         {/* A new view swaps in at once and fades up; it never waits on the old one to leave. */}

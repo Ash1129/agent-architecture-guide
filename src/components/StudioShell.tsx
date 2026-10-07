@@ -6,8 +6,8 @@ import { useMenuBar } from "./Shell";
 import { type ThemePref, loadTheme, saveTheme } from "../lib/storage";
 
 // The result workspace's frame ("blueprint, your solution studio"): a sidebar
-// with the three views of the result, and a strip of the key facts above the
-// page. With a mouse or trackpad the sidebar rests as a slim rail of icons and
+// with the three views of the result. The key facts sit in the Solution view's
+// byline, not here. With a mouse or trackpad the sidebar rests as a slim rail of icons and
 // opens over the page while the pointer is over it or focus is inside it,
 // like the top bar. Styles live in src/studio.css.
 
@@ -20,13 +20,11 @@ const VIEWS: { id: ResultView; label: string; Icon: typeof CheckCircle }[] = [
 export function StudioShell({
   view,
   onView,
-  facts,
   historyCount,
   children,
 }: {
   view: ResultView;
   onView: (v: ResultView) => void;
-  facts: { label: string; value: string }[];
   historyCount: number;
   children: ReactNode;
 }) {
@@ -46,7 +44,7 @@ export function StudioShell({
           <a href={href({ name: "home" })} className="studio-logo" aria-label="blueprint, home">
             <BrandMark className="studio-logo-mark" />
             <span className="rail-label studio-logo-word">
-              lueprint
+              <span>lueprint</span>
               <small>YOUR SOLUTION STUDIO</small>
             </span>
           </a>
@@ -98,14 +96,6 @@ export function StudioShell({
         </div>
       </aside>
       <div className="studio-main">
-        <dl className="fact-strip" aria-label="Key facts">
-          {facts.map((f) => (
-            <div key={f.label} className="min-w-0">
-              <dt>{f.label}</dt>
-              <dd>{f.value}</dd>
-            </div>
-          ))}
-        </dl>
         {children}
       </div>
     </div>

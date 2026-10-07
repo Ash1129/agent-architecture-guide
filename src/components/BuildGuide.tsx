@@ -10,7 +10,6 @@ import {
   DownloadSimple,
   FileCode,
   FileText,
-  FileZip,
   FolderOpen,
   Key,
   Lightbulb,
@@ -194,7 +193,7 @@ export function BuildGuide({
   const steps: Step[] = [
     {
       title: "Download the kit",
-      screen: <DownloadScreen zip={zip} slug={slug} files={files} />,
+      screen: <DownloadScreen slug={slug} files={files} item={{ n: "01", title: "Build it with an AI coding assistant" }} />,
       body: (
         <>
           Press <B>Download all</B>, then double-click <Mono>{zip}</Mono> to unzip it. You get a folder called <Mono>{slug}</Mono>.
@@ -428,7 +427,7 @@ export function HermesGuide({
   const steps: Step[] = [
     {
       title: "Download the setup",
-      screen: <DownloadScreen zip={`${folder}.zip`} slug={folder} files={shown} label="Download setup" />,
+      screen: <DownloadScreen slug={folder} files={shown} label="Download setup" item={{ n: "02", title: "Hermes Agent setup" }} />,
       body: (
         <>
           Press <B>Download setup</B>, then double-click <Mono>{folder}.zip</Mono>. The folder holds the settings, the persona (<Mono>SOUL.md</Mono>), the Skill and{" "}
@@ -529,34 +528,61 @@ function Cursor() {
   return <CursorClick size={16} weight="fill" className="absolute -bottom-3 -right-3 text-ink" />;
 }
 
-function DownloadScreen({ zip, slug, files, label = "Download all" }: { zip: string; slug: string; files: KitFile[]; label?: string }) {
-  const shown = files.slice(0, 3);
+/**
+ * One step of the Build page as it looks now (see .build-item in studio.css and
+ * SitePage in BuildVideo): a numbered row with its title and its green text
+ * action, which the cursor presses. The action sits under the title here, so
+ * the title stays readable in the narrow step cards.
+ */
+function BuildItemMock({ n, title, action, icon, done = false }: { n: string; title: string; action: string; icon: ReactNode; done?: boolean }) {
+  return (
+    <div className="w-full rounded-lg border border-line bg-surface px-2.5 py-2 shadow-sm">
+      <div className="flex items-start gap-2">
+        <span className="grid size-[18px] shrink-0 place-items-center rounded-full border border-line-strong/60 text-[7.5px] text-muted">{n}</span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[10.5px] font-medium text-ink">{title}</p>
+          <span className={`relative mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[10px] text-accent ${done ? "font-semibold" : "font-medium"}`}>
+            {action}
+            {icon}
+            <Cursor />
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DownloadScreen({
+  slug,
+  files,
+  label = "Download all",
+  item,
+}: {
+  slug: string;
+  files: KitFile[];
+  label?: string;
+  item: { n: string; title: string };
+}) {
+  // Two files and a count: the Build page row above takes the room the frame used to give the list.
+  const shown = files.slice(0, 2);
   const more = files.length - shown.length;
   return (
-    <div className="flex w-full flex-col items-center gap-1.5">
-      <div className="relative flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[10.5px] font-medium text-accent-ink">
-        <DownloadSimple size={11} />
-        {label}
-        <Cursor />
-      </div>
-      <div className="mt-1 flex items-center gap-1 font-mono text-[9.5px] text-muted">
-        <FileZip size={13} className="text-accent" />
-        <span className="max-w-[150px] truncate">{zip}</span>
-      </div>
-      <ArrowDown size={11} className="text-line-strong" />
+    <div className="flex w-full flex-col items-center gap-1">
+      <BuildItemMock n={item.n} title={item.title} action={label} icon={<DownloadSimple size={10} />} />
       <Window title={slug}>
-        <p className="flex items-center gap-1 font-mono text-[10px] text-ink">
-          <FolderOpen size={12} weight="fill" className="text-accent" />
-          {slug}/
+        <p className="flex min-w-0 items-center gap-1 font-mono text-[10px] text-ink">
+          <FolderOpen size={12} weight="fill" className="shrink-0 text-accent" />
+          <span className="truncate">{slug}/</span>
         </p>
         <ul className="mt-0.5 space-y-px pl-3.5">
-          {shown.map((f) => (
+          {shown.map((f, i) => (
             <li key={f.path} className={`flex items-center gap-1 font-mono text-[9.5px] ${f.path === "BUILD.md" ? "font-semibold text-ink" : "text-muted"}`}>
-              {f.lang === "markdown" ? <FileText size={10} /> : <FileCode size={10} />}
+              {f.lang === "markdown" ? <FileText size={10} className="shrink-0" /> : <FileCode size={10} className="shrink-0" />}
               <span className="truncate">{f.path}</span>
+              {/* The count rides on the last line shown, to keep the picture inside its frame. */}
+              {i === shown.length - 1 && more > 0 && <span className="ml-auto shrink-0 pl-1.5 font-normal text-muted">+ {more} more</span>}
             </li>
           ))}
-          {more > 0 && <li className="font-mono text-[9.5px] text-muted">+ {more} more</li>}
         </ul>
       </Window>
     </div>
@@ -623,19 +649,12 @@ const N8N = "#ea4b71";
 function CopyScreen({ count, ready }: { count: number; ready: boolean }) {
   return (
     <div className="flex w-full flex-col items-center gap-2">
-      <div className="w-full rounded-lg border border-line bg-surface p-2 shadow-sm">
-        <div className="flex items-center gap-1.5">
-          <span className="grid size-4 place-items-center rounded text-[9px] font-bold text-white" style={{ background: N8N }}>
-            n
-          </span>
-          <span className="min-w-0 flex-1 truncate text-[10.5px] font-semibold text-ink">n8n</span>
-          <span className="relative flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-line-strong px-2 py-0.5 text-[9.5px] font-medium text-ink">
-            {ready ? <Copy size={9} /> : <Sparkle size={9} weight="fill" className="text-accent" />}
-            {ready ? "Copy for n8n" : "Tailor with AI"}
-            <Cursor />
-          </span>
-        </div>
-      </div>
+      <BuildItemMock
+        n="02"
+        title="n8n workflow"
+        action={ready ? "Copy for n8n" : "Tailor with AI"}
+        icon={ready ? <Copy size={10} /> : <Sparkle size={10} weight="fill" />}
+      />
       <ArrowDown size={11} className="mt-1 text-line-strong" />
       <div className="flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 font-mono text-[9.5px] text-ink">
         <Check size={10} weight="bold" className="text-accent" />
