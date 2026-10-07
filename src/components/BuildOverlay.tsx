@@ -16,8 +16,9 @@ const MESSAGES = [
 ];
 /** How long each line stays fully on screen, in seconds. */
 const HOLD = 2.1;
-const IN = 0.7;
-const OUT = 0.55;
+// Slow, soft dissolves: each line comes out of a heavy blur and melts back into one.
+const IN = 1.05;
+const OUT = 0.9;
 
 export function BuildOverlay({ onDone }: { onDone: () => void }) {
   const reduce = useReducedMotion();
@@ -47,7 +48,7 @@ export function BuildOverlay({ onDone }: { onDone: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const blur = reduce ? "blur(0px)" : "blur(8px)";
+  const blur = reduce ? "blur(0px)" : "blur(18px)";
   return (
     <div className={`studio build-overlay${leaving ? " is-leaving" : ""}`} role="status" aria-live="polite">
       <BrandMark className="build-overlay-mark" />
@@ -57,19 +58,14 @@ export function BuildOverlay({ onDone }: { onDone: () => void }) {
             <m.p
               key={index}
               className="build-overlay-line"
-              initial={{ opacity: 0, filter: blur, y: reduce ? 0 : 10 }}
-              animate={{ opacity: 1, filter: "blur(0px)", y: 0, transition: { duration: IN, ease: [0.16, 1, 0.3, 1] } }}
-              exit={{ opacity: 0, filter: blur, y: reduce ? 0 : -6, transition: { duration: OUT, ease: [0.4, 0, 1, 1] } }}
+              initial={{ opacity: 0, filter: blur, scale: reduce ? 1 : 0.96, y: reduce ? 0 : 14 }}
+              animate={{ opacity: 1, filter: "blur(0px)", scale: 1, y: 0, transition: { duration: IN, ease: [0.22, 1, 0.36, 1] } }}
+              exit={{ opacity: 0, filter: blur, scale: reduce ? 1 : 1.03, y: reduce ? 0 : -10, transition: { duration: OUT, ease: [0.55, 0, 0.75, 0.2] } }}
             >
               {MESSAGES[index]}
             </m.p>
           )}
         </AnimatePresence>
-        <span className="build-overlay-dots" aria-hidden>
-          {MESSAGES.map((_, i) => (
-            <i key={i} className={i <= index ? "is-on" : undefined} />
-          ))}
-        </span>
       </div>
       <button type="button" className="studio-quiet build-overlay-skip" onClick={() => setLeaving(true)}>
         Skip
