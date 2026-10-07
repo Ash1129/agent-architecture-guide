@@ -4,6 +4,7 @@ import { LAST_REVIEWED } from "../lib/catalog";
 import { AI_ENABLED } from "../lib/features";
 import { href, type Route } from "../lib/router";
 import { loadTheme, saveTheme, type ThemePref } from "../lib/storage";
+import { BrandMark } from "./Brand";
 import { btn } from "./ui";
 
 function ThemeToggle({ compact = false }: { compact?: boolean }) {
@@ -38,17 +39,9 @@ function fold(collapsed: boolean, side: "left" | "right" = "left") {
 export function Wordmark({ collapsed = false }: { collapsed?: boolean }) {
   return (
     <a href={href({ name: "home" })} aria-label="Agent Architecture Guide, home" className="group inline-flex items-center rounded-full py-1 pr-2">
-      <svg
-        aria-hidden
-        viewBox="0 0 32 32"
-        className={`shrink-0 transition-[width,height] duration-300 motion-reduce:transition-none ${collapsed ? "h-7 w-7 mouse:h-6 mouse:w-6" : "h-7 w-7"}`}
-      >
-        <rect width="32" height="32" rx="8" className="fill-accent" />
-        <path d="M9 16h6l4-6M15 16l4 6" fill="none" className="stroke-accent-ink" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="9" cy="16" r="3" className="fill-accent-ink" />
-        <circle cx="21" cy="9" r="3" className="fill-accent-ink" />
-        <circle cx="21" cy="23" r="3" className="fill-accent-ink" />
-      </svg>
+      <BrandMark
+        className={`w-auto shrink-0 transition-[height] duration-300 motion-reduce:transition-none ${collapsed ? "h-7 mouse:h-6" : "h-7"}`}
+      />
       <span className={`${fold(collapsed)} text-[15px] font-semibold tracking-tight text-ink`}>Agent Architecture Guide</span>
     </a>
   );
@@ -58,9 +51,9 @@ export function Wordmark({ collapsed = false }: { collapsed?: boolean }) {
  * Like the macOS Spaces bar: with a mouse or trackpad the top bar rests as a
  * slim, translucent strip of icons and expands with labels while the pointer
  * is over it or keyboard focus is inside it. On touch screens it is an
- * ordinary full bar.
+ * ordinary full bar. The result's sidebar folds the same way.
  */
-function useMenuBar() {
+export function useMenuBar() {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const timer = useRef<number | undefined>(undefined);

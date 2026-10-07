@@ -30,15 +30,16 @@ export const KIND_ICON: Record<NodeKind, Icon> = {
   end: FlagCheckered,
 };
 
-export const NODE_STYLE: Record<NodeKind, string> = {
-  start: "bg-surface-2 border border-line-strong/50",
-  end: "bg-surface-2 border border-line-strong/50",
-  ai: "bg-accent-soft border border-accent/55",
-  fixed: "bg-surface border border-line-strong/70",
-  decision: "bg-surface border border-line-strong",
-  human: "bg-surface border-[1.5px] border-dashed border-ink/60",
-  tool: "bg-surface-2 border border-line-strong/70",
-};
+/**
+ * Each step's colour, from yellow at the first step to red at the last, so the
+ * diagram reads as one run from start to finish. Steps are styled by
+ * .flow-node in src/studio.css, which tints them with this as --tone.
+ */
+export function stepTone(step: number, total: number) {
+  const t = total > 1 ? (step - 1) / (total - 1) : 0;
+  const mix = (a: number, b: number) => (a + (b - a) * t).toFixed(3);
+  return `oklch(${mix(0.86, 0.6)} ${mix(0.15, 0.2)} ${mix(92, 27)})`;
+}
 
 export const COL_MIN = 116;
 export const COL_GAP = 62;
@@ -76,8 +77,8 @@ function EngineIcon({ engine }: { engine: Engine }) {
   const Icon = model ? Cpu : FunctionIcon;
   const name = model ? "AI model" : engine.short;
   return (
-    <span title={name} className={`inline-flex h-5 w-5 items-center justify-center rounded-md ${model ? "bg-surface ring-1 ring-accent/50" : "bg-surface-2 ring-1 ring-line-strong/50"}`}>
-      <Icon size={11} weight="bold" aria-hidden className={model ? "text-accent" : "text-muted"} />
+    <span title={name} className="flow-chip">
+      <Icon size={11} weight="bold" aria-hidden />
       <span className="sr-only">{name}</span>
     </span>
   );
@@ -310,20 +311,40 @@ export function ArchitectureMap({
             height={box.h}
           >
             <defs>
-              {(["base", "on"] as const).map((v) => (
-                <marker
-                  key={v}
-                  id={`arrow-${bp.variant}-${v}`}
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerWidth="6.5"
-                  markerHeight="6.5"
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" className={v === "on" ? "fill-accent" : "fill-line-strong"} />
-                </marker>
-              ))}
+              {/* Each connection fades from its step's colour to the next one's, and ends in an arrow of the step it reaches. */}
+              {bp.edges.map((e, i) => {
+                const a = rects[e.from];
+                const b = rects[e.to];
+                if (!a || !b) return null;
+                const from = stepTone(byId.get(e.from)!.step, bp.nodes.length);
+                const to = stepTone(byId.get(e.to)!.step, bp.nodes.length);
+                return (
+                  <g key={i}>
+                    <linearGradient
+                      id={`edge-${bp.variant}-${i}`}
+                      gradientUnits="userSpaceOnUse"
+                      x1={a.x + a.w / 2}
+                      y1={a.y + a.h / 2}
+                      x2={b.x + b.w / 2}
+                      y2={b.y + b.h / 2}
+                    >
+                      <stop offset="0" stopColor={from} />
+                      <stop offset="1" stopColor={to} />
+                    </linearGradient>
+                    <marker
+                      id={`arrow-${bp.variant}-${i}`}
+                      viewBox="0 0 10 10"
+                      refX="9"
+                      refY="5"
+                      markerWidth="6.5"
+                      markerHeight="6.5"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill={to} />
+                    </marker>
+                  </g>
+                );
+              })}
             </defs>
             {Object.entries(bp.captions).map(([stage, text]) => {
               const inStage = bp.nodes.filter((n) => n.stage === Number(stage)).map((n) => rects[n.id]).filter(Boolean);
@@ -337,10 +358,9 @@ export function ArchitectureMap({
                   x={vertical ? minX : (minX + maxX) / 2}
                   y={minY - (vertical ? 9 : 12)}
                   textAnchor={vertical ? "start" : "middle"}
-                  className="fill-muted stroke-surface"
-                  strokeWidth={5}
+                  className="flow-caption"
+                  strokeWidth={6}
                   strokeLinejoin="round"
-                  style={{ fontSize: 12, fontWeight: 500, paintOrder: "stroke" }}
                 >
                   {text}
                 </text>
@@ -353,15 +373,15 @@ export function ArchitectureMap({
               const on = selected !== null && (e.from === selected || e.to === selected);
               const dim = selected !== null && !on;
               return (
-                <g key={`${e.from}-${e.to}-${i}`} style={{ opacity: dim ? 0.45 : 1, transition: "opacity 200ms" }}>
+                <g key={`${e.from}-${e.to}-${i}`} style={{ opacity: dim ? 0.3 : on ? 1 : 0.85, transition: "opacity 200ms" }}>
                   <m.path
                     d={g.d}
                     fill="none"
-                    className={on ? "stroke-accent" : "stroke-line-strong"}
-                    strokeWidth={on ? 2 : 1.5}
+                    stroke={`url(#edge-${bp.variant}-${i})`}
+                    strokeWidth={on ? 2.4 : 1.6}
                     strokeDasharray={e.style === "assign" ? "5 4" : e.style === "loop" ? "2 4" : undefined}
                     strokeLinecap="round"
-                    markerEnd={`url(#arrow-${bp.variant}-${on ? "on" : "base"})`}
+                    markerEnd={`url(#arrow-${bp.variant}-${i})`}
                     initial={reduce ? false : { pathLength: 0, opacity: 0 }}
                     animate={{ pathLength: 1, opacity: 1 }}
                     transition={{ duration: 0.5, delay: 0.15 + i * 0.03, ease: [0.16, 1, 0.3, 1] }}
@@ -372,10 +392,9 @@ export function ArchitectureMap({
                       y={labelY.get(i) ?? g.ly}
                       textAnchor={g.anchor}
                       transform={g.rotate ? `rotate(-90 ${g.lx} ${g.ly})` : undefined}
-                      className={`${on ? "fill-accent" : "fill-muted"} stroke-surface`}
-                      strokeWidth={5}
+                      className={`flow-edge-label${on ? " is-on" : ""}`}
+                      strokeWidth={6}
                       strokeLinejoin="round"
-                      style={{ fontSize: 11, fontWeight: 500, paintOrder: "stroke" }}
                     >
                       {e.label}
                     </text>
@@ -417,26 +436,20 @@ export function ArchitectureMap({
                 delay: ghost || spotlight ? 0 : n.step * 0.045,
                 ease: [0.16, 1, 0.3, 1],
               }}
+              data-kind={n.kind}
               style={{
                 ...place,
+                ["--tone" as string]: stepTone(n.step, bp.nodes.length),
                 translate: offsets[n.id] ? `${offsets[n.id].dx}px ${offsets[n.id].dy}px` : undefined,
                 alignSelf: "center",
                 justifySelf: vertical && span > 1 ? "center" : "stretch",
                 width: vertical && span > 1 ? "min(100%, 250px)" : undefined,
               }}
-              className={`group relative z-10 flex min-w-0 flex-col items-start rounded-2xl text-left transition-[box-shadow,transform] duration-200 hover:-translate-y-px hover:shadow-soft ${
-                compact ? "gap-1 p-2.5" : "gap-1.5 px-3.5 py-3"
-              } ${NODE_STYLE[n.kind]} ${isOn ? "ring-2 ring-accent ring-offset-2 ring-offset-surface" : ""}`}
+              className={`flow-node group relative z-10 flex min-w-0 flex-col items-start text-left${compact ? " is-compact" : ""}`}
             >
               <span className="flex w-full flex-wrap items-center gap-1.5">
-                <span
-                  className={`flex h-[22px] min-w-[22px] items-center justify-center rounded-full px-1 font-mono text-[11.5px] font-semibold ${
-                    isOn ? "bg-accent text-accent-ink" : "bg-ink/[0.07] text-ink"
-                  }`}
-                >
-                  {n.step}
-                </span>
-                <Icon size={14} weight={n.kind === "ai" ? "fill" : "regular"} aria-hidden className={n.kind === "ai" ? "text-accent" : "text-muted"} />
+                <span className="flow-num">{n.step}</span>
+                <Icon size={15} weight={n.kind === "ai" ? "fill" : "regular"} aria-hidden className="flow-kind" />
                 {/* The diagram stays light: what does the work and each safeguard show as icons
                     (named on hover); the step panel and walkthrough spell them out. */}
                 {n.engine && n.kind !== "start" && <EngineIcon engine={n.engine} />}
@@ -444,9 +457,7 @@ export function ArchitectureMap({
                   <GateBadge key={g.text} kind={g.kind} text={g.text} compact />
                 ))}
               </span>
-              <span className={`block font-semibold leading-snug tracking-[-0.01em] text-ink ${compact ? "text-[12.5px]" : "text-[14.5px]"}`}>
-                {n.name}
-              </span>
+              <span className="flow-name">{n.name}</span>
             </m.button>
           );
         })}

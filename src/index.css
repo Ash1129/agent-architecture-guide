@@ -127,3 +127,47 @@ body {
     break-inside: avoid;
   }
 }
+
+/* ---------------------------------------------------------------- the logo (src/components/Brand.tsx) */
+
+.brand-mark {
+  display: block;
+  color: var(--ink);
+}
+.brand-dot {
+  fill: var(--accent);
+}
+.brand-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 900ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.brand-intro svg {
+  width: min(84vw, 860px);
+  height: auto;
+  overflow: visible;
+  transition: opacity 500ms ease;
+}
+.brand-intro.is-morph,
+.brand-intro.is-fade {
+  background-color: transparent;
+  pointer-events: none;
+}
+.brand-intro.is-fade svg {
+  opacity: 0;
+}
+/* "Blueprint." as a heading: sized by font-size, as tall as a line of Instrument Serif. */
+.brand-word {
+  display: block;
+  height: 1.3em;
+  width: auto;
+  margin: -0.14em auto;
+  overflow: visible;
+  color: var(--ink);
+}

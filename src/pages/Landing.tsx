@@ -1,7 +1,8 @@
-import { ArrowRight, MagnifyingGlass, TreeStructure } from "@phosphor-icons/react";
+import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useState, type FormEvent } from "react";
 import workspaceImage from "../assets/workspace.jpg";
+import { BrandMark, BrandWord } from "../components/Brand";
 
 // The public starting point ("blueprint studio"). Two ways in: describe the
 // problem in your own words and press Build, or take the short survey (the
@@ -12,10 +13,13 @@ import workspaceImage from "../assets/workspace.jpg";
 const MAX_TASK = 200;
 
 export function Landing({
+  introPlaying = false,
   onTask,
   onSurvey,
   onExample,
 }: {
+  /** The first-open intro is on screen; the heading stays hidden until the intro's word lands on it. */
+  introPlaying?: boolean;
   /** Start from the person's own description of the problem. */
   onTask: (task: string) => void;
   /** Start the survey from its first question. */
@@ -30,15 +34,16 @@ export function Landing({
     e?.preventDefault();
     if (ready) onTask(problem.replace(/\s+/g, " ").trim());
   };
+  // Under the first-open intro the page is already in place, so the intro's word can land exactly on the heading.
+  const [underIntro] = useState(introPlaying);
   const rise = (delay: number) =>
-    reduce ? {} : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as const } };
+    reduce || underIntro ? {} : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] as const } };
 
   return (
     <div className="studio start-page">
       <header className="start-header">
-        <a href="#/" className="start-brand" aria-label="blueprint studio, home">
-          <TreeStructure size={22} aria-hidden />
-          <span>blueprint studio</span>
+        <a href="#/" className="start-brand" aria-label="Blueprint, home">
+          <BrandMark className="h-[26px] w-auto" />
         </a>
         <button type="button" className="studio-quiet" onClick={onExample}>
           Explore an example
@@ -51,9 +56,12 @@ export function Landing({
           <span className="status-dot" aria-hidden />
           YOUR BUSINESS PROBLEM. A CLEAR PATH FORWARD.
         </m.div>
-        <m.h1 {...rise(0.05)}>
-          Blueprint<span className="title-period">.</span>
-        </m.h1>
+        {/* Hidden under the intro until its word lands here; it's the same drawing, so the hand-over doesn't show. */}
+        <div style={{ opacity: introPlaying ? 0 : 1 }}>
+          <m.h1 {...rise(0.05)} aria-label="Blueprint.">
+            <BrandWord />
+          </m.h1>
+        </div>
         <m.p {...rise(0.1)} className="start-subtitle">
           Tell us what’s holding your business back.
           <br />

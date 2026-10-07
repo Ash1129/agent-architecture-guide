@@ -52,6 +52,11 @@
   display: flex;
   flex-direction: column;
 }
+.studio-rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .studio-logo {
   display: flex;
   align-items: center;
@@ -63,13 +68,9 @@
   margin-bottom: 54px;
 }
 .studio-logo-mark {
-  width: 36px;
-  height: 38px;
-  border-radius: 5px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  display: grid;
-  place-items: center;
+  height: 34px;
+  width: auto;
+  color: var(--ink);
   flex-shrink: 0;
 }
 .studio-logo small {
@@ -104,6 +105,9 @@
   color: var(--muted);
   text-align: left;
   transition: background-color 150ms, color 150ms;
+}
+.studio-nav button > svg {
+  flex-shrink: 0;
 }
 .studio-nav button:hover {
   background: var(--accent-soft);
@@ -174,6 +178,55 @@
   font-size: 11.5px;
   color: var(--studio-caption);
   margin-top: 1px;
+}
+
+/* With a mouse or trackpad on a wide screen, the sidebar rests as a rail of
+   icons and opens over the page while the pointer is over it or focus is
+   inside it (see useMenuBar). The rail keeps its place in the layout; the
+   panel inside it widens, so the page never reflows. */
+@media (hover: hover) and (pointer: fine) and (min-width: 761px) {
+  .studio .studio-sidebar {
+    width: 76px;
+    padding: 0;
+    border-right: 0;
+    z-index: 30;
+  }
+  .studio .studio-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 248px;
+    padding: 34px 14px 22px;
+    overflow: hidden;
+    background: var(--bg);
+    border-right: 1px solid var(--studio-hairline);
+    box-shadow: 0 18px 50px -24px color-mix(in oklab, var(--ink) 35%, transparent);
+    transition:
+      width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 320ms;
+  }
+  .studio .studio-sidebar[data-collapsed] .studio-rail {
+    width: 76px;
+    box-shadow: none;
+  }
+  .studio .studio-logo {
+    padding-left: 9px;
+  }
+  .studio .studio-logo,
+  .studio .studio-nav button,
+  .studio .studio-profile a,
+  .studio .studio-profile button {
+    white-space: nowrap;
+  }
+  .studio .studio-note {
+    width: 220px; /* no reflow while the panel widens */
+  }
+  .studio .rail-label {
+    transition: opacity 220ms 80ms;
+  }
+  .studio .studio-sidebar[data-collapsed] .rail-label {
+    opacity: 0;
+    transition-delay: 0ms;
+  }
 }
 
 /* ---------------------------------------------------------------- main column */
@@ -721,7 +774,7 @@
   .studio-logo {
     margin-bottom: 18px;
   }
-  .studio-sidebar > .studio-caption,
+  .studio-rail > .studio-caption,
   .studio-note,
   .studio-profile {
     display: none;
@@ -796,12 +849,6 @@
   align-items: center;
   gap: 10px;
   color: var(--accent);
-}
-.start-brand span {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  line-height: 1;
-  color: var(--ink);
 }
 .start-main {
   flex: 1;
@@ -951,9 +998,6 @@
   }
   .start-header {
     padding: 20px 22px;
-  }
-  .start-brand span {
-    font-size: 23px;
   }
   .start-main {
     padding: 72px 22px 80px;
@@ -1188,4 +1232,189 @@
   .studio h1.survey-title {
     font-size: 36px;
   }
+}
+
+/* ---------------------------------------------------------------- the workflow diagram (ArchitectureMap) */
+
+/* The workflow has its own page, so it takes the full width of the main column. */
+.studio-page.is-wide {
+  max-width: none;
+}
+
+/* The canvas: a frosted sheet with a faint blueprint dot grid. */
+.workflow-canvas {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--studio-hairline, var(--line));
+  background-color: color-mix(in oklab, var(--surface) 72%, transparent);
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 11%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  box-shadow: 0 18px 50px -34px color-mix(in oklab, var(--ink) 40%, transparent);
+}
+
+/* A step. --tone runs from yellow (first step) to red (last), set per step by stepTone(). */
+.flow-node {
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--tone) 55%, transparent);
+  background: color-mix(in oklab, var(--tone) 13%, var(--surface));
+  box-shadow: 0 10px 26px -18px color-mix(in oklab, var(--tone) 85%, transparent);
+  transition:
+    transform 200ms,
+    box-shadow 200ms,
+    background-color 200ms;
+}
+.flow-node:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px -18px color-mix(in oklab, var(--tone) 95%, transparent);
+}
+.flow-node[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--tone) 22%, var(--surface));
+  box-shadow:
+    0 0 0 2px var(--tone),
+    0 16px 34px -16px color-mix(in oklab, var(--tone) 95%, transparent);
+}
+.flow-node:focus-visible {
+  outline: 2px solid var(--tone);
+  outline-offset: 3px;
+}
+/* A person's step keeps its dashed edge. */
+.flow-node[data-kind="human"] {
+  border-style: dashed;
+  border-width: 1.5px;
+  border-color: color-mix(in oklab, var(--tone) 75%, var(--ink));
+}
+/* The start and the finish are quieter: an outline in the step's colour. */
+.flow-node[data-kind="start"],
+.flow-node[data-kind="end"] {
+  background: var(--surface);
+}
+.flow-num {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--tone);
+  color: #1f1609;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.flow-kind {
+  color: color-mix(in oklab, var(--tone) 60%, var(--ink));
+}
+.flow-name {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.flow-node.is-compact {
+  gap: 6px;
+  padding: 10px 11px 11px;
+}
+.flow-node.is-compact .flow-name {
+  font-size: 15.5px;
+}
+/* Small round marks on a step: what does the work, and in the key. */
+.flow-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--studio-hairline, var(--line));
+  background: var(--surface);
+  color: var(--studio-caption, var(--muted));
+}
+.flow-chip.is-dashed {
+  border: 1.5px dashed var(--studio-caption, var(--muted));
+}
+/* Stage captions ("at the same time") and connection labels. */
+.flow-caption,
+.flow-edge-label {
+  fill: var(--studio-caption, var(--muted));
+  stroke: color-mix(in oklab, var(--surface) 92%, transparent);
+  paint-order: stroke;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.flow-edge-label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.flow-edge-label.is-on {
+  fill: var(--ink);
+}
+
+/* The key, under the diagram. */
+.flow-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 14px 24px 18px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.flow-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.flow-legend-ramp {
+  width: 44px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, oklch(0.86 0.15 92), oklch(0.73 0.175 60), oklch(0.6 0.2 27));
+}
+
+/* The step details under the diagram. */
+.flow-panel {
+  border-top: 1px solid var(--studio-hairline, var(--line));
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+}
+.flow-panel.is-open {
+  background: var(--surface);
+}
+.flow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+.studio h3.flow-panel-title,
+.flow-panel-title {
+  margin-top: 8px;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.flow-panel-engine {
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline, var(--line));
+  background: color-mix(in oklab, var(--bg) 55%, var(--surface));
+}
+.flow-panel h4.studio-caption {
+  margin: 0;
+}
+.studio-outline.is-small {
+  height: 36px;
+  padding: 0 14px;
+  gap: 6px;
+  font-size: 13.5px;
+}
+.studio-outline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

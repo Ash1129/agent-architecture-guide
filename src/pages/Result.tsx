@@ -273,72 +273,58 @@ function Legend({ bp }: { bp: Blueprint }) {
   const gates = new Set(bp.nodes.flatMap((n) => n.gates.map((g) => g.kind)));
   const loops = bp.edges.some((e) => e.style === "loop");
   const assigns = bp.edges.some((e) => e.style === "assign");
-  const swatch: Record<NodeKind, string> = {
-    ai: "bg-accent-soft border border-accent/55",
-    fixed: "bg-surface border border-line-strong/70",
-    decision: "bg-surface border border-line-strong",
-    human: "bg-surface border-[1.5px] border-dashed border-ink/60",
-    tool: "bg-surface-2 border border-line-strong/70",
-    start: "bg-surface-2 border border-line-strong/50",
-    end: "bg-surface-2 border border-line-strong/50",
-  };
+  const line = (dash: string) => (
+    <svg aria-hidden width="24" height="6">
+      <line x1="1" y1="3" x2="23" y2="3" stroke="var(--studio-caption)" strokeWidth="1.5" strokeDasharray={dash} strokeLinecap="round" />
+    </svg>
+  );
   return (
-    <ul aria-label="Key" className="flex flex-wrap gap-x-4 gap-y-2 px-5 pb-4 text-[12.5px] text-muted sm:px-6">
+    <ul aria-label="Key" className="flow-legend">
+      <li>
+        <span aria-hidden className="flow-legend-ramp" />
+        Step 1 to {bp.nodes.length}
+      </li>
       {order
         .filter((k) => kinds.includes(k) && k !== "end")
         .map((k) => {
           const Icon = KIND_ICON[k];
           return (
-            <li key={k} className="inline-flex items-center gap-1.5">
-              <span aria-hidden className={`inline-flex h-4 w-6 items-center justify-center rounded-[5px] ${swatch[k]}`}>
-                <Icon size={10} />
+            <li key={k}>
+              <span aria-hidden className={`flow-chip${k === "human" ? " is-dashed" : ""}`}>
+                <Icon size={11} weight={k === "ai" ? "fill" : "regular"} />
               </span>
               {k === "start" ? "Start or finish" : KIND_LABEL[k]}
             </li>
           );
         })}
       {bp.nodes.some((n) => n.engine?.kind === "model") && (
-        <li className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-surface ring-1 ring-accent/50">
-            <Cpu size={11} weight="bold" className="text-accent" />
+        <li>
+          <span aria-hidden className="flow-chip">
+            <Cpu size={11} weight="bold" />
           </span>
           AI model
         </li>
       )}
       {bp.nodes.some((n) => n.engine?.kind === "algorithm" && n.kind !== "start") && (
-        <li className="inline-flex items-center gap-1.5">
-          <span aria-hidden className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-surface-2 ring-1 ring-line-strong/50">
-            <FunctionIcon size={11} weight="bold" className="text-muted" />
+        <li>
+          <span aria-hidden className="flow-chip">
+            <FunctionIcon size={11} weight="bold" />
           </span>
           Method, no AI
         </li>
       )}
       {gates.has("human") && (
-        <li className="inline-flex items-center gap-1.5">
+        <li>
           <GateBadge kind="human" text="A person steps in" compact /> A person steps in
         </li>
       )}
       {gates.has("stop") && (
-        <li className="inline-flex items-center gap-1.5">
+        <li>
           <GateBadge kind="stop" text="Stop rule" compact /> Stop rule
         </li>
       )}
-      {loops && (
-        <li className="inline-flex items-center gap-1.5">
-          <svg aria-hidden width="22" height="6">
-            <line x1="1" y1="3" x2="21" y2="3" className="stroke-line-strong" strokeWidth="1.5" strokeDasharray="2 4" strokeLinecap="round" />
-          </svg>
-          Loops back
-        </li>
-      )}
-      {assigns && (
-        <li className="inline-flex items-center gap-1.5">
-          <svg aria-hidden width="22" height="6">
-            <line x1="1" y1="3" x2="21" y2="3" className="stroke-line-strong" strokeWidth="1.5" strokeDasharray="5 4" />
-          </svg>
-          Hands out work
-        </li>
-      )}
+      {loops && <li>{line("2 4")} Loops back</li>}
+      {assigns && <li>{line("5 4")} Hands out work</li>}
     </ul>
   );
 }
@@ -1145,8 +1131,8 @@ function Ready({
           </aside>
         </div>
       ) : (
-        <div ref={cardRef} className="overflow-hidden rounded-xl border border-line bg-surface">
-          <div className="px-3 sm:px-5">
+        <div ref={cardRef} className="workflow-canvas">
+          <div className="px-3 sm:px-6">
             <DiagramBoundary
               resetKey={`${bp.variant}-${bp.nodes.map((n) => n.id).join()}`}
               fallback={<StepList bp={bp} selected={selected} onSelect={setSelected} panelId={panelId} />}
@@ -1170,7 +1156,7 @@ function Ready({
   return (
     <StudioShell view={view} onView={onView} facts={facts.map(({ label, value }) => ({ label, value }))} historyCount={historyCount}>
       {walking && <Walkthrough bp={bp} onClose={endWalk} />}
-      <main id="main" className="studio-page">
+      <main id="main" className={`studio-page${view === "workflow" ? " is-wide" : ""}`}>
         {/* A new view swaps in at once and fades up; it never waits on the old one to leave. */}
         <m.div key={view} initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
           {view === "solution" && solutionView}

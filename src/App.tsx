@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Footer, Nav } from "./components/Shell";
+import { BrandIntro, shouldPlayIntro } from "./components/Brand";
 import { SurveyFrame } from "./components/StudioShell";
 import { Details, Guide } from "./pages/Guide";
 import { History } from "./pages/History";
@@ -99,6 +100,10 @@ export default function App() {
   }, [answers.task, inGuide]); // eslint-disable-line react-hooks/exhaustive-deps -- plan is read only to skip a repeat fetch
   const currentPlan = plan && plan.task === answers.task?.trim() ? plan : undefined;
   // The start page and a finished result have their own header and footer, so the app's step aside.
+  // The full-screen logo intro plays on a visitor's first open only, and ends by revealing the start page's heading.
+  const [intro, setIntro] = useState<"playing" | "revealing" | "done">(() => (shouldPlayIntro() ? "playing" : "done"));
+  const revealAfterIntro = useCallback(() => setIntro("revealing"), []);
+  const endIntro = useCallback(() => setIntro("done"), []);
   const studio = route.name === "home" || inGuide || (route.name === "result" && isComplete(answers));
   const planDetails = currentPlan?.status === "ready" ? (currentPlan.response?.plan.details ?? []) : [];
 
@@ -224,6 +229,7 @@ export default function App() {
       <div className="flex-1 [&>main]:outline-none">
         {route.name === "home" && (
           <Landing
+            introPlaying={intro === "playing"}
             onTask={(task) => {
               // A problem typed on the start page begins a new entry, unless it's the unfinished one already under way.
               if (isComplete(answers) || answers.task?.trim() !== task) {
@@ -316,6 +322,7 @@ export default function App() {
         )}
       </div>
       {!inGuide && !studio && <Footer />}
+      {intro !== "done" && <BrandIntro onReveal={revealAfterIntro} onDone={endIntro} />}
     </div>
   );
 }
