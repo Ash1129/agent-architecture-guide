@@ -38,6 +38,20 @@ describe("AI design hard limits", () => {
     }
   });
 
+  it("read underscores in step ids as hyphens, so a tidy-but-snake_case draft isn't thrown away", () => {
+    const { d, ctx } = draftOf(emails);
+    const step = d.steps.find((x) => x.kind === "ai")!;
+    const old = step.id;
+    step.id = `${old}_step`;
+    d.edges.forEach((e) => {
+      if (e.from === old) e.from = `${old}_step`;
+      if (e.to === old) e.to = `${old}_step`;
+    });
+    const { blueprint, problems } = checkDesign(d, ctx);
+    expect(problems).toEqual([]);
+    expect(blueprint!.nodes.some((n) => n.id === `${old}-step`)).toBe(true);
+  });
+
   it("let the model rename, rewrite and add steps, and cite the knowledge base", () => {
     const { d, ctx } = draftOf(emails);
     const agent = d.steps.find((s) => s.id === "agent")!;

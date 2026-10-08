@@ -62,6 +62,9 @@ const text = (v: unknown, max: number): string | undefined => {
 
 export type DesignContext = { r: Recommendation; a: Answers; baseline: Blueprint; chunks: KbChunk[] };
 
+/** A step id as written, tidied: models often use underscores or spaces, which read the same as hyphens. */
+const tidyId = (v: unknown) => (typeof v === "string" ? v.trim().replace(/[_\s]+/g, "-") : v);
+
 /**
  * Checks a draft against the hard limits and, if it passes, turns it into a
  * blueprint. Returns every problem found, worded so the model can fix them.
@@ -82,7 +85,8 @@ export function checkDesign(raw: unknown, ctx: DesignContext): { blueprint?: Blu
   if (d.steps.length > MAX_STEPS) p.push(`Use at most ${MAX_STEPS} steps; there are ${d.steps.length}.`);
   for (const [i, s] of d.steps.entries()) {
     const raw = (s ?? {}) as Record<string, unknown>;
-    const id = typeof raw.id === "string" && /^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(raw.id) ? raw.id : undefined;
+    const rawId = tidyId(raw.id);
+    const id = typeof rawId === "string" && /^[A-Za-z][A-Za-z0-9-]{0,23}$/.test(rawId) ? rawId : undefined;
     const where = id ? `Step "${id}"` : `Step ${i + 1}`;
     if (!id) p.push(`${where} needs an id of letters, digits and hyphens, starting with a letter.`);
     else if (ids.has(id)) p.push(`${where} is a duplicate id.`);
@@ -164,8 +168,8 @@ export function checkDesign(raw: unknown, ctx: DesignContext): { blueprint?: Blu
   const edges: BEdge[] = [];
   const seen = new Set<string>();
   for (const e of d.edges) {
-    const from = (e as BEdge)?.from;
-    const to = (e as BEdge)?.to;
+    const from = tidyId((e as BEdge)?.from) as string;
+    const to = tidyId((e as BEdge)?.to) as string;
     const style = STYLES.includes((e as BEdge)?.style) ? (e as BEdge).style : undefined;
     if (!ids.has(from) || !ids.has(to)) {
       p.push(`A connection goes from "${from}" to "${to}", but both ends must be step ids.`);
