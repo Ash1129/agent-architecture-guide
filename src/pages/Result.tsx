@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   Play,
   X,
+  FileCode,
 } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
@@ -34,6 +35,7 @@ import { keySteps, leadStep } from "../components/ArchitectureArt";
 import { BuildInvite } from "../components/BuildInvite";
 import { StudioShell } from "../components/StudioShell";
 import { buildStarterKit, slugify } from "../lib/starter";
+import { drawioXml } from "../lib/exportxml";
 import { AutonomyScale, Ladder } from "../components/Scales";
 import { ModelGuidance, StepPanel } from "../components/StepPanel";
 import { BasisLabel, Term, WhyList, btn } from "../components/ui";
@@ -1151,6 +1153,23 @@ function Ready({
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className="studio-quiet workflow-export"
+          title="A draw.io file (XML): both designs as editable diagrams, each step carrying its full details"
+          onClick={() => {
+            const xml = drawioXml({ task: r.task, design: full, source: full === ruleDesign ? "rules" : "ai", simpler: simple });
+            const url = URL.createObjectURL(new Blob([xml], { type: "application/xml" }));
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${slugify(r.task) || "blueprint"}.drawio`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }}
+        >
+          <FileCode size={16} aria-hidden />
+          Export to draw.io
+        </button>
       </div>
       {AI_ENABLED && variant === "recommended" && (
         <div className="mb-6 max-w-[70ch]">

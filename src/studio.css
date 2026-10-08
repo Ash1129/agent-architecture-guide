@@ -735,6 +735,11 @@
   gap: 12px 16px;
   margin-bottom: 20px;
 }
+/* The draw.io export sits at the far end of the workflow's toolbar. */
+.workflow-tools .workflow-export {
+  margin: 0 0 0 auto;
+  padding: 8px 12px;
+}
 
 .studio-footer {
   border-top: 1px solid var(--studio-hairline);
