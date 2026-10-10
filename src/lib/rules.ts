@@ -357,6 +357,14 @@ export const RULES: Rule[] = [
 
   // ------------------------------------------------------------ Tools: the core
   {
+    id: "TL20", group: "Tools",
+    if: "An agent must be embedded in a service or execute generated code, and developers are available",
+    then: "Use LangGraph for explicit state and execution boundaries, even for one agent.",
+    basis: design, kb: ["J01", "J02", "J03"],
+    when: (a) => agentic(a) && a.team === "large" && !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
+    apply: (d, _a, why) => addTool(d, "langgraph", "Developers implement the agent as a service with explicit state, recovery and controlled tool execution.", why("Your execution requirements need a custom service boundary. One agent can need this architecture without adding specialist agents. LangGraph does not supply a secure code sandbox by itself."), true),
+  },
+  {
     id: "TL1",
     group: "Tools",
     if: "No agent needed, it depends on other data jobs, and you have developers",
@@ -428,7 +436,7 @@ export const RULES: Rule[] = [
     then: "Build a custom agent workflow in LangGraph, with explicit state and handoffs.",
     basis: design,
     kb: ["J01", "J02", "J03"],
-    when: (a) => multi(a) && a.team === "large" && !knows(a, "memory"),
+    when: (a, d) => !core(d) && multi(a) && a.team === "large" && !knows(a, "memory"),
     apply: (d, _a, why) => addTool(d, "langgraph",
       "Your developers implement the coordinator, specialist handoffs, state and review points in code.",
       why("You have developers and several agent roles to coordinate. Explicit state and transitions make their handoffs testable. Start with one agent and add specialists only where evaluation supports them."), true),
@@ -1405,6 +1413,27 @@ export const RULES: Rule[] = [
           : `Name one owner who reviews results at the starting level (${AUTONOMY[d.autonomy.level ?? 2].name.toLowerCase()}) and decide what track record would earn the next level.`,
       );
     },
+  },
+  {
+    id: "AU11", group: "Autonomy", if: "Every result explicitly requires approval",
+    then: "Cap autonomy at level 2 regardless of volume or checkability.",
+    basis: design, kb: ["A02"],
+    when: (a) => !!a.requirements?.includes("approval"),
+    apply: (d, _a, why) => { cap(d, 2, why("You explicitly require approval before release or action. High volume does not waive that requirement.")); d.autonomy.checkpoints.push("A named person approves every result before release or action; reject, timeout and missing approval stop the run."); },
+  },
+  {
+    id: "G31", group: "Gotchas", if: "Advanced data-asset operations are required",
+    then: "Disclose the catalog boundary and require an operational comparison.",
+    basis: design, kb: ["R01", "R02", "R03"],
+    when: (a) => !!a.requirements?.includes("assets"),
+    apply: (d) => { gotcha(d, { id: "G31", priority: 1, title: "Compare data operations before choosing the platform", body: "This catalog does not evaluate Dagster or dbt. Treat the suggested platform as provisional. Compare partition mappings, backfills, data quality gates, lineage, team permissions and existing infrastructure. Test replay and failure recovery with representative data before selecting an orchestrator." }, design); d.firstSteps[2] = "Compare the proposed orchestrator with an asset-oriented alternative such as Dagster, and assess whether dbt is needed for transformations. Record backfill, quality-gate and migration results."; },
+  },
+  {
+    id: "G32", group: "Gotchas", if: "An embedded AI service or isolated generated-code execution is required",
+    then: "Make execution requirements and implementation ownership explicit.",
+    basis: design, kb: ["G01", "G04"],
+    when: (a) => !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
+    apply: (d, a) => { gotcha(d, { id: "G32", priority: 1, title: "Design the execution boundary", body: "A framework alone does not provide a secure sandbox. Define authentication, per-request isolation, persistent recovery state, schema and value validation, timeouts and retry limits. For generated code, restrict filesystem and network access, keep credentials outside the sandbox and limit compute. The starter does not implement these production controls." + (a.team !== "large" ? " Arrange developer ownership before using this as an embedded service; the suggested assistant is only a prototype." : "") }, design); },
   },
 ];
 

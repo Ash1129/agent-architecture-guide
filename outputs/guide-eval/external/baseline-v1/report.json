@@ -1,0 +1,3885 @@
+{
+  "generatedAt": "2026-10-10T18:02:40.144Z",
+  "gitCommit": "2af449e88720e5f75100b5b70eef39997b003e64",
+  "datasetVersion": 1,
+  "datasetHash": "f019db497924773ca77e0e045aac55d37ee349b5b8b737e9f467a61f87367775",
+  "sourceFiles": [
+    "src/lib/rules.ts",
+    "src/lib/blueprint.ts",
+    "src/lib/models.ts",
+    "src/lib/questions.ts",
+    "src/lib/catalog.ts",
+    "evals/recommendations/external.ts",
+    "scripts/evaluate-external-guide.mjs"
+  ],
+  "implementationHash": "dcbc4bd4ce762adfe13f31660168603392a8e504a12768b057ab4ebf3ecea326",
+  "authorship": "Externally sourced problems; assistant-authored scoped encodings and rubrics. User accepted source shortlist; expectations remain unreviewed. Not held out or independently benchmarked.",
+  "overallStatus": "REVIEW_REQUIRED",
+  "scope": "Scoped adaptations of published cases. Broad structural checks only; manual criteria remain unresolved. No live execution, independent review, or optimal-tool benchmark. Links were opened during research; this command does not recheck them.",
+  "summary": {
+    "cases": 7,
+    "checksPassed": 11,
+    "checksTotal": 12,
+    "manualCriteriaPending": 14
+  },
+  "results": [
+    {
+      "id": "bordr",
+      "company": "Bordr",
+      "source": {
+        "url": "https://n8n.io/case-studies/bordr/",
+        "publisher": "n8n customer story",
+        "section": "The solution",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "Orders connect Airtable, transactional email, partner tasks and PDF generation through branching workflows."
+        ]
+      },
+      "brief": "Process relocation orders, generate PDFs, create partner tasks and send transactional status emails.",
+      "answers": {
+        "task": "Process relocation orders, generate PDFs, create partner tasks and send transactional status emails.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "event",
+        "volume": "daily",
+        "risks": [
+          "personal",
+          "visible"
+        ],
+        "location": "open",
+        "team": "mid"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped to the listed order-processing workflows."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Listed actions use branching and conditional logic."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "The workflows create records, PDFs and emails."
+        },
+        "trigger": {
+          "kind": "assumption",
+          "note": "Trigger is an evaluation assumption; the publication does not specify it."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Risk flags are our assessment of the scoped task, not a published risk assessment."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "assumption",
+          "note": "Developer availability is inferred for this scoped implementation, not company headcount."
+        }
+      },
+      "observedStack": [
+        "n8n"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation"
+        },
+        {
+          "name": "No unnecessary AI",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          }
+        }
+      ],
+      "manualCriteria": [
+        "Check duplicate-order handling, safe email retries and recipient/document matching.",
+        "Verify whether operator skills and order triggers match the assumed answers."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Process relocation orders, generate PDFs, create partner tasks and send transactional status emails.",
+        "topology": {
+          "primary": "pipeline",
+          "addOns": [],
+          "why": [
+            {
+              "text": "Because the work follows the same steps and rules every time, each step and branch can be written down in advance.",
+              "ruleId": "T1",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic",
+                  "notes"
+                ]
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "n8n",
+            "role": "Holds the workflow and starts it automatically.",
+            "core": true,
+            "why": [
+              {
+                "text": "You said it should start automatically when something happens. n8n is built for workflows and automation, with AI steps where needed.",
+                "ruleId": "TL2",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes",
+                    "selfhosting"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "integrations",
+            "role": "Fetches and updates data in your other software as fixed steps.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to take actions in your systems. With a fixed path, those steps don't need AI to decide anything.",
+                "ruleId": "TL12",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [],
+        "models": {
+          "needed": false,
+          "capabilities": [],
+          "process": [],
+          "examples": ""
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "Rules-based automation is predictable, so it can run on its own once tested.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "If a run fails, stop and alert a named person rather than retrying silently."
+          ],
+          "guardrails": [],
+          "level": 4
+        },
+        "gotchas": [
+          {
+            "id": "G1",
+            "priority": 1,
+            "title": "Don't add AI just because you can",
+            "body": "If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G10",
+            "priority": 4,
+            "title": "You don't need MCP here",
+            "body": "MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit.",
+            "basis": {
+              "kind": "design"
+            }
+          },
+          {
+            "id": "G21",
+            "priority": 4,
+            "title": "n8n isn't open source",
+            "body": "n8n's licence lets you use and change it for your own internal business purposes. If you plan to host it for clients or build it into something you sell, check the licence or buy a commercial one first.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "n8nDocs"
+              ]
+            }
+          }
+        ],
+        "firstSteps": [
+          "Write every step, rule and exception on one page, and check it against 20 recent real cases.",
+          "Build it in n8n with a manual start button, and run it alongside the current process for two weeks before switching over.",
+          "Name the person who gets the alert when a run fails, and who updates the rules when the business changes."
+        ],
+        "fired": [
+          "A1",
+          "T1",
+          "TL2",
+          "TL12",
+          "H5",
+          "M1",
+          "AU1",
+          "AU9",
+          "S5",
+          "G1",
+          "G10",
+          "G21",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "automation",
+          "title": "Plain automation. No AI needed.",
+          "summary": "A rules-based workflow will do this job reliably and cheaply. Adding AI would add cost and unpredictability without adding value.",
+          "agents": "No agent",
+          "why": [
+            {
+              "text": "You said the work follows the same steps and rules every time. When the right result always follows from the input, a fixed set of rules is the most reliable tool.",
+              "ruleId": "A1",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "anthropic"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "A written checklist",
+          "body": "Write every rule and exception on one page and follow it by hand for two weeks. Automate once the rules stop changing; automating a moving target wastes the build.",
+          "why": {
+            "text": "Rules that are still being discovered are expensive to change once automated.",
+            "ruleId": "S5",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "Plain automation. No AI needed.",
+        "tool": "n8n",
+        "summary": "A rules-based workflow in n8n. No AI model is involved.",
+        "stages": 4,
+        "tracks": 2,
+        "nodes": [
+          {
+            "id": "start",
+            "kind": "start",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Event trigger",
+              "short": "Event trigger",
+              "how": "A webhook or inbox watcher starts a run the moment a new item arrives."
+            },
+            "name": "Something arrives",
+            "label": "n8n trigger",
+            "what": "A new email, form or file starts a run automatically.",
+            "why": "You said it should start automatically when something happens.",
+            "passes": "The new item, plus any context the next step needs.",
+            "rules": [
+              "TL2"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              1
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "rules",
+            "kind": "decision",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Decision table",
+              "short": "Decision table",
+              "how": "Each rule is a row of conditions and an action. The first row that matches decides."
+            },
+            "name": "Check the rules",
+            "label": "Rules in n8n",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "Failures alert a person"
+              }
+            ],
+            "what": "The workflow compares the item with your written rules and picks the matching path. No AI is involved.",
+            "why": "You said the work follows the same steps and rules every time. When the right result always follows from the input, a fixed set of rules is the most reliable tool.",
+            "passes": "The item, to the action its rules call for.",
+            "rules": [
+              "A1",
+              "T1",
+              "AU9"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 2
+          },
+          {
+            "id": "actA",
+            "kind": "fixed",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Scripted action",
+              "short": "Scripted action",
+              "how": "A fixed sequence of API calls with set inputs. Same input, same result."
+            },
+            "name": "Matching action",
+            "label": "Via app connections",
+            "what": "When a rule matches, the workflow carries out the action that rule specifies.",
+            "why": "Each rule maps to one clear action, so the outcome is predictable and easy to audit.",
+            "passes": "The completed action.",
+            "rules": [
+              "T1",
+              "TL12"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              0
+            ],
+            "gates": [],
+            "step": 3
+          },
+          {
+            "id": "actB",
+            "kind": "fixed",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Scripted action",
+              "short": "Scripted action",
+              "how": "A fixed sequence of API calls with set inputs. Same input, same result."
+            },
+            "name": "Default action",
+            "label": "Via app connections",
+            "what": "Anything no rule matches takes the default path, such as logging it or doing nothing.",
+            "why": "Every item needs a defined outcome, including the ones that match no rule.",
+            "passes": "The completed action.",
+            "rules": [
+              "T1"
+            ],
+            "stage": 2,
+            "tracks": [
+              1,
+              1
+            ],
+            "gates": [],
+            "step": 4
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Action is taken",
+            "label": "In your systems",
+            "gates": [],
+            "what": "The finished work is applied in your systems: a record updated, a message sent, an order placed.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 3,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 5
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "rules",
+            "style": "flow"
+          },
+          {
+            "from": "rules",
+            "to": "actA",
+            "label": "match",
+            "style": "flow"
+          },
+          {
+            "from": "rules",
+            "to": "actB",
+            "label": "no match",
+            "style": "flow"
+          },
+          {
+            "from": "actA",
+            "to": "end",
+            "style": "flow"
+          },
+          {
+            "from": "actB",
+            "to": "end",
+            "style": "flow"
+          }
+        ],
+        "captions": {}
+      },
+      "outsideCatalog": [],
+      "automatedChecksPassed": true,
+      "overallStatus": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "oversee",
+      "company": "Oversee",
+      "source": {
+        "url": "https://n8n.io/case-studies/oversee/",
+        "publisher": "n8n customer story",
+        "section": "Solution",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "AI gathers case information into structured reports; operations staff decide the next action. Autonomous customer communication is described as a future goal."
+        ]
+      },
+      "brief": "Gather service-request context across systems and produce a report for an operations person to decide the next action.",
+      "answers": {
+        "task": "Gather service-request context across systems and produce a report for an operations person to decide the next action.",
+        "shape": "judgement",
+        "systems": "read",
+        "trigger": "event",
+        "volume": "daily",
+        "risks": [
+          "personal"
+        ],
+        "location": "open",
+        "team": "large",
+        "kinds": "no",
+        "quality": "partly",
+        "knowledge": [
+          "reference"
+        ],
+        "split": "sequential"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped to current investigation support, excluding the future roadmap."
+        },
+        "shape": {
+          "kind": "assumption",
+          "note": "Work shape is an evaluation interpretation of the published problem."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Scoped to information gathering; staff decide subsequent actions."
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Workflow starts when a service request comes in."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Risk flags are our assessment of the scoped task, not a published risk assessment."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "The source says developers build workflows."
+        },
+        "kinds": {
+          "kind": "assumption",
+          "note": "Request taxonomy is unspecified; no is the baseline."
+        },
+        "quality": {
+          "kind": "assumption",
+          "note": "Acceptance criteria are not fully published; partly is a conservative assumption."
+        },
+        "knowledge": {
+          "kind": "assumption",
+          "note": "Reference material is assumed sufficient; persistent learning is not established."
+        },
+        "split": {
+          "kind": "assumption",
+          "note": "Sequential steps are assumed for this scoped task."
+        }
+      },
+      "observedStack": [
+        "n8n"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "workflow",
+            "agent"
+          ],
+          "actual": "workflow"
+        },
+        {
+          "name": "Human decision before completion",
+          "pass": false,
+          "expected": {
+            "maxAutonomy": 2,
+            "bypass": false
+          },
+          "actual": {
+            "autonomy": 3,
+            "visible": true,
+            "bypass": true
+          }
+        }
+      ],
+      "manualCriteria": [
+        "Confirm reports preserve source context and do not send customer replies automatically."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Gather service-request context across systems and produce a report for an operations person to decide the next action.",
+        "topology": {
+          "primary": "chain",
+          "addOns": [],
+          "why": [
+            {
+              "text": "You said each step builds on the last. A chain keeps that order and lets you check each step before the next one starts.",
+              "ruleId": "T6",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic"
+                ]
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "n8n",
+            "role": "Holds the workflow, starts it automatically, and calls an AI model for the steps that need judgement.",
+            "core": true,
+            "why": [
+              {
+                "text": "You said it should start automatically when something happens. n8n is built for workflows and automation, with AI steps where needed.",
+                "ruleId": "TL2",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes",
+                    "selfhosting"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "integrations",
+            "role": "Fetches and updates data in your other software as fixed steps.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to look things up in your systems. With a fixed path, those steps don't need AI to decide anything.",
+                "ruleId": "TL12",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          },
+          {
+            "tool": "system-prompt",
+            "role": "Sets the AI's role, tone and the rules that always apply.",
+            "core": false,
+            "why": [
+              {
+                "text": "Every AI setup needs one. It covers universal truths about your business, not the details of a single task.",
+                "ruleId": "TL13",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes",
+                    "enmgt"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "resources",
+            "role": "The documents and data it relies on instead of guessing.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it should draw on reference material. Giving the AI the source material is the best defence against made-up details.",
+                "ruleId": "TL14",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "promptfoo",
+            "role": "Tests examples and failure cases before changing the AI system.",
+            "core": false,
+            "why": [
+              {
+                "text": "A development team can turn acceptance criteria into repeatable regression checks.",
+                "ruleId": "TL19",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          },
+          {
+            "tool": "langfuse",
+            "role": "Traces AI runs, with sensitive content filtered before export.",
+            "core": false,
+            "why": [
+              {
+                "text": "Trace evidence helps the team diagnose failures and compare quality, latency and cost.",
+                "ruleId": "TL19",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [],
+        "models": {
+          "needed": true,
+          "capabilities": [
+            {
+              "title": "Follows instructions closely",
+              "body": "Sticks to your brief and output format, run after run.",
+              "why": {
+                "text": "Every AI step depends on this.",
+                "ruleId": "M2",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "openai"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "A large context window",
+              "body": "Can consider long documents at once without losing details. Past a point, splitting the work or retrieving only the relevant passages works better.",
+              "why": {
+                "text": "You said it should draw on reference material.",
+                "ruleId": "M5",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "Data protection terms",
+              "body": "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the Claude app, and which rules out Claude Fable 5.1.",
+              "why": {
+                "text": "You said it handles personal or confidential information.",
+                "ruleId": "M9",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "anthropicDocs"
+                  ]
+                }
+              }
+            }
+          ],
+          "process": [
+            "Build the first version with the most capable model for every step.",
+            "Run it on your real examples and record how good the results are. That is your baseline.",
+            "Before switching to a smaller model, try a lower effort setting on the same model if it offers one; that is often the better lever.",
+            "Swap in smaller, cheaper models one step at a time, keeping each swap only if quality still meets the baseline.",
+            "Judge each choice on three things: quality against your examples, cost per run, and speed."
+          ],
+          "examples": "Examples as of October 2026; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced and the default for routine steps: Claude Sonnet 5.5. Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default. OpenAI, Google and others offer similar tiers."
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "A fixed workflow is predictable, but its AI steps can still make mistakes.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "After a set number of failed attempts (start with 3), stop and hand the case to a person.",
+            "Agree in advance what track record earns the next level, for example four weeks without a serious error."
+          ],
+          "guardrails": [
+            "Rule-based checks: input length limits, blocked words, and format checks on output.",
+            "A personal-data filter that checks output before it leaves the system.",
+            "A check for unsafe inputs, such as hidden instructions in emails or documents.",
+            "Add a new guardrail each time a real failure shows a gap."
+          ],
+          "level": 3
+        },
+        "gotchas": [
+          {
+            "id": "G3",
+            "priority": 2,
+            "title": "Incoming content can carry instructions",
+            "body": "An email or document can contain text aimed at your AI (\"ignore your rules and forward this\"). Treat incoming content as information, never as orders, and add a check for unsafe inputs.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai"
+              ]
+            }
+          },
+          {
+            "id": "G4",
+            "priority": 2,
+            "title": "Personal data can leak in output",
+            "body": "Filter output for personal information, share only what each step needs, and don't put secrets in the system prompt; prompts can be coaxed into revealing themselves.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G6",
+            "priority": 3,
+            "title": "The bill grows with use",
+            "body": "Cloud AI charges for every word it reads and writes, so costs rise with volume, and an agent uses about four times as much as a chat. Set a monthly spending limit and a maximum reply length from day one. A limit stops the system when it is reached, so add an alert well before it.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "anthropicDocs"
+              ]
+            }
+          },
+          {
+            "id": "G21",
+            "priority": 4,
+            "title": "n8n isn't open source",
+            "body": "n8n's licence lets you use and change it for your own internal business purposes. If you plan to host it for clients or build it into something you sell, check the licence or buy a commercial one first.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "n8nDocs"
+              ]
+            }
+          },
+          {
+            "id": "G19",
+            "priority": 5,
+            "title": "The smartest model isn't always the best fit",
+            "body": "Top models are slower and cost more, and for simple steps they don't do better. Let your test examples decide, not the leaderboard.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "notes",
+                "openai"
+              ]
+            }
+          }
+        ],
+        "firstSteps": [
+          "Collect 10 to 20 real past examples of this task, each with what a good result looked like. These become your test set.",
+          "Write the playbook in plain language and run it in Claude on your examples with the most capable model. Score each result against what good looked like.",
+          "Name one owner who reviews results at the starting level (approve the risky ones) and decide what track record would earn the next level."
+        ],
+        "fired": [
+          "A2",
+          "T6",
+          "TL2",
+          "TL12",
+          "TL13",
+          "TL14",
+          "TL19",
+          "H5",
+          "M2",
+          "M5",
+          "M9",
+          "M10",
+          "AU1",
+          "AU9",
+          "AU10",
+          "S3",
+          "G3",
+          "G4",
+          "G6",
+          "G19",
+          "G21",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "workflow",
+          "title": "An automated workflow with AI steps. No agent needed.",
+          "summary": "You decide the steps in advance. AI does the reading, writing or judging inside those steps, but never chooses the path.",
+          "agents": "No agent",
+          "why": [
+            {
+              "text": "You said the steps are fixed but some need reading or judgement. A predictable path is easier to test and cheaper to run than an agent, and AI still handles the judgement calls.",
+              "ruleId": "A2",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic",
+                  "notes"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "Do it by hand with AI first",
+          "body": "Paste real examples into Claude (or another assistant) with your written playbook, one at a time. When results are consistently good, wire the same steps into n8n.",
+          "why": {
+            "text": "You learn what the instructions need to say before paying to automate them.",
+            "ruleId": "S3",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "An automated workflow with AI steps. No agent needed.",
+        "tool": "n8n",
+        "summary": "A fixed workflow in n8n. AI handles only the steps that need judgement.",
+        "stages": 6,
+        "tracks": 2,
+        "nodes": [
+          {
+            "id": "start",
+            "kind": "start",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Event trigger",
+              "short": "Event trigger",
+              "how": "A webhook or inbox watcher starts a run the moment a new item arrives."
+            },
+            "name": "Something arrives",
+            "label": "n8n trigger",
+            "what": "A new email, form or file starts a run automatically.",
+            "why": "You said it should start automatically when something happens.",
+            "passes": "The new item, plus any context the next step needs.",
+            "rules": [
+              "TL2"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              1
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "step1",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "sonnet",
+              "role": "worker",
+              "name": "Claude Sonnet 5.5",
+              "short": "Sonnet 5.5",
+              "prototype": "Build the first version on Claude Opus 5.5. Switch to Claude Sonnet 5.5 once it matches that baseline on your test examples. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "A balanced model handles most judgement steps well at a reasonable cost per run.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "First AI step",
+            "label": "AI step in n8n",
+            "what": "The first part of the job, for example reading the input and producing a draft. It draws on your reference library rather than guessing.",
+            "why": "You said each step builds on the last. A chain keeps that order and lets you check each step before the next one starts.",
+            "passes": "A draft, to be checked before the next step.",
+            "rules": [
+              "T6",
+              "A2"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              1
+            ],
+            "gates": [],
+            "step": 2
+          },
+          {
+            "id": "gate",
+            "kind": "decision",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Validation rules",
+              "short": "Validation rules",
+              "how": "Schema, required-field and pattern (regex) checks on the output."
+            },
+            "name": "Quality gate",
+            "label": "Automatic check",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "3 failures, then a person"
+              }
+            ],
+            "what": "A simple automatic check confirms the draft is complete and in the right format before work continues.",
+            "why": "Catching a problem between steps is cheaper than fixing it at the end.",
+            "passes": "Drafts that pass. Failures go back to step one.",
+            "rules": [
+              "T6",
+              "AU9"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 3
+          },
+          {
+            "id": "step2",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "sonnet",
+              "role": "worker",
+              "name": "Claude Sonnet 5.5",
+              "short": "Sonnet 5.5",
+              "prototype": "Build the first version on Claude Opus 5.5. Switch to Claude Sonnet 5.5 once it matches that baseline on your test examples. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "A balanced model handles most judgement steps well at a reasonable cost per run.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "Second AI step",
+            "label": "AI step in n8n",
+            "what": "The next part of the job builds on the checked draft, for example refining, translating or formatting it.",
+            "why": "Each step does one thing, which makes each one easier to test and improve.",
+            "passes": "The finished work.",
+            "rules": [
+              "T6"
+            ],
+            "stage": 3,
+            "tracks": [
+              0,
+              1
+            ],
+            "gates": [],
+            "step": 4
+          },
+          {
+            "id": "approve",
+            "kind": "human",
+            "name": "Sign-off for risky items",
+            "label": "Person approves",
+            "what": "Only items that cross an agreed line (an amount, a type of action, a sensitive customer) stop here for a person's sign-off.",
+            "why": "Autonomy starts at level 3: routine items go through on their own. A fixed workflow is predictable, but its AI steps can still make mistakes.",
+            "passes": "Approved high-risk items. Anything rejected goes back to a person to handle.",
+            "rules": [
+              "AU1"
+            ],
+            "stage": 4,
+            "tracks": [
+              0,
+              0
+            ],
+            "gates": [],
+            "step": 5
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Result goes out",
+            "label": "Delivered output",
+            "gates": [],
+            "what": "The finished result is delivered to whoever needs it.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 5,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 6
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "step1",
+            "style": "flow"
+          },
+          {
+            "from": "step1",
+            "to": "gate",
+            "style": "flow"
+          },
+          {
+            "from": "gate",
+            "to": "step1",
+            "label": "retry",
+            "style": "loop"
+          },
+          {
+            "from": "gate",
+            "to": "step2",
+            "label": "pass",
+            "style": "flow"
+          },
+          {
+            "from": "step2",
+            "to": "approve",
+            "label": "high-risk",
+            "style": "flow"
+          },
+          {
+            "from": "step2",
+            "to": "end",
+            "label": "routine",
+            "style": "flow"
+          },
+          {
+            "from": "approve",
+            "to": "end",
+            "label": "approved",
+            "style": "flow"
+          }
+        ],
+        "captions": {}
+      },
+      "outsideCatalog": [],
+      "automatedChecksPassed": false,
+      "overallStatus": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "adyen",
+      "company": "Adyen",
+      "source": {
+        "url": "https://airflow.apache.org/use-cases/adyen/",
+        "publisher": "Apache Airflow customer account",
+        "section": "How did Apache Airflow help to solve this problem?",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "Teams author dependent Spark jobs, monitor logs and use custom access groups. A custom backfill plugin also clears generated data."
+        ]
+      },
+      "brief": "Schedule dependent ETL and Spark jobs with team ownership, monitoring and controlled backfills.",
+      "answers": {
+        "task": "Schedule dependent ETL and Spark jobs with team ownership, monitoring and controlled backfills.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "data",
+        "volume": "daily",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Paraphrases documented ETL, dependency, ownership and backfill needs."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "ETL orchestration is deterministic within this scope."
+        },
+        "systems": {
+          "kind": "assumption",
+          "note": "Access scope is our scoped evaluation boundary."
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Jobs have upstream dependencies."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Risk flags are our assessment of the scoped task, not a published risk assessment."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Data scientists author DAGs and a platform team maintains extensions."
+        }
+      },
+      "observedStack": [
+        "airflow"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation"
+        },
+        {
+          "name": "No unnecessary AI",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          }
+        }
+      ],
+      "manualCriteria": [
+        "Check interval-aware backfills, retry idempotency and team permissions.",
+        "Data deletion is part of a custom plugin, not an assumed standard Airflow rollback capability."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Schedule dependent ETL and Spark jobs with team ownership, monitoring and controlled backfills.",
+        "topology": {
+          "primary": "dag",
+          "addOns": [],
+          "why": [
+            {
+              "text": "You said it depends on other data jobs finishing first. A dependency graph waits for upstream data instead of guessing when it will arrive.",
+              "ruleId": "T2",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "selfhosting"
+                ]
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "airflow",
+            "role": "Runs each job in the right order, starting it when its data is ready.",
+            "core": true,
+            "why": [
+              {
+                "text": "You said it depends on other data jobs finishing first and you have developers or an IT team. Airflow's data-aware scheduling is built for this, and your team can handle its code-based setup.",
+                "ruleId": "TL1",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "selfhosting",
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "integrations",
+            "role": "Fetches and updates data in your other software as fixed steps.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to take actions in your systems. With a fixed path, those steps don't need AI to decide anything.",
+                "ruleId": "TL12",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [],
+        "models": {
+          "needed": false,
+          "capabilities": [],
+          "process": [],
+          "examples": ""
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "Rules-based automation is predictable, so it can run on its own once tested.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "If a run fails, stop and alert a named person rather than retrying silently."
+          ],
+          "guardrails": [],
+          "level": 4
+        },
+        "gotchas": [
+          {
+            "id": "G1",
+            "priority": 1,
+            "title": "Don't add AI just because you can",
+            "body": "If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G12",
+            "priority": 3,
+            "title": "Airflow is a developer tool",
+            "body": "Every workflow is written in Python, compared with n8n's visual builder, and a production setup needs ongoing monitoring and tuning. Budget for someone to own it, or use a managed Airflow service.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "selfhosting",
+                "airflowDocs"
+              ]
+            }
+          },
+          {
+            "id": "G10",
+            "priority": 4,
+            "title": "You don't need MCP here",
+            "body": "MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit.",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        ],
+        "firstSteps": [
+          "Write every step, rule and exception on one page, and check it against 20 recent real cases.",
+          "Build it in Airflow with a manual start button, and run it alongside the current process for two weeks before switching over.",
+          "Name the person who gets the alert when a run fails, and who updates the rules when the business changes."
+        ],
+        "fired": [
+          "A1",
+          "T2",
+          "TL1",
+          "TL12",
+          "H5",
+          "M1",
+          "AU1",
+          "AU9",
+          "S5",
+          "G1",
+          "G10",
+          "G12",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "automation",
+          "title": "Plain automation. No AI needed.",
+          "summary": "A rules-based workflow will do this job reliably and cheaply. Adding AI would add cost and unpredictability without adding value.",
+          "agents": "No agent",
+          "why": [
+            {
+              "text": "You said the work follows the same steps and rules every time. When the right result always follows from the input, a fixed set of rules is the most reliable tool.",
+              "ruleId": "A1",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "anthropic"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "A written checklist",
+          "body": "Write every rule and exception on one page and follow it by hand for two weeks. Automate once the rules stop changing; automating a moving target wastes the build.",
+          "why": {
+            "text": "Rules that are still being discovered are expensive to change once automated.",
+            "ruleId": "S5",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "Plain automation. No AI needed.",
+        "tool": "Apache Airflow",
+        "summary": "A rules-based workflow in Airflow. No AI model is involved.",
+        "stages": 3,
+        "tracks": 2,
+        "nodes": [
+          {
+            "id": "job1",
+            "kind": "start",
+            "name": "First data job lands",
+            "label": "Upstream import",
+            "what": "An earlier job, such as an overnight import, finishes and its data is ready.",
+            "why": "You said it depends on other data jobs finishing first.",
+            "passes": "Fresh data for your task.",
+            "rules": [
+              "T2"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              0
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "job2",
+            "kind": "start",
+            "name": "Second data job lands",
+            "label": "Upstream import",
+            "what": "Another job your task depends on finishes.",
+            "why": "Your task needs both sets of data, so it must wait for both.",
+            "passes": "The rest of the data your task needs.",
+            "rules": [
+              "T2"
+            ],
+            "stage": 0,
+            "tracks": [
+              1,
+              1
+            ],
+            "gates": [],
+            "step": 2
+          },
+          {
+            "id": "run",
+            "kind": "fixed",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Dependency scheduler (DAG)",
+              "short": "Dependency scheduler (DAG)",
+              "how": "Runs each job only once every job it depends on has finished, in dependency order."
+            },
+            "name": "Run your task",
+            "label": "Airflow",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "Failures alert a person"
+              }
+            ],
+            "what": "Your rules run once every input is ready, the same way every time.",
+            "why": "You said it depends on other data jobs finishing first. A dependency graph waits for upstream data instead of guessing when it will arrive.",
+            "passes": "The finished output.",
+            "rules": [
+              "T2",
+              "TL1"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 3
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Action is taken",
+            "label": "In your systems",
+            "gates": [],
+            "what": "The finished work is applied in your systems: a record updated, a message sent, an order placed.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 4
+          }
+        ],
+        "edges": [
+          {
+            "from": "job1",
+            "to": "run",
+            "label": "both ready",
+            "style": "flow"
+          },
+          {
+            "from": "job2",
+            "to": "run",
+            "label": "both ready",
+            "style": "flow"
+          },
+          {
+            "from": "run",
+            "to": "end",
+            "style": "flow"
+          }
+        ],
+        "captions": {}
+      },
+      "outsideCatalog": [],
+      "automatedChecksPassed": true,
+      "overallStatus": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "adobe",
+      "company": "Adobe",
+      "source": {
+        "url": "https://airflow.apache.org/use-cases/adobe/",
+        "publisher": "Apache Airflow customer account",
+        "section": "What was the problem? / What are the results?",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "An orchestration service manages hierarchical Spark and non-Spark workflows, using custom operators and the Kubernetes executor."
+        ]
+      },
+      "brief": "Run sequential and parallel Spark and non-Spark data jobs with scheduling, monitoring and retries.",
+      "answers": {
+        "task": "Run sequential and parallel Spark and non-Spark data jobs with scheduling, monitoring and retries.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "data",
+        "volume": "daily",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Paraphrases the published orchestration problem."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Scoped to fixed job execution and dependencies."
+        },
+        "systems": {
+          "kind": "assumption",
+          "note": "Access scope is our scoped evaluation boundary."
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Data dependencies are one scoped mode; the article also describes schedules and external events."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Risk flags are our assessment of the scoped task, not a published risk assessment."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Engineering teams built the orchestration service."
+        }
+      },
+      "observedStack": [
+        "airflow"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation"
+        },
+        {
+          "name": "No unnecessary AI",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          }
+        }
+      ],
+      "manualCriteria": [
+        "Check sequential/parallel dependencies, workload isolation and retry policy.",
+        "Repeat with schedule/event triggers before drawing conclusions about all Adobe workloads."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Run sequential and parallel Spark and non-Spark data jobs with scheduling, monitoring and retries.",
+        "topology": {
+          "primary": "dag",
+          "addOns": [],
+          "why": [
+            {
+              "text": "You said it depends on other data jobs finishing first. A dependency graph waits for upstream data instead of guessing when it will arrive.",
+              "ruleId": "T2",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "selfhosting"
+                ]
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "airflow",
+            "role": "Runs each job in the right order, starting it when its data is ready.",
+            "core": true,
+            "why": [
+              {
+                "text": "You said it depends on other data jobs finishing first and you have developers or an IT team. Airflow's data-aware scheduling is built for this, and your team can handle its code-based setup.",
+                "ruleId": "TL1",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "selfhosting",
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "integrations",
+            "role": "Fetches and updates data in your other software as fixed steps.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to take actions in your systems. With a fixed path, those steps don't need AI to decide anything.",
+                "ruleId": "TL12",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [],
+        "models": {
+          "needed": false,
+          "capabilities": [],
+          "process": [],
+          "examples": ""
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "Rules-based automation is predictable, so it can run on its own once tested.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "If a run fails, stop and alert a named person rather than retrying silently."
+          ],
+          "guardrails": [],
+          "level": 4
+        },
+        "gotchas": [
+          {
+            "id": "G1",
+            "priority": 1,
+            "title": "Don't add AI just because you can",
+            "body": "If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G12",
+            "priority": 3,
+            "title": "Airflow is a developer tool",
+            "body": "Every workflow is written in Python, compared with n8n's visual builder, and a production setup needs ongoing monitoring and tuning. Budget for someone to own it, or use a managed Airflow service.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "selfhosting",
+                "airflowDocs"
+              ]
+            }
+          },
+          {
+            "id": "G10",
+            "priority": 4,
+            "title": "You don't need MCP here",
+            "body": "MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit.",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        ],
+        "firstSteps": [
+          "Write every step, rule and exception on one page, and check it against 20 recent real cases.",
+          "Build it in Airflow with a manual start button, and run it alongside the current process for two weeks before switching over.",
+          "Name the person who gets the alert when a run fails, and who updates the rules when the business changes."
+        ],
+        "fired": [
+          "A1",
+          "T2",
+          "TL1",
+          "TL12",
+          "H5",
+          "M1",
+          "AU1",
+          "AU9",
+          "S5",
+          "G1",
+          "G10",
+          "G12",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "automation",
+          "title": "Plain automation. No AI needed.",
+          "summary": "A rules-based workflow will do this job reliably and cheaply. Adding AI would add cost and unpredictability without adding value.",
+          "agents": "No agent",
+          "why": [
+            {
+              "text": "You said the work follows the same steps and rules every time. When the right result always follows from the input, a fixed set of rules is the most reliable tool.",
+              "ruleId": "A1",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "anthropic"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "A written checklist",
+          "body": "Write every rule and exception on one page and follow it by hand for two weeks. Automate once the rules stop changing; automating a moving target wastes the build.",
+          "why": {
+            "text": "Rules that are still being discovered are expensive to change once automated.",
+            "ruleId": "S5",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "Plain automation. No AI needed.",
+        "tool": "Apache Airflow",
+        "summary": "A rules-based workflow in Airflow. No AI model is involved.",
+        "stages": 3,
+        "tracks": 2,
+        "nodes": [
+          {
+            "id": "job1",
+            "kind": "start",
+            "name": "First data job lands",
+            "label": "Upstream import",
+            "what": "An earlier job, such as an overnight import, finishes and its data is ready.",
+            "why": "You said it depends on other data jobs finishing first.",
+            "passes": "Fresh data for your task.",
+            "rules": [
+              "T2"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              0
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "job2",
+            "kind": "start",
+            "name": "Second data job lands",
+            "label": "Upstream import",
+            "what": "Another job your task depends on finishes.",
+            "why": "Your task needs both sets of data, so it must wait for both.",
+            "passes": "The rest of the data your task needs.",
+            "rules": [
+              "T2"
+            ],
+            "stage": 0,
+            "tracks": [
+              1,
+              1
+            ],
+            "gates": [],
+            "step": 2
+          },
+          {
+            "id": "run",
+            "kind": "fixed",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Dependency scheduler (DAG)",
+              "short": "Dependency scheduler (DAG)",
+              "how": "Runs each job only once every job it depends on has finished, in dependency order."
+            },
+            "name": "Run your task",
+            "label": "Airflow",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "Failures alert a person"
+              }
+            ],
+            "what": "Your rules run once every input is ready, the same way every time.",
+            "why": "You said it depends on other data jobs finishing first. A dependency graph waits for upstream data instead of guessing when it will arrive.",
+            "passes": "The finished output.",
+            "rules": [
+              "T2",
+              "TL1"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 3
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Action is taken",
+            "label": "In your systems",
+            "gates": [],
+            "what": "The finished work is applied in your systems: a record updated, a message sent, an order placed.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 4
+          }
+        ],
+        "edges": [
+          {
+            "from": "job1",
+            "to": "run",
+            "label": "both ready",
+            "style": "flow"
+          },
+          {
+            "from": "job2",
+            "to": "run",
+            "label": "both ready",
+            "style": "flow"
+          },
+          {
+            "from": "run",
+            "to": "end",
+            "style": "flow"
+          }
+        ],
+        "captions": {}
+      },
+      "outsideCatalog": [],
+      "automatedChecksPassed": true,
+      "overallStatus": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "remote",
+      "company": "Remote",
+      "source": {
+        "url": "https://www.langchain.com/blog/customers-remote",
+        "publisher": "Remote engineer guest post on LangChain",
+        "section": "The Solution / Why LangChain and LangGraph",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "The agent generates and runs Python in a WebAssembly sandbox, revises transformations and stores validated JSON."
+        ]
+      },
+      "brief": "Map varied customer HR and payroll files into an onboarding schema using iterative code execution and validation.",
+      "answers": {
+        "task": "Map varied customer HR and payroll files into an onboarding schema using iterative code execution and validation.",
+        "shape": "varies",
+        "systems": "act",
+        "trigger": "manual",
+        "volume": "daily",
+        "risks": [
+          "personal"
+        ],
+        "location": "open",
+        "team": "large",
+        "kinds": "no",
+        "quality": "partly",
+        "knowledge": [
+          "reference"
+        ],
+        "roles": "one"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped to the documented file migration agent."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "The agent iteratively revises code after inspecting outputs."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Code transforms data and stores the resulting file."
+        },
+        "trigger": {
+          "kind": "assumption",
+          "note": "Trigger is an evaluation assumption; the publication does not specify it."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "source-interpretation",
+          "note": "HR and payroll records establish personal-data handling."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "A staff engineer describes an internally built agent service."
+        },
+        "kinds": {
+          "kind": "assumption",
+          "note": "Request taxonomy is unspecified; no is the baseline."
+        },
+        "quality": {
+          "kind": "assumption",
+          "note": "Acceptance criteria are not fully published; partly is a conservative assumption."
+        },
+        "knowledge": {
+          "kind": "assumption",
+          "note": "Reference material is assumed sufficient; persistent learning is not established."
+        },
+        "roles": {
+          "kind": "source-interpretation",
+          "note": "One Code Execution Agent is described."
+        }
+      },
+      "observedStack": [
+        "langchain",
+        "langgraph"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "agent",
+            "workflow"
+          ],
+          "actual": "agent"
+        }
+      ],
+      "manualCriteria": [
+        "Verify sandbox permissions, schema validation, bounded retries and recoverable state.",
+        "Sensitive data and generated code still require validation; sandboxing is not proof that hallucinations disappear.",
+        "Trigger and deployment restrictions are unknown; test alternative encodings before selecting a platform."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Map varied customer HR and payroll files into an onboarding schema using iterative code execution and validation.",
+        "topology": {
+          "primary": "agent-loop",
+          "addOns": [],
+          "why": [
+            {
+              "text": "An agent repeats a simple loop: choose an action, use a tool, read the result, decide again. Limits on steps keep that loop from running away.",
+              "ruleId": "T8",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic",
+                  "databricks"
+                ]
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "cowork",
+            "role": "Runs the agent: you hand it the goal and it works through the steps on its own.",
+            "core": true,
+            "why": [
+              {
+                "text": "Claude can act repeatedly and reason between steps, which makes it an agent, with no setup beyond a paid Claude plan. Chat and agent work are one app now, in the desktop app, on the web and on mobile.",
+                "ruleId": "TL7",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "enmgt",
+                    "notes",
+                    "anthropicDocs"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "skill",
+            "role": "Tells the AI which of your connected tools to use for this task, and when.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to take actions in your systems. A Skill helps the AI pick the right tool from its list.",
+                "ruleId": "TL10",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "enmgt",
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "mcp",
+            "role": "Lets the AI take actions in your systems. Give it only the permissions this task needs.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to take actions in your systems. An AI can only use another program through a connector that tells it which tools exist and how to call them.",
+                "ruleId": "TL11",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "enmgt",
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "system-prompt",
+            "role": "Sets the AI's role, tone and the rules that always apply.",
+            "core": false,
+            "why": [
+              {
+                "text": "Every AI setup needs one. It covers universal truths about your business, not the details of a single task.",
+                "ruleId": "TL13",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes",
+                    "enmgt"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "resources",
+            "role": "The documents and data it relies on instead of guessing.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it should draw on reference material. Giving the AI the source material is the best defence against made-up details.",
+                "ruleId": "TL14",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "promptfoo",
+            "role": "Tests examples and failure cases before changing the AI system.",
+            "core": false,
+            "why": [
+              {
+                "text": "A development team can turn acceptance criteria into repeatable regression checks.",
+                "ruleId": "TL19",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          },
+          {
+            "tool": "langfuse",
+            "role": "Traces AI runs, with sensitive content filtered before export.",
+            "core": false,
+            "why": [
+              {
+                "text": "Trace evidence helps the team diagnose failures and compare quality, latency and cost.",
+                "ruleId": "TL19",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [
+          {
+            "text": "Skill plus MCP: the Skill points the AI to the right tools, and MCP connectors carry out the actual calls.",
+            "why": {
+              "text": "A Skill can't call a tool itself, and a connector alone doesn't say when to use it. Together they cover both.",
+              "ruleId": "TL17",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "enmgt"
+                ]
+              }
+            }
+          }
+        ],
+        "models": {
+          "needed": true,
+          "capabilities": [
+            {
+              "title": "Follows instructions closely",
+              "body": "Sticks to your brief and output format, run after run.",
+              "why": {
+                "text": "Every AI step depends on this.",
+                "ruleId": "M2",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "openai"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "Reliable tool use",
+              "body": "Calls the right tool with the right details, and notices when a call fails.",
+              "why": {
+                "text": "An agent acts through tools; weak tool use means weak actions.",
+                "ruleId": "M3",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "openai",
+                    "anthropic"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "Multi-step reasoning",
+              "body": "Plans ahead, notices when an approach isn't working, and changes course.",
+              "why": {
+                "text": "You said each case is different and the next step has to be worked out. The model has to work out the next step itself.",
+                "ruleId": "M4",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "databricks",
+                    "anthropic"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "A large context window",
+              "body": "Can consider long documents at once without losing details. Past a point, splitting the work or retrieving only the relevant passages works better.",
+              "why": {
+                "text": "You said it should draw on reference material.",
+                "ruleId": "M5",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "Data protection terms",
+              "body": "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the Claude app, and which rules out Claude Fable 5.1.",
+              "why": {
+                "text": "You said it handles personal or confidential information.",
+                "ruleId": "M9",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "anthropicDocs"
+                  ]
+                }
+              }
+            }
+          ],
+          "process": [
+            "Build the first version with the most capable model for every step.",
+            "Run it on your real examples and record how good the results are. That is your baseline.",
+            "Before switching to a smaller model, try a lower effort setting on the same model if it offers one; that is often the better lever.",
+            "Swap in smaller, cheaper models one step at a time, keeping each swap only if quality still meets the baseline.",
+            "Judge each choice on three things: quality against your examples, cost per run, and speed."
+          ],
+          "examples": "Examples as of October 2026; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced and the default for routine steps: Claude Sonnet 5.5. Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default. OpenAI, Google and others offer similar tiers."
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "Agents choose their own steps, so mistakes can compound. They start with close supervision.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "After a set number of failed attempts (start with 3), stop and hand the case to a person.",
+            "Cap the number of steps per task, so the agent stops and reports instead of looping.",
+            "If something isn't in your reference material, the agent asks rather than fills the gap.",
+            "Agree in advance what track record earns the next level, for example four weeks without a serious error."
+          ],
+          "guardrails": [
+            "Rule-based checks: input length limits, blocked words, and format checks on output.",
+            "A personal-data filter that checks output before it leaves the system.",
+            "A check for unsafe inputs, such as hidden instructions in emails or documents.",
+            "Add a new guardrail each time a real failure shows a gap."
+          ],
+          "level": 2
+        },
+        "gotchas": [
+          {
+            "id": "G2",
+            "priority": 1,
+            "title": "Mistakes compound",
+            "body": "Each step builds on the last, so one early error can spread through the whole task. Set step limits, stopping rules and human checkpoints, and test before you trust it.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic"
+              ]
+            }
+          },
+          {
+            "id": "G3",
+            "priority": 2,
+            "title": "Incoming content can carry instructions",
+            "body": "An email or document can contain text aimed at your AI (\"ignore your rules and forward this\"). Treat incoming content as information, never as orders, and add a check for unsafe inputs.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai"
+              ]
+            }
+          },
+          {
+            "id": "G4",
+            "priority": 2,
+            "title": "Personal data can leak in output",
+            "body": "Filter output for personal information, share only what each step needs, and don't put secrets in the system prompt; prompts can be coaxed into revealing themselves.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G6",
+            "priority": 3,
+            "title": "The bill grows with use",
+            "body": "Cloud AI charges for every word it reads and writes, so costs rise with volume, and an agent uses about four times as much as a chat. Set a monthly spending limit and a maximum reply length from day one. A limit stops the system when it is reached, so add an alert well before it.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "anthropicDocs"
+              ]
+            }
+          },
+          {
+            "id": "G7",
+            "priority": 3,
+            "title": "It only runs on its own once it's set up to",
+            "body": "Chat and agent work are one Claude app now, and nothing happens until something starts it. For unattended work, ask Claude to schedule the task: scheduled tasks run in the cloud even when your computer is off. Tasks that need files or apps on your computer still need the desktop app open.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "notes",
+                "enmgt",
+                "anthropicDocs"
+              ]
+            }
+          },
+          {
+            "id": "G9",
+            "priority": 4,
+            "title": "A Skill can't reach your systems by itself",
+            "body": "A Skill says what to do and which tools to use. It can include small scripts, but it still needs a connector or access set up for each of your systems, or it will point at something that isn't there.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "notes",
+                "enmgt",
+                "anthropicDocs"
+              ]
+            }
+          },
+          {
+            "id": "G19",
+            "priority": 5,
+            "title": "The smartest model isn't always the best fit",
+            "body": "Top models are slower and cost more, and for simple steps they don't do better. Let your test examples decide, not the leaderboard.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "notes",
+                "openai"
+              ]
+            }
+          }
+        ],
+        "firstSteps": [
+          "Collect 10 to 20 real past examples of this task, each with what a good result looked like. These become your test set.",
+          "Write the agent's brief (its goal, the tools it may use, and when it must stop and ask) and pilot it in Claude on your examples with read-only access.",
+          "Name one owner who reviews results at the starting level (approve every output) and decide what track record would earn the next level."
+        ],
+        "fired": [
+          "A3",
+          "T8",
+          "TL7",
+          "TL10",
+          "TL11",
+          "TL13",
+          "TL14",
+          "TL17",
+          "TL19",
+          "H5",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M9",
+          "M10",
+          "AU1",
+          "AU8",
+          "AU9",
+          "AU10",
+          "S2",
+          "G2",
+          "G3",
+          "G4",
+          "G6",
+          "G7",
+          "G9",
+          "G19",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "agent",
+          "title": "One AI agent.",
+          "summary": "Because the next step has to be worked out each time, you need an agent: an AI model in a loop that chooses an action, checks the result and decides what to do next.",
+          "agents": "One agent",
+          "why": [
+            {
+              "text": "You said each case is different and the next step has to be worked out, so the path can't be mapped out in advance. That is the case an agent exists for.",
+              "ruleId": "A3",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic",
+                  "databricks",
+                  "notes"
+                ]
+              }
+            },
+            {
+              "text": "You also said one capable person could handle it, so one agent is enough.",
+              "ruleId": "A3",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic",
+                  "databricks",
+                  "notes"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "Automate the common case only",
+          "body": "Map the path your most frequent case follows and build that as a fixed workflow. Unusual cases go to a person. Add the agent once you know which cases really need it.",
+          "why": {
+            "text": "The simplest system that works is usually the right first step; add complexity only when it is needed.",
+            "ruleId": "S2",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic"
+              ]
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "One AI agent.",
+        "tool": "Claude, as an agent",
+        "summary": "One AI agent, run in Claude, works each case in a loop with your tools.",
+        "stages": 4,
+        "tracks": 2,
+        "nodes": [
+          {
+            "id": "start",
+            "kind": "start",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Manual start",
+              "short": "Manual start",
+              "how": "Runs only when a person starts it."
+            },
+            "name": "You start it",
+            "label": "In Claude",
+            "what": "You hand the task over when you need it. Nothing runs on its own.",
+            "why": "You said you'll start it yourself.",
+            "passes": "The new item, plus any context the next step needs.",
+            "rules": [
+              "TL7"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              1
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "agent",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "sonnet",
+              "role": "agent",
+              "name": "Claude Sonnet 5.5",
+              "short": "Sonnet 5.5",
+              "prototype": "Build the first version on Claude Opus 5.5. Switch to Claude Sonnet 5.5 once it matches that baseline on your test examples. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "Agents need dependable tool use and multi-step reasoning, run after run.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "Agent works the case",
+            "label": "Agent in Claude",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "Stops at goal or step limit"
+              }
+            ],
+            "what": "The agent decides the next step, acts, looks at the result and repeats until the goal is met. It follows the steps in your Skill. It draws on your reference library rather than guessing.",
+            "why": "You said each case is different and the next step has to be worked out, so the path can't be mapped out in advance. That is the case an agent exists for.",
+            "passes": "A finished case once the goal is met, or a hand-off to a person if it hits its step limit.",
+            "rules": [
+              "A3",
+              "T8",
+              "AU9"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              0
+            ],
+            "step": 2
+          },
+          {
+            "id": "tools",
+            "kind": "tool",
+            "stage": 1,
+            "name": "Uses your systems",
+            "label": "MCP connectors",
+            "gates": [
+              {
+                "kind": "human",
+                "text": "You OK every action"
+              }
+            ],
+            "what": "The agent acts through connectors: looking up records and making changes, with only the permissions this task needs.",
+            "why": "You said it needs to take actions in your systems. An AI can only use another program through a connector that tells it which tools exist and how to call them.",
+            "passes": "The result of each action, back to the agent, which decides what to do next.",
+            "rules": [
+              "TL11",
+              "AU8"
+            ],
+            "tracks": [
+              1,
+              1
+            ],
+            "step": 3
+          },
+          {
+            "id": "approve",
+            "kind": "human",
+            "name": "You approve each result",
+            "label": "Before anything goes out",
+            "what": "A named person reviews every result before it leaves the system, and either approves it or sends it back.",
+            "why": "Autonomy starts at level 2. Agents choose their own steps, so mistakes can compound. They start with close supervision.",
+            "passes": "Approved results only. Rejected ones go back with a note, and become test examples.",
+            "rules": [
+              "AU1"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              1
+            ],
+            "gates": [],
+            "step": 4
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Action is taken",
+            "label": "In your systems",
+            "gates": [],
+            "what": "The finished work is applied in your systems: a record updated, a message sent, an order placed.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 3,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 5
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "agent",
+            "style": "flow"
+          },
+          {
+            "from": "agent",
+            "to": "tools",
+            "label": "act",
+            "style": "flow"
+          },
+          {
+            "from": "tools",
+            "to": "agent",
+            "label": "result",
+            "style": "loop"
+          },
+          {
+            "from": "agent",
+            "to": "approve",
+            "style": "flow"
+          },
+          {
+            "from": "approve",
+            "to": "end",
+            "label": "approved",
+            "style": "flow"
+          }
+        ],
+        "captions": {}
+      },
+      "outsideCatalog": [
+        "langchain"
+      ],
+      "automatedChecksPassed": true,
+      "overallStatus": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "kensho",
+      "company": "Kensho",
+      "source": {
+        "url": "https://www.langchain.com/blog/customers-kensho",
+        "publisher": "Kensho guest post on LangChain",
+        "section": "Designing a Multi-Agent Framework / Key Learnings",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "A router delegates to domain retrieval agents and aggregates responses. Evaluation covers routing, data quality and answer completeness."
+        ]
+      },
+      "brief": "Route financial queries to domain-specific retrieval agents and combine answers with citations to verified datasets.",
+      "answers": {
+        "task": "Route financial queries to domain-specific retrieval agents and combine answers with citations to verified datasets.",
+        "shape": "varies",
+        "systems": "read",
+        "trigger": "manual",
+        "volume": "daily",
+        "risks": [
+          "visible"
+        ],
+        "location": "open",
+        "team": "large",
+        "kinds": "yes",
+        "quality": "partly",
+        "knowledge": [
+          "reference"
+        ],
+        "roles": "specialists"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Paraphrases the documented retrieval problem."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Query-dependent routing and decomposition are described."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Scoped to retrieval rather than financial transactions."
+        },
+        "trigger": {
+          "kind": "assumption",
+          "note": "Trigger is an evaluation assumption; the publication does not specify it."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Risk flags are our assessment of the scoped task, not a published risk assessment."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Multiple engineering/data teams own retrieval agents."
+        },
+        "kinds": {
+          "kind": "source-interpretation",
+          "note": "Queries span different financial data domains."
+        },
+        "quality": {
+          "kind": "assumption",
+          "note": "Acceptance criteria are not fully published; partly is a conservative assumption."
+        },
+        "knowledge": {
+          "kind": "assumption",
+          "note": "Reference material is assumed sufficient; persistent learning is not established."
+        },
+        "roles": {
+          "kind": "source-interpretation",
+          "note": "Separate dataset agents have explicit domain responsibilities."
+        }
+      },
+      "observedStack": [
+        "langgraph"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "multi"
+          ],
+          "actual": "multi"
+        }
+      ],
+      "manualCriteria": [
+        "Check domain routing, citations, source access controls and aggregation accuracy.",
+        "Confirm separate ownership warrants the coordination cost; do not equate specialist count with quality."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Route financial queries to domain-specific retrieval agents and combine answers with citations to verified datasets.",
+        "topology": {
+          "primary": "orchestrator",
+          "addOns": [
+            "routing"
+          ],
+          "why": [
+            {
+              "text": "A coordinator that decides which specialist does what keeps one clear line of responsibility, which matters when subtasks change from case to case.",
+              "ruleId": "T9",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "anthropic",
+                  "openai"
+                ]
+              }
+            },
+            {
+              "text": "You said the work arrives in a few distinct types. Routine types rarely need an agent, so sorting first keeps cost and risk down.",
+              "ruleId": "T10",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "langgraph",
+            "role": "Your developers implement the coordinator, specialist handoffs, state and review points in code.",
+            "core": true,
+            "why": [
+              {
+                "text": "You have developers and several agent roles to coordinate. Explicit state and transitions make their handoffs testable. Start with one agent and add specialists only where evaluation supports them.",
+                "ruleId": "TL18",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          },
+          {
+            "tool": "mcp",
+            "role": "Lets the AI look things up in your systems. Read-only access is enough.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to look things up in your systems. An AI can only use another program through a connector that tells it which tools exist and how to call them.",
+                "ruleId": "TL11",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "enmgt",
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "system-prompt",
+            "role": "One per agent: its role, its limits and what it hands back to the coordinator.",
+            "core": false,
+            "why": [
+              {
+                "text": "Every AI setup needs one. It covers universal truths about your business, not the details of a single task.",
+                "ruleId": "TL13",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes",
+                    "enmgt"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "resources",
+            "role": "The documents and data it relies on instead of guessing.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it should draw on reference material. Giving the AI the source material is the best defence against made-up details.",
+                "ruleId": "TL14",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "promptfoo",
+            "role": "Tests examples and failure cases before changing the AI system.",
+            "core": false,
+            "why": [
+              {
+                "text": "A development team can turn acceptance criteria into repeatable regression checks.",
+                "ruleId": "TL19",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          },
+          {
+            "tool": "langfuse",
+            "role": "Traces AI runs, with sensitive content filtered before export.",
+            "core": false,
+            "why": [
+              {
+                "text": "Trace evidence helps the team diagnose failures and compare quality, latency and cost.",
+                "ruleId": "TL19",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [],
+        "models": {
+          "needed": true,
+          "capabilities": [
+            {
+              "title": "Follows instructions closely",
+              "body": "Sticks to your brief and output format, run after run.",
+              "why": {
+                "text": "Every AI step depends on this.",
+                "ruleId": "M2",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "openai"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "Reliable tool use",
+              "body": "Calls the right tool with the right details, and notices when a call fails.",
+              "why": {
+                "text": "An agent acts through tools; weak tool use means weak actions.",
+                "ruleId": "M3",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "openai",
+                    "anthropic"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "Multi-step reasoning",
+              "body": "Plans ahead, notices when an approach isn't working, and changes course.",
+              "why": {
+                "text": "You said each case is different and the next step has to be worked out. The model has to work out the next step itself.",
+                "ruleId": "M4",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "databricks",
+                    "anthropic"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "A large context window",
+              "body": "Can consider long documents at once without losing details. Past a point, splitting the work or retrieving only the relevant passages works better.",
+              "why": {
+                "text": "You said it should draw on reference material.",
+                "ruleId": "M5",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "notes"
+                  ]
+                }
+              }
+            },
+            {
+              "title": "A small model for sorting",
+              "body": "Classifying a request is a simple task. It rarely needs the most capable model. The guide starts with Sonnet 5.5 here; test a smaller model once your examples show it's enough.",
+              "why": {
+                "text": "You said the work arrives in a few distinct types.",
+                "ruleId": "M7",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "openai"
+                  ]
+                }
+              }
+            }
+          ],
+          "process": [
+            "Build the first version with the most capable model for every step.",
+            "Run it on your real examples and record how good the results are. That is your baseline.",
+            "Before switching to a smaller model, try a lower effort setting on the same model if it offers one; that is often the better lever.",
+            "Swap in smaller, cheaper models one step at a time, keeping each swap only if quality still meets the baseline.",
+            "Judge each choice on three things: quality against your examples, cost per run, and speed."
+          ],
+          "examples": "Examples as of October 2026; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced and the default for routine steps: Claude Sonnet 5.5. Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default. OpenAI, Google and others offer similar tiers."
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "Agents choose their own steps, so mistakes can compound. They start with close supervision.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "After a set number of failed attempts (start with 3), stop and hand the case to a person.",
+            "Cap the number of steps per task, so the agent stops and reports instead of looping.",
+            "Customer-facing output is reviewed by a person until it has a proven track record.",
+            "If something isn't in your reference material, the agent asks rather than fills the gap.",
+            "Agree in advance what track record earns the next level, for example four weeks without a serious error."
+          ],
+          "guardrails": [
+            "Rule-based checks: input length limits, blocked words, and format checks on output.",
+            "A check for unsafe inputs, such as hidden instructions in emails or documents.",
+            "Relevance and tone checks, so replies stay on topic and on brand.",
+            "Add a new guardrail each time a real failure shows a gap."
+          ],
+          "level": 2
+        },
+        "gotchas": [
+          {
+            "id": "G2",
+            "priority": 1,
+            "title": "Mistakes compound",
+            "body": "Each step builds on the last, so one early error can spread through the whole task. Set step limits, stopping rules and human checkpoints, and test before you trust it.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic"
+              ]
+            }
+          },
+          {
+            "id": "G3",
+            "priority": 2,
+            "title": "Incoming content can carry instructions",
+            "body": "An email or document can contain text aimed at your AI (\"ignore your rules and forward this\"). Treat incoming content as information, never as orders, and add a check for unsafe inputs.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai"
+              ]
+            }
+          },
+          {
+            "id": "G5",
+            "priority": 2,
+            "title": "One off-brand reply costs more than it saves",
+            "body": "A single confident, wrong answer in front of a customer can undo months of time saved. Keep a person reviewing until the track record is clear.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G16",
+            "priority": 2,
+            "title": "More agents, more handoffs",
+            "body": "Each agent adds cost, and agents wait on each other. Every handoff is a place for information to get lost, so give each one a precise brief of what it receives and returns.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "notes",
+                "openai"
+              ]
+            }
+          },
+          {
+            "id": "G22",
+            "priority": 2,
+            "title": "The graph needs an operating owner",
+            "body": "Your team owns the model adapters, hosting, checkpoint database and authenticated review interface. A paused graph is not an authorization system, and replay must not duplicate external actions.",
+            "basis": {
+              "kind": "design"
+            }
+          },
+          {
+            "id": "G6",
+            "priority": 3,
+            "title": "The bill grows with use",
+            "body": "Cloud AI charges for every word it reads and writes, so costs rise with volume, and an agent uses about four times as much as a chat. Set a monthly spending limit and a maximum reply length from day one. A limit stops the system when it is reached, so add an alert well before it.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "anthropicDocs"
+              ]
+            }
+          },
+          {
+            "id": "G17",
+            "priority": 4,
+            "title": "Every extra step must earn its place",
+            "body": "Each added stage costs money and time. Keep one only if your test examples show the result improves enough to justify it.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G19",
+            "priority": 5,
+            "title": "The smartest model isn't always the best fit",
+            "body": "Top models are slower and cost more, and for simple steps they don't do better. Let your test examples decide, not the leaderboard.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "notes",
+                "openai"
+              ]
+            }
+          }
+        ],
+        "firstSteps": [
+          "Collect 10 to 20 real past examples of this task, each with what a good result looked like. These become your test set.",
+          "Pilot a single agent in LangGraph on your examples, read-only, and note exactly where it loses track. Those points tell you where to split roles.",
+          "Name one owner who reviews results at the starting level (approve every output) and decide what track record would earn the next level."
+        ],
+        "fired": [
+          "A4",
+          "T9",
+          "T10",
+          "TL18",
+          "TL11",
+          "TL13",
+          "TL14",
+          "TL19",
+          "H5",
+          "M2",
+          "M3",
+          "M4",
+          "M5",
+          "M7",
+          "M10",
+          "AU1",
+          "AU4",
+          "AU9",
+          "AU10",
+          "S1",
+          "G2",
+          "G3",
+          "G5",
+          "G6",
+          "G16",
+          "G17",
+          "G19",
+          "G22",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "multi",
+          "title": "A coordinator agent with a few specialist agents.",
+          "summary": "One agent coordinates and hands work to specialists, one per specialist role. Each specialist gets its own instructions and only the information it needs.",
+          "agents": "One coordinator plus 2 to 4 specialists",
+          "why": [
+            {
+              "text": "You said each case is different and the next step has to be worked out, which calls for an agent.",
+              "ruleId": "A4",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "openai"
+                ]
+              }
+            },
+            {
+              "text": "You also said it needs a few distinct specialists. Like hiring, separate roles each get their own brief and responsibilities.",
+              "ruleId": "A4",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "openai"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "One agent first",
+          "body": "Give a single agent all the roles, in sequence, with one clear brief. Split into specialists only when you can point to where it gets overwhelmed.",
+          "why": {
+            "text": "One employee is simpler and cheaper than a team; hire the second only when the first is clearly overloaded.",
+            "ruleId": "S1",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "openai",
+                "notes"
+              ]
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "A coordinator agent with a few specialist agents.",
+        "tool": "LangGraph",
+        "summary": "A coordinator agent in LangGraph hands work to specialist agents and combines what they return.",
+        "stages": 7,
+        "tracks": 3,
+        "nodes": [
+          {
+            "id": "start",
+            "kind": "start",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Manual start",
+              "short": "Manual start",
+              "how": "Runs only when a person starts it."
+            },
+            "name": "You start it",
+            "label": "In LangGraph",
+            "what": "You hand the task over when you need it. Nothing runs on its own.",
+            "why": "You said you'll start it yourself.",
+            "passes": "The new item, plus any context the next step needs.",
+            "rules": [
+              "TL18"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              2
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "router",
+            "kind": "decision",
+            "engine": {
+              "kind": "model",
+              "model": "sonnet",
+              "role": "router",
+              "name": "Claude Sonnet 5.5",
+              "short": "Sonnet 5.5",
+              "prototype": "Build the first version on Claude Opus 5.5. Switch to Claude Sonnet 5.5 once it matches that baseline on your test examples. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "Sorting is a simple classification. A fast, balanced model is enough; a smaller one can be tested later.",
+              "alternative": "Open-weight alternative: for example a smaller model from the same open families, chosen by testing."
+            },
+            "name": "Routine or open-ended?",
+            "label": "Small, fast model",
+            "what": "A quick AI step separates routine requests, which follow a fixed path, from the open-ended ones that need an agent.",
+            "why": "You said the work arrives in a few distinct types. Routine types rarely need an agent, so sorting first keeps cost and risk down.",
+            "passes": "Routine items to the fixed path; everything else to the agent.",
+            "rules": [
+              "T10",
+              "M7"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              2
+            ],
+            "gates": [],
+            "step": 2
+          },
+          {
+            "id": "routine",
+            "kind": "fixed",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Scripted action",
+              "short": "Scripted action",
+              "how": "A fixed sequence of API calls with set inputs. Same input, same result."
+            },
+            "name": "Routine: fixed steps",
+            "label": "Set workflow",
+            "what": "Predictable requests follow a fixed, tested workflow. No agent is needed for them.",
+            "why": "Routine types rarely need an agent, so keeping them on a fixed path cuts cost and risk.",
+            "passes": "The finished routine item, straight to the finish.",
+            "rules": [
+              "T10"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              0
+            ],
+            "gates": [],
+            "step": 3
+          },
+          {
+            "id": "coord",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "opus",
+              "role": "coordinator",
+              "name": "Claude Opus 5.5",
+              "short": "Opus 5.5",
+              "prototype": "Build on Claude Opus 5.5 and keep it there: this step needs the strongest model in the design. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "Planning across several specialists is the hardest reasoning in the system.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "Coordinator plans",
+            "label": "Agent in LangGraph",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "Stops after set rounds"
+              }
+            ],
+            "what": "A coordinating agent breaks the case into pieces and decides which specialist handles each one.",
+            "why": "You said each case is different and the next step has to be worked out, which calls for an agent.",
+            "passes": "A clear brief for each specialist: what to do and what to hand back.",
+            "rules": [
+              "A4",
+              "T9",
+              "AU9"
+            ],
+            "stage": 2,
+            "tracks": [
+              1,
+              2
+            ],
+            "step": 4
+          },
+          {
+            "id": "specA",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "sonnet",
+              "role": "specialist",
+              "name": "Claude Sonnet 5.5",
+              "short": "Sonnet 5.5",
+              "prototype": "Build the first version on Claude Opus 5.5. Switch to Claude Sonnet 5.5 once it matches that baseline on your test examples. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "Each specialist has a narrow brief, so a balanced model is usually enough.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "Specialist A",
+            "label": "Own brief and tools",
+            "what": "This agent has one role, its own instructions and only the tools that role needs.",
+            "why": "Separate roles each get their own brief, like hiring specialists.",
+            "passes": "Its finished piece, back to the coordinator.",
+            "rules": [
+              "A4",
+              "T9",
+              "TL13"
+            ],
+            "stage": 3,
+            "tracks": [
+              1,
+              1
+            ],
+            "gates": [],
+            "step": 5
+          },
+          {
+            "id": "specB",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "sonnet",
+              "role": "specialist",
+              "name": "Claude Sonnet 5.5",
+              "short": "Sonnet 5.5",
+              "prototype": "Build the first version on Claude Opus 5.5. Switch to Claude Sonnet 5.5 once it matches that baseline on your test examples. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "Each specialist has a narrow brief, so a balanced model is usually enough.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "Specialist B",
+            "label": "Own brief and tools",
+            "what": "This agent has one role, its own instructions and only the tools that role needs.",
+            "why": "Separate roles each get their own brief, like hiring specialists.",
+            "passes": "Its finished piece, back to the coordinator.",
+            "rules": [
+              "A4",
+              "T9",
+              "TL13"
+            ],
+            "stage": 3,
+            "tracks": [
+              2,
+              2
+            ],
+            "gates": [],
+            "step": 6
+          },
+          {
+            "id": "combine",
+            "kind": "ai",
+            "engine": {
+              "kind": "model",
+              "model": "opus",
+              "role": "coordinator",
+              "name": "Claude Opus 5.5",
+              "short": "Opus 5.5",
+              "prototype": "Build on Claude Opus 5.5 and keep it there: this step needs the strongest model in the design. If Claude Opus 5.5 itself falls short on the hardest steps, try Claude Fable 5.1; it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention.",
+              "why": "Planning across several specialists is the hardest reasoning in the system.",
+              "alternative": "Open-weight alternative: for example Kimi K2.6, GLM-5 or DeepSeek-V3.2 (leading open-weight models in October 2026)."
+            },
+            "name": "Coordinator combines",
+            "label": "Agent in LangGraph",
+            "what": "The coordinator assembles the pieces, spots gaps and, if needed, sends work out for another round.",
+            "why": "One agent stays responsible for the whole result, which keeps a single clear line of accountability.",
+            "passes": "The combined result, or a new round of assignments if something is missing.",
+            "rules": [
+              "T9"
+            ],
+            "stage": 4,
+            "tracks": [
+              1,
+              2
+            ],
+            "gates": [],
+            "step": 7
+          },
+          {
+            "id": "approve",
+            "kind": "human",
+            "name": "You approve each result",
+            "label": "Before anything goes out",
+            "what": "A named person reviews every result before it leaves the system, and either approves it or sends it back.",
+            "why": "Autonomy starts at level 2. Agents choose their own steps, so mistakes can compound. They start with close supervision.",
+            "passes": "Approved results only. Rejected ones go back with a note, and become test examples.",
+            "rules": [
+              "AU1"
+            ],
+            "stage": 5,
+            "tracks": [
+              0,
+              2
+            ],
+            "gates": [],
+            "step": 8
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Result is ready",
+            "label": "Delivered output",
+            "gates": [],
+            "what": "The finished result is delivered to whoever needs it.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 6,
+            "tracks": [
+              0,
+              2
+            ],
+            "step": 9
+          }
+        ],
+        "edges": [
+          {
+            "from": "start",
+            "to": "router",
+            "style": "flow"
+          },
+          {
+            "from": "router",
+            "to": "routine",
+            "label": "routine",
+            "style": "flow"
+          },
+          {
+            "from": "router",
+            "to": "coord",
+            "label": "open-ended",
+            "style": "flow"
+          },
+          {
+            "from": "coord",
+            "to": "specA",
+            "style": "assign"
+          },
+          {
+            "from": "coord",
+            "to": "specB",
+            "style": "assign"
+          },
+          {
+            "from": "specA",
+            "to": "combine",
+            "style": "flow"
+          },
+          {
+            "from": "specB",
+            "to": "combine",
+            "style": "flow"
+          },
+          {
+            "from": "combine",
+            "to": "coord",
+            "label": "gaps found",
+            "style": "loop"
+          },
+          {
+            "from": "combine",
+            "to": "approve",
+            "style": "flow"
+          },
+          {
+            "from": "routine",
+            "to": "approve",
+            "style": "flow"
+          },
+          {
+            "from": "approve",
+            "to": "end",
+            "label": "approved",
+            "style": "flow"
+          }
+        ],
+        "captions": {
+          "2": "Two paths",
+          "3": "Specialists, at the same time"
+        }
+      },
+      "outsideCatalog": [],
+      "automatedChecksPassed": true,
+      "overallStatus": "REVIEW_REQUIRED"
+    },
+    {
+      "id": "discord",
+      "company": "Discord",
+      "source": {
+        "url": "https://discord.com/blog/how-discord-uses-open-source-tools-for-scalable-data-orchestration-transformation",
+        "publisher": "Discord engineering",
+        "section": "Dagster & dbt / Lessons learned / How users are benefiting",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "Discord chose Dagster and dbt using declarative automation, usability, Kubernetes and migration criteria. The article describes partition backfills and data-quality gates."
+        ]
+      },
+      "brief": "Manage dependent analytics tables with mixed time partitions, self-service backfills, quality gates and lineage.",
+      "answers": {
+        "task": "Manage dependent analytics tables with mixed time partitions, self-service backfills, quality gates and lineage.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "data",
+        "volume": "daily",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped paraphrase of documented analytics requirements."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Data transformation and orchestration are deterministic in this scope."
+        },
+        "systems": {
+          "kind": "assumption",
+          "note": "Access scope is our scoped evaluation boundary."
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Dependencies include hourly-to-daily partitions."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Exact request frequency is unspecified; daily is a baseline assumption."
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Risk flags are our assessment of the scoped task, not a published risk assessment."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Deployment restrictions are unspecified; open is a baseline assumption, not evidence of permission to export data."
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Data engineers and a platform team build and operate the system."
+        }
+      },
+      "observedStack": [
+        "dagster",
+        "dbt"
+      ],
+      "checks": [
+        {
+          "name": "Broad approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation"
+        },
+        {
+          "name": "No unnecessary AI",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          }
+        }
+      ],
+      "manualCriteria": [
+        "Compare asset-oriented orchestration, partitions, backfills, quality gates and lineage.",
+        "Dagster and dbt are outside the current guide catalog. Treat that as a coverage gap, not an automatic Airflow win or failure."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "recommendation": {
+        "task": "Manage dependent analytics tables with mixed time partitions, self-service backfills, quality gates and lineage.",
+        "topology": {
+          "primary": "dag",
+          "addOns": [],
+          "why": [
+            {
+              "text": "You said it depends on other data jobs finishing first. A dependency graph waits for upstream data instead of guessing when it will arrive.",
+              "ruleId": "T2",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "selfhosting"
+                ]
+              }
+            }
+          ]
+        },
+        "tools": [
+          {
+            "tool": "airflow",
+            "role": "Runs each job in the right order, starting it when its data is ready.",
+            "core": true,
+            "why": [
+              {
+                "text": "You said it depends on other data jobs finishing first and you have developers or an IT team. Airflow's data-aware scheduling is built for this, and your team can handle its code-based setup.",
+                "ruleId": "TL1",
+                "basis": {
+                  "kind": "source",
+                  "sources": [
+                    "selfhosting",
+                    "notes"
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "tool": "integrations",
+            "role": "Fetches and updates data in your other software as fixed steps.",
+            "core": false,
+            "why": [
+              {
+                "text": "You said it needs to take actions in your systems. With a fixed path, those steps don't need AI to decide anything.",
+                "ruleId": "TL12",
+                "basis": {
+                  "kind": "design"
+                }
+              }
+            ]
+          }
+        ],
+        "hybrid": [],
+        "models": {
+          "needed": false,
+          "capabilities": [],
+          "process": [],
+          "examples": ""
+        },
+        "autonomy": {
+          "why": [
+            {
+              "text": "Rules-based automation is predictable, so it can run on its own once tested.",
+              "ruleId": "AU1",
+              "basis": {
+                "kind": "design"
+              }
+            }
+          ],
+          "checkpoints": [
+            "If a run fails, stop and alert a named person rather than retrying silently."
+          ],
+          "guardrails": [],
+          "level": 4
+        },
+        "gotchas": [
+          {
+            "id": "G1",
+            "priority": 1,
+            "title": "Don't add AI just because you can",
+            "body": "If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "anthropic",
+                "notes"
+              ]
+            }
+          },
+          {
+            "id": "G12",
+            "priority": 3,
+            "title": "Airflow is a developer tool",
+            "body": "Every workflow is written in Python, compared with n8n's visual builder, and a production setup needs ongoing monitoring and tuning. Budget for someone to own it, or use a managed Airflow service.",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "selfhosting",
+                "airflowDocs"
+              ]
+            }
+          },
+          {
+            "id": "G10",
+            "priority": 4,
+            "title": "You don't need MCP here",
+            "body": "MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit.",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        ],
+        "firstSteps": [
+          "Write every step, rule and exception on one page, and check it against 20 recent real cases.",
+          "Build it in Airflow with a manual start button, and run it alongside the current process for two weeks before switching over.",
+          "Name the person who gets the alert when a run fails, and who updates the rules when the business changes."
+        ],
+        "fired": [
+          "A1",
+          "T2",
+          "TL1",
+          "TL12",
+          "H5",
+          "M1",
+          "AU1",
+          "AU9",
+          "S5",
+          "G1",
+          "G10",
+          "G12",
+          "F1",
+          "F2",
+          "F3"
+        ],
+        "approach": {
+          "id": "automation",
+          "title": "Plain automation. No AI needed.",
+          "summary": "A rules-based workflow will do this job reliably and cheaply. Adding AI would add cost and unpredictability without adding value.",
+          "agents": "No agent",
+          "why": [
+            {
+              "text": "You said the work follows the same steps and rules every time. When the right result always follows from the input, a fixed set of rules is the most reliable tool.",
+              "ruleId": "A1",
+              "basis": {
+                "kind": "source",
+                "sources": [
+                  "notes",
+                  "anthropic"
+                ]
+              }
+            }
+          ]
+        },
+        "hosting": {
+          "title": "Cloud, pay as you go",
+          "body": "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
+          "why": {
+            "text": "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
+            "ruleId": "H5",
+            "basis": {
+              "kind": "source",
+              "sources": [
+                "mindstudio",
+                "costResearch"
+              ]
+            }
+          }
+        },
+        "simpler": {
+          "title": "A written checklist",
+          "body": "Write every rule and exception on one page and follow it by hand for two weeks. Automate once the rules stop changing; automating a moving target wastes the build.",
+          "why": {
+            "text": "Rules that are still being discovered are expensive to change once automated.",
+            "ruleId": "S5",
+            "basis": {
+              "kind": "design"
+            }
+          }
+        }
+      },
+      "blueprint": {
+        "variant": "recommended",
+        "title": "Plain automation. No AI needed.",
+        "tool": "Apache Airflow",
+        "summary": "A rules-based workflow in Airflow. No AI model is involved.",
+        "stages": 3,
+        "tracks": 2,
+        "nodes": [
+          {
+            "id": "job1",
+            "kind": "start",
+            "name": "First data job lands",
+            "label": "Upstream import",
+            "what": "An earlier job, such as an overnight import, finishes and its data is ready.",
+            "why": "You said it depends on other data jobs finishing first.",
+            "passes": "Fresh data for your task.",
+            "rules": [
+              "T2"
+            ],
+            "stage": 0,
+            "tracks": [
+              0,
+              0
+            ],
+            "gates": [],
+            "step": 1
+          },
+          {
+            "id": "job2",
+            "kind": "start",
+            "name": "Second data job lands",
+            "label": "Upstream import",
+            "what": "Another job your task depends on finishes.",
+            "why": "Your task needs both sets of data, so it must wait for both.",
+            "passes": "The rest of the data your task needs.",
+            "rules": [
+              "T2"
+            ],
+            "stage": 0,
+            "tracks": [
+              1,
+              1
+            ],
+            "gates": [],
+            "step": 2
+          },
+          {
+            "id": "run",
+            "kind": "fixed",
+            "engine": {
+              "kind": "algorithm",
+              "name": "Dependency scheduler (DAG)",
+              "short": "Dependency scheduler (DAG)",
+              "how": "Runs each job only once every job it depends on has finished, in dependency order."
+            },
+            "name": "Run your task",
+            "label": "Airflow",
+            "gates": [
+              {
+                "kind": "stop",
+                "text": "Failures alert a person"
+              }
+            ],
+            "what": "Your rules run once every input is ready, the same way every time.",
+            "why": "You said it depends on other data jobs finishing first. A dependency graph waits for upstream data instead of guessing when it will arrive.",
+            "passes": "The finished output.",
+            "rules": [
+              "T2",
+              "TL1"
+            ],
+            "stage": 1,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 3
+          },
+          {
+            "id": "end",
+            "kind": "end",
+            "name": "Action is taken",
+            "label": "In your systems",
+            "gates": [],
+            "what": "The finished work is applied in your systems: a record updated, a message sent, an order placed.",
+            "why": "This is the outcome the task exists to produce. Every run, and every failure, should be logged so you can review it.",
+            "passes": "Nothing further. Logged results become new test examples over time.",
+            "rules": [
+              "AU9"
+            ],
+            "stage": 2,
+            "tracks": [
+              0,
+              1
+            ],
+            "step": 4
+          }
+        ],
+        "edges": [
+          {
+            "from": "job1",
+            "to": "run",
+            "label": "both ready",
+            "style": "flow"
+          },
+          {
+            "from": "job2",
+            "to": "run",
+            "label": "both ready",
+            "style": "flow"
+          },
+          {
+            "from": "run",
+            "to": "end",
+            "style": "flow"
+          }
+        ],
+        "captions": {}
+      },
+      "outsideCatalog": [
+        "dagster",
+        "dbt"
+      ],
+      "automatedChecksPassed": true,
+      "overallStatus": "REVIEW_REQUIRED"
+    }
+  ]
+}

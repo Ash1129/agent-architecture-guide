@@ -303,7 +303,7 @@ export default function App() {
     if (route.name !== "guide") return;
     const active = activeQuestions(answers);
     const idx = active.findIndex((q) => q.id === route.q);
-    const gap = active.slice(0, Math.max(idx, 0)).find((q) => !isAnswered(q, answers));
+    const gap = active.slice(0, Math.max(idx, 0)).find((q) => !q.optional && !isAnswered(q, answers));
     if (idx === -1 || gap) navigate({ name: "guide", q: (gap ?? firstUnanswered(answers) ?? active[0]).id });
   }, [route, answers]);
 

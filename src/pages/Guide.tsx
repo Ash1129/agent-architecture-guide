@@ -565,7 +565,7 @@ export function Review({
             <li key={q.id} className="review-row">
               <div className="min-w-0">
                 <p className="review-question">{q.title}</p>
-                <p className="review-answer">{labels.join(", ")}</p>
+                <p className="review-answer">{labels.length ? labels.join(", ") : "Not assessed yet"}</p>
                 {read && (
                   <p className="review-source">
                     <Sparkle size={13} weight="fill" aria-hidden />

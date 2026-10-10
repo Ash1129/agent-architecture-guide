@@ -73,9 +73,9 @@ const marketResearch: Answers = {
 };
 
 describe("question flow", () => {
-  it("asks only eight questions for rules-based work", () => {
+  it("asks eight core questions and an optional requirements question for rules-based work", () => {
     expect(activeQuestions({ shape: "rules" }).map((q) => q.id)).toEqual([
-      "task", "shape", "systems", "trigger", "volume", "risks", "location", "team",
+      "task", "shape", "systems", "trigger", "volume", "risks", "location", "team", "requirements",
     ]);
   });
 
@@ -86,8 +86,8 @@ describe("question flow", () => {
     expect(j).not.toContain("roles");
     expect(v).toContain("roles");
     expect(v).not.toContain("split");
-    expect(j).toHaveLength(12);
-    expect(v).toHaveLength(12);
+    expect(j).toHaveLength(13);
+    expect(v).toHaveLength(13);
   });
 
   it("ignores stale answers when an earlier answer changes", () => {

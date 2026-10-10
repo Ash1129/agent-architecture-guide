@@ -401,6 +401,13 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       g.link(rules, actB, "no match");
       approvalAndEnd(g, r, a, [actA, actB]);
     }
+    if (a.requirements?.includes("approval") && a.systems === "act") {
+      for (const n of g.nodes.filter(n => n.kind === "fixed")) {
+        n.name = `Prepare: ${n.name}`;
+        n.what = "Prepare a proposed change only. Do not write to external systems here. Release or execute it only after the named reviewer approves. " + n.what;
+        (n.gates ??= []).push({ kind: "human", text: OK_EVERY_ACTION });
+      }
+    }
     return g.finish("recommended", r.approach.title, summaryOf(r, home), TOOLS[core].name);
   }
 

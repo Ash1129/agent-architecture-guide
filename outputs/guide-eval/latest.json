@@ -1,0 +1,1872 @@
+{
+  "generatedAt": "2026-10-10T19:17:28.908Z",
+  "gitCommit": "2af449e88720e5f75100b5b70eef39997b003e64",
+  "datasetVersion": 1,
+  "datasetHash": "70ee67a4e23f1fd0652eb27f4b5447ba369f643a0fffd4929b89abd96e58976d",
+  "implementationHash": "0409bce4befb67b9bf55906254d1a675f93ea58fa94f5777f4b4249465846929",
+  "sourceFiles": [
+    "src/lib/rules.ts",
+    "src/lib/blueprint.ts",
+    "src/lib/models.ts",
+    "src/lib/questions.ts",
+    "src/lib/catalog.ts",
+    "evals/recommendations/evaluate.ts"
+  ],
+  "reviewStatus": "Provisional synthetic cases; independent human review pending",
+  "scope": "Deterministic recommendations and blueprint safeguards only. No AI interview, AI-generated design, live tools or model quality measured.",
+  "thresholds": {
+    "casePassRate": 0.9,
+    "eachDimensionPassRate": 0.9,
+    "criticalFailures": 0
+  },
+  "summary": {
+    "total": 24,
+    "passed": 24,
+    "casePassRate": 1,
+    "criticalFailures": 0,
+    "dimensions": {
+      "approach": {
+        "passed": 30,
+        "total": 30
+      },
+      "tool-fit": {
+        "passed": 61,
+        "total": 61
+      },
+      "safeguards": {
+        "passed": 21,
+        "total": 21
+      },
+      "complexity": {
+        "passed": 48,
+        "total": 48
+      }
+    },
+    "gatePassed": true,
+    "reviewed": 0
+  },
+  "results": [
+    {
+      "id": "invoice-reminders",
+      "category": "simplicity",
+      "reviewStatus": "provisional",
+      "rationale": "A fixed reminder policy needs scheduling and app connections, not a model.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: mcp",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No mcp",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: skill",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No skill",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langfuse",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langfuse",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: promptfoo",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No promptfoo",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "No unnecessary AI",
+          "dimension": "approach",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          },
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "csv-normalization",
+      "category": "simplicity",
+      "reviewStatus": "provisional",
+      "rationale": "Deterministic transformations should stay free of AI.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 1,
+          "actual": 1,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "No unnecessary AI",
+          "dimension": "approach",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          },
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "data-dependencies",
+      "category": "data",
+      "reviewStatus": "provisional",
+      "rationale": "Explicit upstream dependencies justify a developer-owned data scheduler.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "airflow"
+          ],
+          "actual": [
+            "airflow"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Required: airflow",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "airflow",
+          "actual": [
+            "airflow",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "No unnecessary AI",
+          "dimension": "approach",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          },
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "data-small-team",
+      "category": "data",
+      "reviewStatus": "provisional",
+      "rationale": "A visual solution can be acceptable only if readiness limitations are disclosed.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n",
+            "airflow"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "No unnecessary AI",
+          "dimension": "approach",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          },
+          "critical": false
+        },
+        {
+          "name": "Disclose feasibility limitation",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "dependenc|data jobs|data itself",
+          "actual": "Don't add AI just because you can If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy.\nn8n doesn't wait for data An n8n workflow can pause for a set time or until something calls it back, but it can't start only once the data jobs it depends on have finished. A timer just guesses when the data is ready. If dependencies multiply, that is the moment to move to Airflow, which waits for the data itself.\nYou don't need MCP here MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit.\nn8n isn't open source n8n's licence lets you use and change it for your own internal business purposes. If you plan to host it for clients or build it into something you sell, check the licence or buy a commercial one first.",
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "refund-fixed-policy",
+      "category": "safety",
+      "reviewStatus": "provisional",
+      "rationale": "Predictability removes the need for AI, not the need for review of consequential writes.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "No unnecessary AI",
+          "dimension": "approach",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          },
+          "critical": false
+        },
+        {
+          "name": "Autonomy ceiling",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": 3,
+          "actual": 3,
+          "critical": true
+        },
+        {
+          "name": "Visible human review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": true,
+          "actual": true,
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "document-summary",
+      "category": "simplicity",
+      "reviewStatus": "provisional",
+      "rationale": "One summarization workflow needs neither autonomous planning nor specialist agents.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "claude",
+            "n8n"
+          ],
+          "actual": [
+            "claude"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langgraph",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langgraph",
+          "actual": [
+            "claude",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: airflow",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No airflow",
+          "actual": [
+            "claude",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langfuse",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langfuse",
+          "actual": [
+            "claude",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: promptfoo",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No promptfoo",
+          "actual": [
+            "claude",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 3,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "invoice-extraction",
+      "category": "workflow",
+      "reviewStatus": "provisional",
+      "rationale": "A fixed extraction step belongs inside a triggered workflow.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langgraph",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langgraph",
+          "actual": [
+            "n8n",
+            "integrations",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: hermes",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No hermes",
+          "actual": [
+            "n8n",
+            "integrations",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "batch-ai-report",
+      "category": "data",
+      "reviewStatus": "provisional",
+      "rationale": "A model can write the narrative without turning dependency orchestration into an agent.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "airflow"
+          ],
+          "actual": [
+            "airflow"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Required: airflow",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "airflow",
+          "actual": [
+            "airflow",
+            "integrations",
+            "system-prompt",
+            "resources",
+            "promptfoo",
+            "langfuse"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 7,
+          "actual": 6,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "manual-vendor-independent",
+      "category": "portability",
+      "reviewStatus": "provisional",
+      "rationale": "The platform should not require the Claude app when provider independence is a hard constraint.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "hermes",
+            "n8n",
+            "langgraph"
+          ],
+          "actual": [
+            "hermes"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: claude",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No claude",
+          "actual": [
+            "hermes",
+            "skill",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: cowork",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No cowork",
+          "actual": [
+            "hermes",
+            "skill",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: project",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No project",
+          "actual": [
+            "hermes",
+            "skill",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "support-routing",
+      "category": "agent",
+      "reviewStatus": "provisional",
+      "rationale": "Event handling and one supervised agent are sufficient for this pilot.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n-agent",
+            "hermes"
+          ],
+          "actual": [
+            "n8n-agent"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 5,
+          "actual": 3,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "Autonomy ceiling",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": true
+        },
+        {
+          "name": "Visible human review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": true,
+          "actual": true,
+          "critical": true
+        },
+        {
+          "name": "Every completion passes review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": false,
+          "actual": false,
+          "critical": true
+        },
+        {
+          "name": "In-loop actions have review gates",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "personal-research-memory",
+      "category": "memory",
+      "reviewStatus": "provisional",
+      "rationale": "A persistent assistant is a better initial fit than a custom specialist service.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "hermes"
+          ],
+          "actual": [
+            "hermes"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Required: hermes",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "hermes",
+          "actual": [
+            "hermes",
+            "skill",
+            "mcp",
+            "system-prompt",
+            "resources"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 6,
+          "actual": 5,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "occasional-assistant",
+      "category": "simplicity",
+      "reviewStatus": "provisional",
+      "rationale": "An occasional single-user investigation does not justify a custom graph or data scheduler.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "cowork",
+            "hermes"
+          ],
+          "actual": [
+            "cowork"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langgraph",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langgraph",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: airflow",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No airflow",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langfuse",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langfuse",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: promptfoo",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No promptfoo",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 3,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "custom-specialists",
+      "category": "coordination",
+      "reviewStatus": "provisional",
+      "rationale": "Explicitly requested specialist boundaries can justify a custom graph when developers own it.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "multi"
+          ],
+          "actual": "multi",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "langgraph",
+            "hermes"
+          ],
+          "actual": [
+            "langgraph"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 7,
+          "actual": 5,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "nontechnical-specialists",
+      "category": "coordination",
+      "reviewStatus": "provisional",
+      "rationale": "Keep setup feasible for a team without developers and offer a one-agent pilot.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "multi"
+          ],
+          "actual": "multi",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "cowork",
+            "hermes"
+          ],
+          "actual": [
+            "cowork"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langgraph",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langgraph",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: airflow",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No airflow",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langfuse",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langfuse",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: promptfoo",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No promptfoo",
+          "actual": [
+            "cowork",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "memory-specialists",
+      "category": "memory",
+      "reviewStatus": "provisional",
+      "rationale": "Persistent learning remains important even when several roles are involved.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "multi"
+          ],
+          "actual": "multi",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "hermes",
+            "langgraph"
+          ],
+          "actual": [
+            "hermes"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 8,
+          "actual": 6,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "restricted-support",
+      "category": "portability",
+      "reviewStatus": "provisional",
+      "rationale": "The chosen app and actual model steps must respect provider availability.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "hermes",
+            "n8n-agent",
+            "langgraph"
+          ],
+          "actual": [
+            "hermes"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: claude",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No claude",
+          "actual": [
+            "hermes",
+            "n8n",
+            "skill",
+            "mcp",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: cowork",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No cowork",
+          "actual": [
+            "hermes",
+            "n8n",
+            "skill",
+            "mcp",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: project",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No project",
+          "actual": [
+            "hermes",
+            "n8n",
+            "skill",
+            "mcp",
+            "system-prompt"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 6,
+          "actual": 5,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "Autonomy ceiling",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": true
+        },
+        {
+          "name": "Visible human review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": true,
+          "actual": true,
+          "critical": true
+        },
+        {
+          "name": "Every completion passes review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": false,
+          "actual": false,
+          "critical": true
+        },
+        {
+          "name": "In-loop actions have review gates",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        },
+        {
+          "name": "Model deployment constraints",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "restricted-specialists",
+      "category": "portability",
+      "reviewStatus": "provisional",
+      "rationale": "A portable runtime must also choose deployable model types.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "multi"
+          ],
+          "actual": "multi",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "langgraph",
+            "hermes"
+          ],
+          "actual": [
+            "langgraph"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: claude",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No claude",
+          "actual": [
+            "langgraph",
+            "mcp",
+            "system-prompt",
+            "promptfoo",
+            "langfuse"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: cowork",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No cowork",
+          "actual": [
+            "langgraph",
+            "mcp",
+            "system-prompt",
+            "promptfoo",
+            "langfuse"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: project",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No project",
+          "actual": [
+            "langgraph",
+            "mcp",
+            "system-prompt",
+            "promptfoo",
+            "langfuse"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 7,
+          "actual": 5,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        },
+        {
+          "name": "Model deployment constraints",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "private-analysis",
+      "category": "privacy",
+      "reviewStatus": "provisional",
+      "rationale": "The actual model plan should support the required local deployment.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n",
+            "airflow",
+            "langgraph"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 6,
+          "actual": 5,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "Model deployment constraints",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "unclear-quality",
+      "category": "safety",
+      "reviewStatus": "provisional",
+      "rationale": "Uncheckable customer-facing output needs review before release.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 4,
+          "actual": 3,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "Autonomy ceiling",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": true
+        },
+        {
+          "name": "Visible human review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": true,
+          "actual": true,
+          "critical": true
+        },
+        {
+          "name": "Every completion passes review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": false,
+          "actual": false,
+          "critical": true
+        },
+        {
+          "name": "In-loop actions have review gates",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "agent-irreversible",
+      "category": "safety",
+      "reviewStatus": "provisional",
+      "rationale": "An autonomous planner should not make irreversible changes without review.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n-agent",
+            "hermes",
+            "langgraph"
+          ],
+          "actual": [
+            "n8n-agent"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 5,
+          "actual": 3,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "Autonomy ceiling",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": true
+        },
+        {
+          "name": "Visible human review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": true,
+          "actual": true,
+          "critical": true
+        },
+        {
+          "name": "Every completion passes review",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": false,
+          "actual": false,
+          "critical": true
+        },
+        {
+          "name": "In-loop actions have review gates",
+          "dimension": "safeguards",
+          "pass": true,
+          "expected": [],
+          "actual": [],
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "single-role-developers",
+      "category": "simplicity",
+      "reviewStatus": "provisional",
+      "rationale": "Having developers does not itself require a team of agents.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "cowork",
+            "hermes",
+            "n8n-agent",
+            "langgraph"
+          ],
+          "actual": [
+            "cowork"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 5,
+          "actual": 4,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "agent-after-data",
+      "category": "data",
+      "reviewStatus": "provisional",
+      "rationale": "Separate upstream data readiness from the agent investigation.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "agent"
+          ],
+          "actual": "agent",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n-agent",
+            "hermes",
+            "langgraph"
+          ],
+          "actual": [
+            "n8n-agent"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Required: airflow",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "airflow",
+          "actual": [
+            "n8n-agent",
+            "airflow",
+            "mcp",
+            "system-prompt",
+            "promptfoo",
+            "langfuse"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 7,
+          "actual": 6,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "checkable-internal",
+      "category": "workflow",
+      "reviewStatus": "provisional",
+      "rationale": "Known categories call for routing and checks rather than an autonomous planner.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "workflow"
+          ],
+          "actual": "workflow",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 3,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        }
+      ]
+    },
+    {
+      "id": "high-volume-fixed",
+      "category": "simplicity",
+      "reviewStatus": "provisional",
+      "rationale": "Volume alone is not evidence that AI, agents or AI observability are needed.",
+      "pass": true,
+      "checks": [
+        {
+          "name": "Suitable approach",
+          "dimension": "approach",
+          "pass": true,
+          "expected": [
+            "automation"
+          ],
+          "actual": "automation",
+          "critical": false
+        },
+        {
+          "name": "One suitable main platform",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": [
+            "n8n",
+            "airflow"
+          ],
+          "actual": [
+            "n8n"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langgraph",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langgraph",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: hermes",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No hermes",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: promptfoo",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No promptfoo",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: langfuse",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No langfuse",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Exclude: mcp",
+          "dimension": "tool-fit",
+          "pass": true,
+          "expected": "No mcp",
+          "actual": [
+            "n8n",
+            "integrations"
+          ],
+          "critical": false
+        },
+        {
+          "name": "Tool-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 2,
+          "actual": 2,
+          "critical": false
+        },
+        {
+          "name": "Specialist-count ceiling",
+          "dimension": "complexity",
+          "pass": true,
+          "expected": 0,
+          "actual": 0,
+          "critical": false
+        },
+        {
+          "name": "No unnecessary AI",
+          "dimension": "approach",
+          "pass": true,
+          "expected": "No model calls",
+          "actual": {
+            "needed": false,
+            "modelNodes": 0
+          },
+          "critical": false
+        }
+      ]
+    }
+  ]
+}
