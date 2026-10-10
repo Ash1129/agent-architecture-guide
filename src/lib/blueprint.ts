@@ -67,6 +67,7 @@ const TOOL_SHORT: Record<string, string> = {
   cowork: "Claude",
   claude: "Claude",
   hermes: "Hermes Agent",
+  langgraph: "LangGraph",
   "n8n-agent": "n8n",
 };
 
@@ -132,6 +133,7 @@ function whyOf(r: Recommendation, ruleId: string): Why | undefined {
     ...r.topology.why,
     ...r.tools.flatMap((t) => t.why),
     r.hosting.why,
+    ...(r.hosting.also ?? []),
     ...r.autonomy.why,
     r.simpler.why,
   ];
@@ -154,6 +156,7 @@ function triggerEngine(a: Answers): Engine {
 function startNode(g: Graph, r: Recommendation, a: Answers, home: string): Draft {
   const t = a.trigger;
   // When Hermes runs the agent, n8n is what watches for events (rule TL9).
+  const customGraph = coreTool(r) === "langgraph";
   const watcher = coreTool(r) === "hermes" && has(r, "n8n") ? "n8n" : home;
   return g.add({
     id: "start",
@@ -164,9 +167,9 @@ function startNode(g: Graph, r: Recommendation, a: Answers, home: string): Draft
       t === "manual"
         ? `In ${home}`
         : t === "schedule"
-          ? `${home} schedule`
+          ? customGraph ? "Application scheduler" : `${home} schedule`
           : t === "event"
-            ? `${watcher} trigger`
+            ? customGraph ? "Authenticated event endpoint" : `${watcher} trigger`
             : coreTool(r) === "airflow" || has(r, "airflow")
               ? "Airflow dependency"
               : "Timed after imports",

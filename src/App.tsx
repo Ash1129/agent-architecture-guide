@@ -7,7 +7,9 @@ import { Details, Guide, Review } from "./pages/Guide";
 import { History } from "./pages/History";
 import { HowItWorks } from "./pages/HowItWorks";
 import { Landing } from "./pages/Landing";
+import { ProcessMap } from "./pages/Process";
 import { Result } from "./pages/Result";
+import { SplitReview } from "./pages/Split";
 import {
   type Answers,
   type QuestionId,
@@ -16,12 +18,31 @@ import {
   isAnswered,
   isComplete,
 } from "./lib/questions";
-import { navigate, replaceHash, useRoute, type Route } from "./lib/router";
+import { href, navigate, replaceHash, useRoute, type Route } from "./lib/router";
 import { decodeAnswers, resultCode } from "./lib/share";
 import { loadAnswers, loadDescribed, saveAnswers, saveDescribed } from "./lib/storage";
 import { type HistoryEntry, findByCode, loadHistory, loadSessionId, newSessionId, saveSessionId, upsertHistory } from "./lib/history";
 import { AI_ENABLED } from "./lib/features";
-import { type Detail, type InterviewResponse, MAX_TASK_TITLE, fillFromPlan, taskTitle } from "./lib/interview";
+import { type Detail, type InterviewResponse, MAX_DESCRIPTION, MAX_TASK_TITLE, fillFromPlan, taskTitle } from "./lib/interview";
+import {
+  type Process,
+  type ProcessDraft,
+  type Split,
+  decodeProcess,
+  fetchSplit,
+  isSplit,
+  loadDraft,
+  loadProcesses,
+  loadSystem,
+  partOf,
+  processCode,
+  clearProcesses,
+  removeProcess,
+  saveDraft,
+  saveSystem,
+  upsertProcess,
+} from "./lib/process";
+import type { SystemNav } from "./components/StudioShell";
 import { fetchPlan, loadPlan, savePlan } from "./lib/plans";
 
 /** The adapted questions for the current task: being made, ready, or not used. */
@@ -32,6 +53,8 @@ const TITLES: Record<Route["name"], string> = {
   guide: "Guide | Agent Architecture Guide",
   details: "Guide | Agent Architecture Guide",
   review: "Your answers | Agent Architecture Guide",
+  split: "Your jobs | Agent Architecture Guide",
+  process: "Your system | Agent Architecture Guide",
   result: "Your result | Agent Architecture Guide",
   how: "How it decides | Agent Architecture Guide",
   history: "History | Agent Architecture Guide",
@@ -83,7 +106,26 @@ export default function App() {
     setDescribedState(ids);
     saveDescribed(ids);
   };
-  const [reading, setReading] = useState<string | null>(null);
+  // `split`: a description from the start page, which may hold several jobs.
+  // `title`: a job of a confirmed split, read under its own name.
+  const [reading, setReading] = useState<{ text: string; split?: boolean; title?: string } | null>(null);
+
+  // A description read as several jobs, waiting to be confirmed; then the
+  // confirmed jobs being worked through, one at a time.
+  const [proposal, setProposal] = useState<{ text: string; split: Split } | null>(null);
+  const [draft, setDraftState] = useState<ProcessDraft | null>(loadDraft);
+  const setDraft = (d: ProcessDraft | null) => {
+    setDraftState(d);
+    saveDraft(d);
+  };
+  // The process being looked at, so each of its jobs' results shows its place in it.
+  const [system, setSystemState] = useState(loadSystem);
+  const setSystem = (v: { id: string; code: string } | null) => {
+    setSystemState(v);
+    saveSystem(v);
+  };
+  const systemProcess = useMemo(() => (system ? decodeProcess(system.code) : null), [system]);
+  const [processes, setProcesses] = useState(loadProcesses);
 
   // While working through the guide, the questions are adapted to the task by
   // the local AI server: once per task, then kept in the browser.
@@ -112,39 +154,118 @@ export default function App() {
   }, [answers.task, inGuide]); // eslint-disable-line react-hooks/exhaustive-deps -- plan is read only to skip a repeat fetch
   const currentPlan = plan && plan.task === answers.task?.trim() ? plan : undefined;
 
-  // Read a described problem: answer what it settles, then ask only the rest
-  // (and, after any task-specific questions, show the answers for review).
+  // Read a described problem. From the start page it may be several jobs: then
+  // they're shown to confirm first. One job (or each confirmed job in turn) has
+  // what it settles answered, and only the rest is asked (then, after any
+  // task-specific questions, the answers are shown for review).
   useEffect(() => {
     if (!reading) return;
     const ctl = new AbortController();
-    fetchPlan(reading, ctl.signal)
-      .then((response) => {
-        const task = taskTitle(reading, response.plan);
-        savePlan(task, response);
-        const { answers: filled, filled: ids } = fillFromPlan(task, response.plan);
-        setPlan({ task, status: "ready", response });
-        setAnswers(filled);
-        setDescribed(ids);
-        setReading(null);
-        setDirection(1);
-        const next = firstUnanswered(filled);
-        if (next) navigate({ name: "guide", q: next.id });
-        else navigate(response.plan.details.length ? { name: "details" } : { name: "review" });
-      })
-      .catch((e: Error) => {
+    const { text } = reading;
+    const short = text.length <= MAX_DESCRIPTION;
+    // A short description's questions are read alongside the split, in case it's one job.
+    const early = short ? fetchPlan(text, ctl.signal) : undefined;
+    early?.catch(() => {});
+    (async () => {
+      let jobText = text.slice(0, MAX_DESCRIPTION);
+      let title = reading.title;
+      if (reading.split) {
+        const s = await fetchSplit(text, ctl.signal).catch(() => null);
         if (ctl.signal.aborted) return;
-        // It couldn't be read: carry on with the questions, the description as the task.
-        setPlan({ task: taskTitle(reading), status: "standard", note: e.message });
-        setReading(null);
-      });
+        if (s && isSplit(s.split)) {
+          setProposal({ text, split: s.split });
+          setReading(null);
+          setDirection(1);
+          navigate({ name: "split" });
+          return;
+        }
+        // A long description that is one job is read from the split's own account of it.
+        if (!short && s) {
+          jobText = s.split.jobs[0].description;
+          title = s.split.jobs[0].title;
+        }
+      }
+      const response = await (early ?? fetchPlan(jobText, ctl.signal));
+      if (ctl.signal.aborted) return;
+      const task = title ?? taskTitle(jobText, response.plan);
+      savePlan(task, response);
+      const { answers: filled, filled: ids } = fillFromPlan(task, response.plan);
+      setPlan({ task, status: "ready", response });
+      setAnswers(filled);
+      setDescribed(ids);
+      setReading(null);
+      setDirection(1);
+      const next = firstUnanswered(filled);
+      if (next) navigate({ name: "guide", q: next.id });
+      else navigate(response.plan.details.length ? { name: "details" } : { name: "review" });
+    })().catch((e: Error) => {
+      if (ctl.signal.aborted) return;
+      // It couldn't be read: carry on with the questions, the description as the task.
+      setPlan({ task: reading.title ?? taskTitle(text), status: "standard", note: e.message });
+      setReading(null);
+    });
     return () => ctl.abort();
   }, [reading]); // eslint-disable-line react-hooks/exhaustive-deps -- runs once per description
+
+  /** Starts on one job of a confirmed split: its description is read like any other. */
+  const startJob = (d: ProcessDraft, i: number) => {
+    const job = d.jobs[i];
+    setSession(newSessionId());
+    setDescribed(null);
+    setEditing(false);
+    setInvalidLink(false);
+    setDirection(1);
+    setAnswers({ task: job.title });
+    setPlan({ task: job.title, status: "loading" });
+    setReading({ text: job.description, title: job.title });
+    navigate({ name: "guide", q: "shape" });
+  };
+
+  const openProcess = (p: Process, id: string) => {
+    const code = processCode(p);
+    setSystem({ id, code });
+    setProcesses(upsertProcess(id, p));
+    navigate({ name: "process", code });
+  };
+
+  // A process link opens its map, and is saved like a result.
+  useEffect(() => {
+    if (route.name !== "process" || !route.code || system?.code === route.code) return;
+    const p = decodeProcess(route.code);
+    if (!p) return;
+    const id = processes.find((e) => e.code === route.code)?.id ?? newSessionId();
+    setSystem({ id, code: route.code });
+    setProcesses(upsertProcess(id, p));
+  }, [route]); // eslint-disable-line react-hooks/exhaustive-deps -- once per link
+
+  // Which job of the process the result on screen is. A job whose answers are
+  // edited stays that job: the process takes the new answers.
+  const part = route.name === "result" && systemProcess ? partOf(systemProcess, resultCode(answers)) : -1;
+  const lastPart = useRef<{ session: string; index: number } | null>(null);
+  useEffect(() => {
+    if (part >= 0) {
+      lastPart.current = { session: sessionId, index: part };
+      return;
+    }
+    const last = lastPart.current;
+    if (route.name !== "result" || !isComplete(answers) || !system || !systemProcess || last?.session !== sessionId) return;
+    const p = { ...systemProcess, parts: systemProcess.parts.map((a, i) => (i === last.index ? answers : a)) };
+    setSystem({ id: system.id, code: processCode(p) });
+    setProcesses(upsertProcess(system.id, p));
+  }, [part, answers, sessionId, route.name]); // eslint-disable-line react-hooks/exhaustive-deps
+  const systemNav = (p: Process, code: string, current: number, onMap: boolean): SystemNav => ({
+    title: p.title,
+    mapHref: href({ name: "process", code }),
+    onMap,
+    jobs: p.parts.map((a, i) => ({ label: a.task ?? `Job ${i + 1}`, href: href({ name: "result", code: resultCode(a) }), current: i === current })),
+  });
+
   // The start page and a finished result have their own header and footer, so the app's step aside.
   // The full-screen logo intro plays on a visitor's first open only, and ends by revealing the start page's heading.
   const [intro, setIntro] = useState<"playing" | "revealing" | "done">(() => (shouldPlayIntro() ? "playing" : "done"));
   const revealAfterIntro = useCallback(() => setIntro("revealing"), []);
   const endIntro = useCallback(() => setIntro("done"), []);
-  const studio = route.name === "home" || inGuide || (route.name === "result" && isComplete(answers));
+  const studio = route.name === "home" || inGuide || route.name === "split" || route.name === "process" || (route.name === "result" && isComplete(answers));
   const planDetails = currentPlan?.status === "ready" ? (currentPlan.response?.plan.details ?? []) : [];
 
   // Every result reached is saved; edits update the same entry.
@@ -213,7 +334,7 @@ export default function App() {
     navigate({ name: "result" });
   };
   // A described problem ends on the review of its answers; the survey goes straight to the result.
-  const finish = () => (described ? navigate({ name: "review" }) : toResult());
+  const finish = () => (described || draft ? navigate({ name: "review" }) : toResult());
   // After a description, only the questions it didn't settle are asked; these are the ones to step back through.
   const asked = (a: Answers) => activeQuestions(a).filter((q) => q.id !== "task" && !(described ?? []).includes(q.id));
 
@@ -256,7 +377,7 @@ export default function App() {
     const idx = active.findIndex((q) => q.id === from);
     if (described) {
       const prev = asked(answers).filter((q) => active.indexOf(q) < idx).pop();
-      navigate(prev ? { name: "guide", q: prev.id } : { name: "home" });
+      navigate(prev ? { name: "guide", q: prev.id } : draft && proposal ? { name: "split" } : { name: "home" });
       return;
     }
     if (idx <= 0) navigate({ name: "home" });
@@ -265,6 +386,8 @@ export default function App() {
 
   const startOver = () => {
     setSession(newSessionId());
+    setDraft(null);
+    setSystem(null);
     setDescribed(null);
     setReading(null);
     setAnswers({});
@@ -304,11 +427,14 @@ export default function App() {
               setInvalidLink(false);
               setDirection(1);
               setDescribed(null);
+              setDraft(null);
+              setProposal(null);
+              setSystem(null);
               if (AI_ENABLED) {
                 const task = taskTitle(text);
                 setAnswers({ task });
                 setPlan({ task, status: "loading" });
-                setReading(text);
+                setReading({ text, split: true });
               } else {
                 setAnswers({ task: text.slice(0, MAX_TASK_TITLE) });
               }
@@ -333,7 +459,8 @@ export default function App() {
               editing={editing}
               direction={direction}
               plan={currentPlan}
-              reading={reading ?? undefined}
+              reading={reading?.text}
+              job={draft ? { index: draft.current, total: draft.jobs.length } : undefined}
               described={described ?? undefined}
               onUseStandard={() => {
                 setReading(null);
@@ -382,14 +509,72 @@ export default function App() {
                 const last = asked(answers).pop();
                 navigate(last ? { name: "guide", q: last.id } : { name: "home" });
               }}
+              job={draft ? { index: draft.current, total: draft.jobs.length, next: draft.jobs[draft.current + 1]?.title } : undefined}
               onConfirm={() => {
                 setDescribed(null);
                 setDirection(1);
-                toResult();
+                if (!draft) return toResult();
+                // A job of a split: on to the next one, or, after the last, the whole system.
+                const done = [...draft.done];
+                done[draft.current] = answers;
+                if (draft.current + 1 < draft.jobs.length) {
+                  const d = { ...draft, done, current: draft.current + 1 };
+                  setDraft(d);
+                  return startJob(d, d.current);
+                }
+                setDraft(null);
+                setProposal(null);
+                openProcess({ title: draft.title, parts: done, handoffs: draft.handoffs }, newSessionId());
               }}
             />
           </SurveyFrame>
         )}
+        {AI_ENABLED && route.name === "split" && proposal && (
+          <SurveyFrame>
+            <SplitReview
+              split={proposal.split}
+              onBack={() => navigate({ name: "home" })}
+              onKeepOne={() => {
+                // The whole description as one task, read from the split's account of it when it's long.
+                const { text, split } = proposal;
+                const one = text.length <= MAX_DESCRIPTION ? text : split.jobs.map((j) => j.description).join(" ").slice(0, MAX_DESCRIPTION);
+                setDraft(null);
+                setReading({ text: one, title: text.length <= MAX_TASK_TITLE ? undefined : split.title });
+                navigate({ name: "guide", q: "shape" });
+              }}
+              onConfirm={(split) => {
+                if (split.jobs.length < 2) {
+                  setDraft(null);
+                  setReading({ text: split.jobs[0].description, title: split.jobs[0].title });
+                  return navigate({ name: "guide", q: "shape" });
+                }
+                const d: ProcessDraft = { title: split.title, jobs: split.jobs, handoffs: split.handoffs, current: 0, done: [] };
+                setDraft(d);
+                startJob(d, 0);
+              }}
+            />
+          </SurveyFrame>
+        )}
+        {route.name === "process" &&
+          (route.code && decodeProcess(route.code) ? (
+            <ProcessMap
+              process={decodeProcess(route.code)!}
+              code={route.code}
+              historyCount={history.length}
+              onNew={() => {
+                setSystem(null);
+                navigate({ name: "home" });
+              }}
+            />
+          ) : (
+            <main id="main" className="mx-auto max-w-2xl px-4 py-20 sm:px-6">
+              <h1 className="text-[2rem] font-semibold leading-tight tracking-tight text-ink">This link doesn't contain a complete system</h1>
+              <p className="mt-4 max-w-[55ch] text-[17px] leading-relaxed text-muted">It may have been cut short when it was copied.</p>
+              <a href="#/" className="mt-8 inline-flex text-accent underline-offset-4 hover:underline">
+                Start from the beginning
+              </a>
+            </main>
+          ))}
         {route.name === "result" && (
           <Result
             answers={answers}
@@ -404,6 +589,7 @@ export default function App() {
             view={route.view ?? "solution"}
             onView={(view) => navigate({ name: "result", code: resultCode(answers), view })}
             historyCount={history.length}
+            system={part >= 0 && systemProcess && system ? systemNav(systemProcess, system.code, part, false) : undefined}
           />
         )}
         {route.name === "how" && <HowItWorks cta={cta} />}
@@ -424,6 +610,16 @@ export default function App() {
               navigate({ name: "result", code: entry.code });
             }}
             onStart={startOver}
+            systems={processes}
+            onRemoveSystem={(id) => {
+              setProcesses(removeProcess(id));
+              if (system?.id === id) setSystem(null);
+            }}
+            onClearSystems={() => {
+              clearProcesses();
+              setProcesses([]);
+              setSystem(null);
+            }}
           />
         )}
       </div>

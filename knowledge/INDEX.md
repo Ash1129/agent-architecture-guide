@@ -51,6 +51,7 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | M01 | [Choosing a model, and the current Claude lineup](chunks/05-models-and-cost/M01-choosing-a-model.md) | Capable-first then step down; efficiency-first vs capability-first; effort setting; lineup and prices as of 2026-10-05 (Fable 5.1, Opus 5.5, Sonnet 5.5, Haiku 4.5). |
 | M02 | [Cutting cost without losing quality](chunks/05-models-and-cost/M02-cutting-cost.md) | Cascades (FrugalGPT, up to 98%), routing (RouteLLM, >2×), escalation; batch 50% off; prompt caching; agents use 4–15× tokens. |
 | M03 | [Open-weight models](chunks/05-models-and-cost/M03-open-weight-models.md) | Open models ~4 months behind closed (Epoch); leading open models as of 2026-10-05; Hermes is model-agnostic; site examples are dated. |
+| M04 | [What plans and models cost](chunks/05-models-and-cost/M04-plan-and-token-prices.md) | Claude plans and API prices (Haiku 5.5 now $0.10/$0.50); n8n Cloud plans by executions; DeepSeek and Kimi API prices; Hermes free (MIT). Read 2026-10-10. |
 
 ## 06 Tools, MCP and skills
 
@@ -82,3 +83,52 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 | D02 | [What Anthropic keeps, and the privacy arrangements available](chunks/08-deployment-and-data/D02-data-retention-and-privacy.md) | No training without permission; retention periods; ZDR scope (not the apps, Skills or Fable 5.1); HIPAA; flagged data up to 2 years. |
 | D03 | [Local vs cloud - what each costs, and when your own hardware pays off](chunks/08-deployment-and-data/D03-local-vs-cloud-costs-and-hardware.md) | Capex vs per-token costs; GPU prices; break-even months by model size (Pan et al.) vs utilisation penalty of 17.5-36.3× (Patil); Anthropic spend limits and max_tokens. |
 | D04 | [EU AI Act - which uses are high-risk, and from when](chunks/08-deployment-and-data/D04-eu-ai-act-high-risk.md) | Art. 6 routes and exemptions; Annex III's eight areas (hiring, credit, insurance, education...); Art. 113 dates, moved by the 2026 Digital Omnibus to 2 Dec 2027 (Annex III) and 2 Aug 2028 (Annex I). |
+
+## 09 n8n engineering
+
+Official documentation (tier C), with documented behavior separated from guide recommendations.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| N01 | [Data contracts and item linking](chunks/09-n8n-engineering/N01-data-contracts-and-item-linking.md) | Item identity, expressions, merge semantics, typed sub-workflows and multi-record acceptance tests. |
+| N02 | [Failure recovery and testing](chunks/09-n8n-engineering/N02-failure-recovery-and-testing.md) | Error workflows, bounded retries, API limits, pagination, response validation, realistic tests and execution retention. |
+| N03 | [Safe external actions](chunks/09-n8n-engineering/N03-safe-external-actions.md) | Authenticated webhooks, credentials, tool-level approval, destination-specific idempotency and ambiguous outcomes. |
+
+## 10 Apache Airflow engineering
+
+Official documentation (tier C), reviewed against Airflow 3.3.2 and standard provider 1.20.0. Recommendations and acceptance tests are distinguished from documented behavior.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| R01 | [Data intervals and dependencies](chunks/10-airflow-engineering/R01-data-intervals-and-dependencies.md) | Logical dates, asset updates, external sensors, task contracts, shared storage and XCom limits. |
+| R02 | [Retries, backfills and failure signals](chunks/10-airflow-engineering/R02-retries-backfills-and-failure-signals.md) | Replay-safe outputs, bounded waits, catchup, historical reprocessing, failure propagation and callback testing. |
+| R03 | [Testing, security and operation](chunks/10-airflow-engineering/R03-testing-security-and-operation.md) | Lightweight DAG parsing, public SDK, test layers, secrets, pools, deferrable operators and production checks. |
+
+## 11 Hermes Agent engineering
+
+Official documentation (tier C), with documented controls separated from engineering recommendations. Settings must be checked against the deployed release.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| H01 | [Tool boundaries and safe actions](chunks/11-hermes-engineering/H01-tool-boundaries-and-actions.md) | Command approvals, MCP tool filters, profile boundaries, action contracts and ambiguous writes. |
+| H02 | [Memory and skill review](chunks/11-hermes-engineering/H02-memory-and-skill-review.md) | Durable learning gates, provenance, staged changes, evaluation and versioned rollback. |
+| H03 | [Unattended operation and recovery](chunks/11-hermes-engineering/H03-unattended-operation-and-recovery.md) | Cron health, finite budgets, missed runs, replay safety and session-store recovery. |
+
+## 12 LangGraph engineering
+
+Official documentation (tier C), with guide recommendations distinguished from documented behavior.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| J01 | [LangGraph state contracts and agent boundaries](chunks/12-langgraph-engineering/J01-state-and-agent-boundaries.md) | Implementation boundaries and acceptance checks. |
+| J02 | [LangGraph persistence and replay boundaries](chunks/12-langgraph-engineering/J02-persistence-and-replay.md) | Implementation boundaries and acceptance checks. |
+| J03 | [LangGraph human review and deployment checks](chunks/12-langgraph-engineering/J03-human-review-and-deployment.md) | Implementation boundaries and acceptance checks. |
+
+## 13 Testing and observability
+
+Official documentation (tier C), with guide recommendations distinguished from documented behavior.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| O01 | [Repeatable AI evaluations with Promptfoo](chunks/13-testing-and-observability/O01-evaluations-and-release-gates.md) | Implementation boundaries and acceptance checks. |
+| O02 | [Tracing, privacy and cost with Langfuse](chunks/13-testing-and-observability/O02-tracing-privacy-and-cost.md) | Implementation boundaries and acceptance checks. |

@@ -1,4 +1,4 @@
-import { CheckCircle, CircleNotch, ClockCounterClockwise, Code, GitBranch, Moon, Scales, Sun } from "@phosphor-icons/react";
+import { CheckCircle, CircleNotch, ClockCounterClockwise, Code, GitBranch, Moon, Scales, Sun, TreeStructure } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { type ResultView, href } from "../lib/router";
 import { BrandMark } from "./Brand";
@@ -18,16 +18,29 @@ const VIEWS: { id: ResultView; label: string; Icon: typeof CheckCircle }[] = [
   { id: "build", label: "Build", Icon: Code },
 ];
 
+/** A process's place in the sidebar: its map, then each job's result. */
+export type SystemNav = {
+  title: string;
+  mapHref: string;
+  /** The map is showing (rather than one job's result). */
+  onMap: boolean;
+  jobs: { label: string; href: string; current: boolean }[];
+};
+
 export function StudioShell({
   view,
   onView,
   historyCount,
   building = false,
+  system,
   children,
 }: {
-  view: ResultView;
-  onView: (v: ResultView) => void;
+  /** The result's view; none on a process's map. */
+  view?: ResultView;
+  onView?: (v: ResultView) => void;
   historyCount: number;
+  /** When this result is one job of a process, or the process's map is showing. */
+  system?: SystemNav;
   /** The tools are still being built in the background: the Build view opens once they're ready. */
   building?: boolean;
   children: ReactNode;
@@ -52,8 +65,28 @@ export function StudioShell({
               <small>YOUR SOLUTION STUDIO</small>
             </span>
           </a>
-          <p className="studio-caption rail-label">Your workspace</p>
-          <nav aria-label="Result" className="studio-nav">
+          {system && (
+            <>
+              <p className="studio-caption rail-label">Your system</p>
+              <nav aria-label="Your system" className="studio-nav studio-nav-system">
+                <a href={system.mapHref} aria-current={system.onMap ? "page" : undefined} title={tip("System map")}>
+                  <TreeStructure size={20} weight="light" aria-hidden />
+                  <span className="rail-label">System map</span>
+                  {system.onMap && <span className="nav-dot rail-label" aria-hidden />}
+                </a>
+                {system.jobs.map((j, i) => (
+                  <a key={j.href} href={j.href} aria-current={j.current ? "true" : undefined} title={tip(j.label)} aria-label={`Job ${i + 1}: ${j.label}`}>
+                    <span className="nav-num" aria-hidden>
+                      {i + 1}
+                    </span>
+                    <span className="rail-label nav-job">{j.label}</span>
+                  </a>
+                ))}
+              </nav>
+            </>
+          )}
+          {view && onView && <p className="studio-caption rail-label">{system ? "This job" : "Your workspace"}</p>}
+          {view && onView && <nav aria-label="Result" className="studio-nav">
             {VIEWS.map(({ id, label, Icon }) => {
               const locked = building && id === "build";
               return (
@@ -72,7 +105,7 @@ export function StudioShell({
                 </button>
               );
             })}
-          </nav>
+          </nav>}
           <div className="studio-note rail-label">
             <span className="studio-caption">The recommendation</span>
             <p>A considered path from request to working system.</p>

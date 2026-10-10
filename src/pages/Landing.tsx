@@ -4,15 +4,16 @@ import { useState, type FormEvent } from "react";
 import workspaceImage from "../assets/workspace.jpg";
 import { BrandMark, BrandWord } from "../components/Brand";
 import { AI_ENABLED } from "../lib/features";
-import { MAX_DESCRIPTION, MAX_TASK_TITLE } from "../lib/interview";
+import { MAX_TASK_TITLE } from "../lib/interview";
+import { MAX_PROCESS_DESCRIPTION } from "../lib/process";
 
 // The public starting point ("blueprint studio"). Two ways in: describe the
 // problem in your own words and press Build (the AI answers what the
 // description settles and asks only the rest), or take the short survey when
 // you're not sure where to start. Styles live in src/studio.css under .start-page.
 
-/** With AI, a few sentences are read; without, the text is the survey's first answer, a short title. */
-const MAX_LENGTH = AI_ENABLED ? MAX_DESCRIPTION : MAX_TASK_TITLE;
+/** With AI, anything from a sentence to a whole process (split into jobs when it holds several); without, the text is the survey's first answer, a short title. */
+const MAX_LENGTH = AI_ENABLED ? MAX_PROCESS_DESCRIPTION : MAX_TASK_TITLE;
 
 export function Landing({
   introPlaying = false,

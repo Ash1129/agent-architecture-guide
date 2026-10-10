@@ -25,13 +25,15 @@ type Props = {
   reading?: string;
   /** The questions the AI answered from that description; only the others are asked. */
   described?: QuestionId[];
+  /** Which job of a split this is, when a described problem was split into several. */
+  job?: { index: number; total: number };
   onUseStandard: () => void;
   onAnswer: (next: Answers, from: QuestionId) => void;
   onBack: (from: QuestionId) => void;
   onCancelEdit: () => void;
 };
 
-export function Guide({ qid, answers, editing, direction, plan, reading, described, onUseStandard, onAnswer, onBack, onCancelEdit }: Props) {
+export function Guide({ qid, answers, editing, direction, plan, reading, described, job, onUseStandard, onAnswer, onBack, onCancelEdit }: Props) {
   const reduce = useReducedMotion();
   const ready = plan?.status === "ready" ? plan.response : undefined;
   const q = adaptQuestion(QUESTION_BY_ID[qid], ready?.plan);
@@ -53,7 +55,7 @@ export function Guide({ qid, answers, editing, direction, plan, reading, describ
         <div className="mb-3 flex items-center justify-between gap-4">
           <p className="section-kicker studio-caption !mb-0" aria-live="polite">
             <span className="status-dot" aria-hidden />
-            Question {index + 1} of {total}
+            {job && `Job ${job.index + 1} of ${job.total} · `}Question {index + 1} of {total}
           </p>
           {editing ? (
             <button type="button" onClick={onCancelEdit} className="studio-quiet">
@@ -91,7 +93,7 @@ export function Guide({ qid, answers, editing, direction, plan, reading, describ
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
           {adapting ? (
-            <Adapting task={plan!.task} reading={reading} onUseStandard={onUseStandard} />
+            <Adapting task={plan!.task} reading={reading} job={job} onUseStandard={onUseStandard} />
           ) : (
             <QuestionView
               q={q}
@@ -108,7 +110,7 @@ export function Guide({ qid, answers, editing, direction, plan, reading, describ
   );
 }
 
-function Adapting({ task, reading, onUseStandard }: { task: string; reading?: string; onUseStandard: () => void }) {
+function Adapting({ task, reading, job, onUseStandard }: { task: string; reading?: string; job?: { index: number; total: number }; onUseStandard: () => void }) {
   const reduce = useReducedMotion();
   return (
     <div role="status" aria-live="polite">
@@ -118,10 +120,12 @@ function Adapting({ task, reading, onUseStandard }: { task: string; reading?: st
       </p>
       {reading ? (
         <>
-          <h1 className="survey-title mt-4">Your problem, in your words.</h1>
+          <h1 className="survey-title mt-4">{job ? `Job ${job.index + 1} of ${job.total}: ${task}` : "Your problem, in your words."}</h1>
           <blockquote className="survey-quote">{reading}</blockquote>
           <p className="survey-help">
-            The AI is answering the questions your description already settles. You'll only be asked the rest, then you can check every answer.
+            {job
+              ? "The AI is answering the questions this job's description already settles. You'll only be asked the rest, then you can check every answer."
+              : "The AI is answering the questions your description already settles. If it holds more than one job, you'll see them first. Otherwise you'll only be asked the rest, then you can check every answer."}
           </p>
         </>
       ) : (
@@ -510,6 +514,7 @@ export function Review({
   answers,
   plan,
   described,
+  job,
   onChange,
   onBack,
   onConfirm,
@@ -517,6 +522,8 @@ export function Review({
   answers: Answers;
   plan?: InterviewPlan;
   described: QuestionId[];
+  /** Which job of a split this is, and the next job's name. */
+  job?: { index: number; total: number; next?: string };
   onChange: (q: QuestionId) => void;
   onBack: () => void;
   onConfirm: () => void;
@@ -530,7 +537,7 @@ export function Review({
     <main id="main" className="survey-main">
       <p className="section-kicker studio-caption">
         <span className="status-dot" aria-hidden />
-        Here's what we understood
+        {job ? `Job ${job.index + 1} of ${job.total}` : "Here's what we understood"}
       </p>
       <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
         Check your answers<span className="title-period">.</span>
@@ -591,7 +598,7 @@ export function Review({
           Back
         </button>
         <button type="button" className="start-build" onClick={onConfirm}>
-          See your result
+          {!job ? "See your result" : job.next ? "On to the next job" : "See your system"}
           <ArrowRight size={17} aria-hidden />
         </button>
       </div>

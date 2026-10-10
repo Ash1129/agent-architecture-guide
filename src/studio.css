@@ -109,7 +109,8 @@
   gap: 6px;
   margin-top: 16px;
 }
-.studio-nav button {
+.studio-nav button,
+.studio-nav a {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -121,14 +122,17 @@
   text-align: left;
   transition: background-color 150ms, color 150ms;
 }
-.studio-nav button > svg {
+.studio-nav button > svg,
+.studio-nav a > svg {
   flex-shrink: 0;
 }
-.studio-nav button:hover {
+.studio-nav button:hover,
+.studio-nav a:hover {
   background: var(--accent-soft);
   color: var(--ink);
 }
-.studio-nav button[aria-current="page"] {
+.studio-nav button[aria-current="page"],
+.studio-nav a[aria-current] {
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 500;
@@ -227,6 +231,7 @@
     padding-left: 9px;
   }
   .studio .studio-logo,
+  .studio .studio-nav a,
   .studio .studio-nav button,
   .studio .studio-profile a,
   .studio .studio-profile button {
@@ -807,7 +812,8 @@
     flex-direction: row;
     margin-top: 0;
   }
-  .studio-nav button {
+  .studio-nav button,
+  .studio-nav a {
     flex: 1;
     justify-content: center;
     height: 40px;
@@ -2155,4 +2161,301 @@
 .build-invite.is-building .build-invite-go {
   background: color-mix(in oklab, var(--accent) 14%, var(--surface));
   color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- a process: several jobs designed together */
+
+/* The sidebar's system section: the map, then each job by number. */
+.studio-nav-system {
+  margin-bottom: 18px;
+}
+.studio-nav .nav-num {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.studio-nav .nav-job {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .studio-nav-system {
+    margin-bottom: 8px;
+  }
+  .studio-nav-system .nav-job {
+    display: none;
+  }
+}
+
+/* A long description, while it's read: the start of it, faded out. */
+.survey-quote {
+  max-height: 11.5em;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+
+/* The split: the jobs a description holds, for the owner to confirm. */
+.split-list {
+  display: grid;
+  gap: 0;
+  margin-top: 30px;
+  list-style: none;
+  padding: 0;
+}
+.split-job {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.split-number {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  line-height: 1.3;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.split-title {
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  font-family: var(--font-serif);
+  font-size: 21px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.split-title:hover {
+  border-bottom-color: var(--studio-hairline);
+}
+.split-title:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+.split-details {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.split-details summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  list-style: none;
+}
+.split-details summary::-webkit-details-marker {
+  display: none;
+}
+.split-details[open] summary svg {
+  transform: rotate(180deg);
+}
+.split-details p {
+  margin-top: 8px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+.split-handoff {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 0 30px;
+  padding: 12px 0 12px 18px;
+  border-left: 1px dashed color-mix(in oklab, var(--accent) 55%, transparent);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.split-handoff svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+}
+.split-handoff strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.split-list > li + li {
+  margin-top: 10px;
+}
+.split-list > li:has(.split-handoff) + li {
+  margin-top: 0;
+}
+
+/* The system map: each job as a card, the handoffs between them. */
+.process-map {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-width: 760px;
+}
+.process-job {
+  padding: 24px 26px 22px;
+  border-radius: 16px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+}
+.process-job header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.process-job h2 {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.process-approach {
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.process-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.process-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.process-facts svg {
+  color: var(--accent);
+}
+.process-path {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.process-open {
+  margin-top: 14px !important;
+}
+.process-drafting {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.process-handoff {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  margin-left: 34px;
+}
+.process-handoff-line {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 2px;
+  min-height: 78px;
+  padding-bottom: 2px;
+  background: repeating-linear-gradient(to bottom, var(--accent) 0 5px, transparent 5px 10px);
+  color: var(--accent);
+}
+.process-handoff-line svg {
+  flex-shrink: 0;
+  margin-bottom: -6px;
+  background: var(--bg);
+}
+.process-handoff p {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 14px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.process-handoff strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.process-map > li:has(.process-handoff) + li {
+  margin-top: 0;
+}
+.process-map > li + li {
+  margin-top: 14px;
+}
+.process-others {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.process-others strong {
+  color: var(--ink);
+}
+.process-people {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.process-people li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-hairline);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.process-people .studio-caption {
+  padding-top: 2px;
+}
+.process-person {
+  font-weight: 600;
+  color: var(--ink);
+}
+@media (max-width: 760px) {
+  .process-job {
+    padding: 20px;
+  }
+  .process-job h2 {
+    font-size: 22px;
+  }
+  .process-handoff {
+    margin-left: 20px;
+  }
 }

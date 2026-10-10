@@ -25,6 +25,24 @@ missing or a rule has neither chunks nor a listed gap.
 Retrieval works like RAG: read `INDEX.md`, pick the chunks whose summary
 matches the question, and open only those. Never load the whole folder.
 
+For n8n recommendations, server retrieval reserves space for N01–N03 (data
+handling, recovery, safe actions), including n8n-to-Hermes handoffs. Airflow
+recommendations include R01–R03 (dependencies, recovery, operation), including
+Airflow used only as the upstream scheduler. Hermes recommendations include
+H01–H03 (tool boundaries, learning review, unattended recovery). LangGraph
+recommendations include J01–J03 (state, persistence, review). Every AI design
+includes O01–O02 (evaluation and observability). Design and starter-kit prompts
+retain mandatory context within the seventeen-chunk ceiling, accommodating
+four platform sets and shared AI guidance. Only relevant chunks are selected. Knowledge
+content and retrieval policy participate in AI cache keys.
+Chunks are loaded once per server; restart the server after editing knowledge.
+Starter kits include the relevant platform chapters as `n8n/ENGINEERING.md`,
+`airflow/ENGINEERING.md`, `hermes/ENGINEERING.md` or `langgraph/ENGINEERING.md`.
+AI kits also include `evals/ENGINEERING.md` and `observability/ENGINEERING.md`,
+all embedded in `BUILD.md`,
+so deterministic exports carry the same guidance without an AI call. This is implementation guidance, not a
+claim of live platform validation.
+
 ## Chunk format
 
 Each chunk is one self-contained idea, roughly 300 to 800 words, readable

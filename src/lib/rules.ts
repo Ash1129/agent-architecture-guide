@@ -37,7 +37,8 @@ export type Recommendation = {
   topology: { primary: TopologyId; addOns: TopologyId[]; why: Why[] };
   tools: ToolPick[];
   hybrid: { text: string; why: Why }[];
-  hosting: { title: string; body: string; why: Why };
+  /** `also`: reasons from rules that build on the hosting choice rather than make it (H6). */
+  hosting: { title: string; body: string; why: Why; also?: Why[] };
   models: { needed: boolean; capabilities: Capability[]; process: string[]; examples: string };
   autonomy: { level: AutonomyLevel; why: Why[]; checkpoints: string[]; guardrails: string[] };
   simpler: { title: string; body: string; why: Why };
@@ -421,13 +422,25 @@ export const RULES: Rule[] = [
     },
   },
   {
+    id: "TL18",
+    group: "Tools",
+    if: "Several agent roles need coordination, developers are available, and persistent personal memory is not requested",
+    then: "Build a custom agent workflow in LangGraph, with explicit state and handoffs.",
+    basis: design,
+    kb: ["J01", "J02", "J03"],
+    when: (a) => multi(a) && a.team === "large" && !knows(a, "memory"),
+    apply: (d, _a, why) => addTool(d, "langgraph",
+      "Your developers implement the coordinator, specialist handoffs, state and review points in code.",
+      why("You have developers and several agent roles to coordinate. Explicit state and transitions make their handoffs testable. Start with one agent and add specialists only where evaluation supports them."), true),
+  },
+  {
     id: "TL4",
     group: "Tools",
     if: "AI is needed and you need to avoid a single AI company, or major providers aren't available where you operate",
     then: "Use Hermes Agent, which isn't tied to one company's models.",
     basis: src("pabani", "nous", "notes"),
     kb: ["L03", "M03", "D01"],
-    when: (a) => ai(a) && vendorFree(a) && !(a.shape === "judgement" && a.trigger !== "manual"),
+    when: (a, d) => !core(d) && ai(a) && vendorFree(a) && !(a.shape === "judgement" && a.trigger !== "manual"),
     apply: (d, a, why) => {
       addTool(
         d,
@@ -653,6 +666,20 @@ export const RULES: Rule[] = [
     },
   },
 
+  {
+    id: "TL19",
+    group: "Tools",
+    if: "AI is used and developers are available",
+    then: "Add repeatable evaluations with Promptfoo and privacy-aware tracing with Langfuse.",
+    basis: design,
+    kb: ["O01", "O02"],
+    when: (a) => ai(a) && a.team === "large",
+    apply: (d, _a, why) => {
+      addTool(d, "promptfoo", "Tests examples and failure cases before changing the AI system.", why("A development team can turn acceptance criteria into repeatable regression checks."));
+      addTool(d, "langfuse", "Traces AI runs, with sensitive content filtered before export.", why("Trace evidence helps the team diagnose failures and compare quality, latency and cost."));
+    },
+  },
+
   // ------------------------------------------------------------ Hosting
   {
     id: "H1",
@@ -741,6 +768,26 @@ export const RULES: Rule[] = [
     },
   },
 
+  {
+    // H1 is a limit on which models may be used and wins over H4, which is about
+    // cost at scale. H4's advice still holds inside that limit, so it's added here
+    // instead of being lost.
+    id: "H6",
+    group: "Hosting",
+    if: "Only some AI providers are available where you operate, and a large organisation runs AI hundreds of times a day",
+    then: "Keep to the models available there, and plan your own hardware with open-weight models for the steady bulk of the work.",
+    basis: src("notes", "pabani", "mindstudio", "costResearch"),
+    kb: ["D01", "M03", "D03"],
+    when: (a, d) => d.fired.includes("H1") && ai(a) && a.team === "large" && a.volume === "high",
+    apply: (d, a, why) => {
+      d.hosting = {
+        ...d.hosting!,
+        title: "Models available where you operate, your own hardware for the bulk",
+        body: "Use open-weight models, or providers that operate in your region. At your volume, per-use charges become the dominant cost: once the setup is proven with a regional provider, run open-weight models on your own hardware for the steady, predictable steps, because steady work keeps the hardware busy. Keep bursts and occasional work with the regional provider, and choose tools that let you switch models, so a change in access doesn't stop the business.",
+        also: [why(`You also said ${said(a, "volume")} and ${said(a, "team")}, so your own hardware pays off for the steady work.`)],
+      };
+    },
+  },
   // ------------------------------------------------------------ Models
   {
     id: "M1",
@@ -1274,11 +1321,11 @@ export const RULES: Rule[] = [
   {
     id: "G20",
     group: "Gotchas",
-    if: "Local or self-hosted infrastructure is recommended",
+    if: "Your own hardware is recommended (self-hosting, or local hardware for the steady bulk)",
     then: "Warn about upfront cost.",
     basis: src("mindstudio", "costResearch"),
     kb: ["D03"],
-    when: (_a, d) => d.hosting?.title === "Local or self-hosted" || d.hosting?.title === "Cloud now, local for the steady bulk",
+    when: (_a, d) => ["H2", "H4", "H6"].some((id) => d.fired.includes(id)),
     apply: (d) => gotcha(d, { id: "G20", priority: 4, title: "Local is cheaper only once it's busy", body: "Your own hardware has a large upfront cost and needs looking after. It pays back through high, steady volume, not occasional use: idle hardware can cost more per task than the cloud." }, src("mindstudio", "costResearch")),
   },
   {
@@ -1292,6 +1339,17 @@ export const RULES: Rule[] = [
     apply: (d) => gotcha(d, { id: "G21", priority: 4, title: "n8n isn't open source", body: "n8n's licence lets you use and change it for your own internal business purposes. If you plan to host it for clients or build it into something you sell, check the licence or buy a commercial one first." }, src("n8nDocs")),
   },
 
+
+  {
+    id: "G22",
+    group: "Gotchas",
+    if: "LangGraph is recommended",
+    then: "Budget for a developer-owned service, persistent checkpoints and explicit action authorization.",
+    basis: design,
+    kb: ["J02", "J03"],
+    when: (_a, d) => hasTool(d, "langgraph"),
+    apply: (d) => gotcha(d, { id: "G22", priority: 2, title: "The graph needs an operating owner", body: "Your team owns the model adapters, hosting, checkpoint database and authenticated review interface. A paused graph is not an authorization system, and replay must not duplicate external actions." }, design),
+  },
 
   // ------------------------------------------------------------ First steps
   {
@@ -1320,7 +1378,7 @@ export const RULES: Rule[] = [
     when: () => true,
     apply: (d, a) => {
       const home = d.tools.find((t) => t.core)?.tool;
-      const where = home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" || home === "claude" ? "Claude" : "n8n";
+      const where = home === "langgraph" ? "LangGraph" : home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" || home === "claude" ? "Claude" : "n8n";
       const step =
         a.shape === "rules"
           ? `Build it in ${where} with a manual start button, and run it alongside the current process for two weeks before switching over.`

@@ -100,14 +100,20 @@ function label(n: BNode) {
   return `<b>${n.step}. ${h(n.name)}</b><br><font style="font-size:10px">${h(by)}</font>${gates}`;
 }
 
-function page(bp: Blueprint, name: string, title: string, subtitle: string, id: string): string {
+type Box = { x: number; y: number; w: number; h: number };
+
+/**
+ * One design's steps and connections, placed with its top-left at (ox, oy).
+ * Cell ids start with `id`, so several designs can share a page.
+ */
+function drawSteps(bp: Blueprint, id: string, parent: string, ox: number, oy: number): { cells: string[]; at: Map<string, Box>; box: Box } {
   const cells: string[] = [];
-  const at = new Map<string, { x: number; y: number; w: number; h: number }>();
+  const at = new Map<string, Box>();
   for (const n of bp.nodes) {
     const s = size(n.kind);
     const span = n.tracks[1] - n.tracks[0] + 1;
-    const x = LEFT + n.stage * (COL_W + GAP_X) + (COL_W - s.w) / 2;
-    const laneTop = TOP + n.tracks[0] * (ROW_H + GAP_Y);
+    const x = ox + n.stage * (COL_W + GAP_X) + (COL_W - s.w) / 2;
+    const laneTop = oy + n.tracks[0] * (ROW_H + GAP_Y);
     const laneH = span * ROW_H + (span - 1) * GAP_Y;
     const y = laneTop + (laneH - s.h) / 2;
     at.set(n.id, { x, y, ...s });
@@ -115,11 +121,12 @@ function page(bp: Blueprint, name: string, title: string, subtitle: string, id: 
     const tooltip = [`What happens: ${n.what}`, `Why it's here: ${n.why}`, `Passes on: ${n.passes}`].join("\n\n");
     cells.push(
       `<UserObject${attrs({ id: `${id}-${n.id}`, label: label(n), tooltip, ...d })}>` +
-        `<mxCell${attrs({ style: STYLE[n.kind], vertex: 1, parent: `${id}-layer` })}><mxGeometry${attrs({ x, y, width: s.w, height: s.h, as: "geometry" })}/></mxCell>` +
+        `<mxCell${attrs({ style: STYLE[n.kind], vertex: 1, parent })}><mxGeometry${attrs({ x, y, width: s.w, height: s.h, as: "geometry" })}/></mxCell>` +
         `</UserObject>`,
     );
   }
   const byId = new Map(bp.nodes.map((n) => [n.id, n]));
+  let low = Math.max(...[...at.values()].map((r) => r.y + r.h));
   bp.edges.forEach((e, i) => {
     const loop = e.style !== "flow";
     const from = byId.get(e.from)!;
@@ -130,6 +137,13 @@ function page(bp: Blueprint, name: string, title: string, subtitle: string, id: 
     // takes a detour above (top lane) or below the steps in between.
     let points = "";
     let ends = "";
+    // An arrow to the next column but another lane leaves to the right and
+    // enters from the left, so it turns in the gap, not through a step.
+    if (!loop && to.stage - from.stage === 1 && Math.abs(a.y + a.h / 2 - (b.y + b.h / 2)) > 1) {
+      const mid = (a.x + a.w + b.x) / 2;
+      points = `<Array as="points"><mxPoint x="${mid}" y="${a.y + a.h / 2}"/><mxPoint x="${mid}" y="${b.y + b.h / 2}"/></Array>`;
+      ends = "exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;";
+    }
     if (!loop && to.stage - from.stage > 1) {
       const between = bp.nodes.filter((n) => n.stage > from.stage && n.stage < to.stage).map((n) => at.get(n.id)!);
       const y1 = a.y + a.h / 2;
@@ -138,6 +152,7 @@ function page(bp: Blueprint, name: string, title: string, subtitle: string, id: 
       if (blocked) {
         const above = from.tracks[0] === 0 && to.tracks[0] === 0;
         const y = above ? Math.min(a.y, b.y, ...between.map((r) => r.y)) - 30 : Math.max(a.y + a.h, b.y + b.h, ...between.map((r) => r.y + r.h)) + 30;
+        if (!above) low = Math.max(low, y);
         points = `<Array as="points"><mxPoint x="${a.x + a.w + 20}" y="${y}"/><mxPoint x="${b.x - 20}" y="${y}"/></Array>`;
         ends = "exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;";
       }
@@ -147,35 +162,45 @@ function page(bp: Blueprint, name: string, title: string, subtitle: string, id: 
       ends +
       (loop ? "dashed=1;curved=1;" : "");
     cells.push(
-      `<mxCell${attrs({ id: `${id}-e${i}`, value: e.label, style, edge: 1, parent: `${id}-layer`, source: `${id}-${e.from}`, target: `${id}-${e.to}` })}><mxGeometry relative="1" as="geometry">${points}</mxGeometry></mxCell>`,
+      `<mxCell${attrs({ id: `${id}-e${i}`, value: e.label, style, edge: 1, parent, source: `${id}-${e.from}`, target: `${id}-${e.to}` })}><mxGeometry relative="1" as="geometry">${points}</mxGeometry></mxCell>`,
     );
   });
   // Stage captions ("At the same time") above their column.
   for (const [stage, text] of Object.entries(bp.captions)) {
     const inStage = bp.nodes.filter((n) => n.stage === Number(stage));
     if (!inStage.length) continue;
-    const x = LEFT + Number(stage) * (COL_W + GAP_X);
+    const x = ox + Number(stage) * (COL_W + GAP_X);
     const top = Math.min(...inStage.map((n) => at.get(n.id)!.y));
     cells.push(
-      `<mxCell${attrs({ id: `${id}-c${stage}`, value: text.toUpperCase(), style: "text;html=1;align=center;fontSize=10;fontColor=#7f8d87;fontFamily=Helvetica;", vertex: 1, parent: `${id}-layer` })}><mxGeometry${attrs({ x, y: top - 28, width: COL_W, height: 20, as: "geometry" })}/></mxCell>`,
+      `<mxCell${attrs({ id: `${id}-c${stage}`, value: text.toUpperCase(), style: "text;html=1;align=center;fontSize=10;fontColor=#7f8d87;fontFamily=Helvetica;", vertex: 1, parent })}><mxGeometry${attrs({ x, y: top - 28, width: COL_W, height: 20, as: "geometry" })}/></mxCell>`,
     );
   }
-  // Title and key.
-  cells.push(
-    `<mxCell${attrs({ id: `${id}-title`, value: `<b style="font-size:20px">${h(title)}</b><br><font color="#4d5b55">${h(subtitle)}</font>`, style: "text;html=1;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;fontColor=#13201b;", vertex: 1, parent: `${id}-layer` })}><mxGeometry${attrs({ x: LEFT, y: 20, width: 900, height: 50, as: "geometry" })}/></mxCell>`,
-  );
-  const kinds = [...new Set(bp.nodes.map((n) => n.kind))].filter((k) => k !== "end");
-  kinds.forEach((k, i) => {
-    cells.push(
-      `<mxCell${attrs({ id: `${id}-key-${k}`, value: k === "start" ? "Start / finish" : KIND_LABEL[k], style: STYLE[k].replace(/strokeWidth=2;/, ""), vertex: 1, parent: `${id}-layer` })}><mxGeometry${attrs({ x: LEFT + i * 150, y: 82, width: 135, height: 34, as: "geometry" })}/></mxCell>`,
+  const right = Math.max(...[...at.values()].map((r) => r.x + r.w));
+  return { cells, at, box: { x: ox, y: oy, w: right - ox, h: low - oy } };
+}
+
+const titleCell = (id: string, parent: string, title: string, subtitle: string, y = 20) =>
+  `<mxCell${attrs({ id: `${id}-title`, value: `<b style="font-size:20px">${h(title)}</b><br><font color="#4d5b55">${h(subtitle)}</font>`, style: "text;html=1;align=left;verticalAlign=top;fontFamily=Helvetica;fontSize=13;fontColor=#13201b;", vertex: 1, parent })}><mxGeometry${attrs({ x: LEFT, y, width: 900, height: 50, as: "geometry" })}/></mxCell>`;
+
+/** The key: one sample shape for each kind of step on the page. */
+function keyCells(id: string, parent: string, kinds: NodeKind[]): string[] {
+  return [...new Set(kinds)]
+    .filter((k) => k !== "end")
+    .map(
+      (k, i) =>
+        `<mxCell${attrs({ id: `${id}-key-${k}`, value: k === "start" ? "Start / finish" : KIND_LABEL[k], style: STYLE[k].replace(/strokeWidth=2;/, ""), vertex: 1, parent })}><mxGeometry${attrs({ x: LEFT + i * 150, y: 82, width: 135, height: 34, as: "geometry" })}/></mxCell>`,
     );
-  });
-  return (
-    `<diagram${attrs({ id, name })}><mxGraphModel${attrs({ grid: 1, gridSize: 10, guides: 1, tooltips: 1, connect: 1, arrows: 1, fold: 1, page: 0, pageScale: 1, math: 0, shadow: 0 })}><root>` +
-    `<mxCell id="${id}-root"/><mxCell id="${id}-layer" parent="${id}-root"/>` +
-    cells.join("") +
-    `</root></mxGraphModel></diagram>`
-  );
+}
+
+const diagram = (id: string, name: string, cells: string[]) =>
+  `<diagram${attrs({ id, name })}><mxGraphModel${attrs({ grid: 1, gridSize: 10, guides: 1, tooltips: 1, connect: 1, arrows: 1, fold: 1, page: 0, pageScale: 1, math: 0, shadow: 0 })}><root>` +
+  `<mxCell id="${id}-root"/><mxCell id="${id}-layer" parent="${id}-root"/>` +
+  cells.join("") +
+  `</root></mxGraphModel></diagram>`;
+
+function page(bp: Blueprint, name: string, title: string, subtitle: string, id: string): string {
+  const layer = `${id}-layer`;
+  return diagram(id, name, [...drawSteps(bp, id, layer, LEFT, TOP).cells, titleCell(id, layer, title, subtitle), ...keyCells(id, layer, bp.nodes.map((n) => n.kind))]);
 }
 
 /** The recommended design and the simpler start, as a two-page draw.io file. */
@@ -188,4 +213,85 @@ export function drawioXml(x: { task: string; design: Blueprint; source: "ai" | "
       page(x.simpler, "Simpler start", x.task, `${x.simpler.title} · Simpler start`, "simpler") +
       `</mxfile>`,
   ].join("\n");
+}
+
+// ------------------------------------------------------------------ a whole process
+
+/** One job of a process, with the design its own result shows. */
+export type SystemJob = { task: string; design: Blueprint; source: "ai" | "rules" };
+
+const BAND_PAD = 24;
+const BAND_HEAD = 64;
+const BAND_GAP = 150;
+const HANDOFF_STYLE =
+  "edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontFamily=Helvetica;fontSize=11;fontStyle=1;fontColor=#9a3412;strokeColor=#ea580c;strokeWidth=2;dashed=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;";
+
+/** Where a job's work ends: its last finish step (the usual outcome, after any early exits). */
+const lastFinish = (bp: Blueprint) => [...bp.nodes].reverse().find((n) => n.kind === "end") ?? bp.nodes[bp.nodes.length - 1];
+
+/**
+ * A process as one draw.io file. The first page is the whole system: every
+ * job's design in its own band, top to bottom in the order work flows, joined
+ * by the handoffs (through the system that carries each one). Then each job's
+ * design has a page of its own.
+ */
+export function drawioSystemXml(x: { title: string; jobs: SystemJob[]; handoffs: { from: number; to: number; via: string; when: string }[] }): string {
+  const id = "system";
+  const layer = `${id}-layer`;
+  const cells: string[] = [];
+  const bands: { box: Box; start: string; end: string; endBox: Box; startBox: Box }[] = [];
+  let top = TOP + 10;
+  x.jobs.forEach((job, j) => {
+    const jid = `${id}-j${j + 1}`;
+    const drawn = drawSteps(job.design, jid, layer, LEFT + BAND_PAD, top + BAND_HEAD);
+    const band: Box = { x: LEFT, y: top, w: drawn.box.w + BAND_PAD * 2, h: BAND_HEAD + drawn.box.h + BAND_PAD + 10 };
+    const by = job.source === "ai" ? "designed by AI, checked against the rules" : "from the guide's rules";
+    // The band goes first so the steps sit on top of it.
+    cells.push(
+      `<mxCell${attrs({
+        id: `${jid}-band`,
+        value: `<b style="font-size:15px">Job ${j + 1} · ${h(job.task)}</b><br><font style="font-size:11px" color="#4d5b55">${h(job.design.title)} · ${h(by)}</font>`,
+        style: "rounded=1;arcSize=2;html=1;whiteSpace=wrap;fillColor=#f7f9f8;strokeColor=#c9d4cf;verticalAlign=top;align=left;spacingLeft=16;spacingTop=8;fontFamily=Helvetica;fontColor=#13201b;container=0;",
+        vertex: 1,
+        parent: layer,
+      })}><mxGeometry${attrs({ x: band.x, y: band.y, width: band.w, height: band.h, as: "geometry" })}/></mxCell>`,
+      ...drawn.cells,
+    );
+    const end = lastFinish(job.design);
+    const start = job.design.nodes[0];
+    bands.push({ box: band, start: `${jid}-${start.id}`, end: `${jid}-${end.id}`, startBox: drawn.at.get(start.id)!, endBox: drawn.at.get(end.id)! });
+    top += band.h + BAND_GAP;
+  });
+
+  // Each handoff passes through the system that carries it, drawn in the gap
+  // after the job it leaves. The arrow leaves the job's last finish to the
+  // right, outside its band, so it never crosses the job's own connections.
+  const right = Math.max(...bands.map((b) => b.box.x + b.box.w));
+  x.handoffs.forEach((hf, i) => {
+    const a = bands[hf.from];
+    const b = bands[hf.to];
+    if (!a || !b) return;
+    const sid = `${id}-h${i + 1}`;
+    const w = 170;
+    const hgt = 64;
+    const sx = a.box.x + a.box.w - w;
+    const sy = a.box.y + a.box.h + (BAND_GAP - hgt) / 2 + i * 6;
+    const lane = right + 40 + i * 20;
+    const when = `${hf.when.charAt(0).toUpperCase()}${hf.when.slice(1).replace(/\.$/, "")}`;
+    cells.push(
+      `<UserObject${attrs({ id: sid, label: `<b>${h(hf.via)}</b>`, tooltip: `Hands over when ${hf.when}`, "hands-over-when": hf.when, from: `Job ${hf.from + 1}`, to: `Job ${hf.to + 1}` })}>` +
+        `<mxCell${attrs({ style: STYLE.tool, vertex: 1, parent: layer })}><mxGeometry${attrs({ x: sx, y: sy, width: w, height: hgt, as: "geometry" })}/></mxCell></UserObject>`,
+      `<mxCell${attrs({ id: `${sid}-when`, value: `<b>Hands over</b> when ${h(when.charAt(0).toLowerCase() + when.slice(1))}`, style: "text;html=1;whiteSpace=wrap;align=right;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=#9a3412;", vertex: 1, parent: layer })}><mxGeometry${attrs({ x: sx - 440, y: sy, width: 420, height: hgt, as: "geometry" })}/></mxCell>`,
+      `<mxCell${attrs({ id: `${sid}-in`, style: `${HANDOFF_STYLE}exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;`, edge: 1, parent: layer, source: a.end, target: sid })}><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="${lane}" y="${a.endBox.y + a.endBox.h / 2}"/><mxPoint x="${lane}" y="${sy + hgt / 2}"/></Array></mxGeometry></mxCell>`,
+      `<mxCell${attrs({ id: `${sid}-out`, value: `starts job ${hf.to + 1}`, style: `${HANDOFF_STYLE}exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;`, edge: 1, parent: layer, source: sid, target: b.start })}><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="${sx + w / 2}" y="${b.box.y - 24}"/><mxPoint x="${b.box.x - 20}" y="${b.box.y - 24}"/><mxPoint x="${b.box.x - 20}" y="${b.startBox.y + b.startBox.h / 2}"/></Array></mxGeometry></mxCell>`,
+    );
+  });
+
+  const kinds = x.jobs.flatMap((j) => j.design.nodes.map((n) => n.kind));
+  const subtitle = `${x.jobs.length} jobs, each designed for how it works, joined where one hands work to the next`;
+  const pages = [
+    diagram(id, "Whole system", [titleCell(id, layer, x.title, subtitle), ...keyCells(id, layer, [...kinds, "tool"]), ...cells]),
+    ...x.jobs.map((job, j) => page(job.design, `Job ${j + 1}`, job.task, `${job.design.title} · ${job.source === "ai" ? "Designed by AI, checked against the guide's rules" : "From the guide's rules"}`, `job${j + 1}`)),
+  ];
+  return ['<?xml version="1.0" encoding="UTF-8"?>', `<mxfile${attrs({ host: "blueprint studio", modified: new Date().toISOString(), type: "device" })}>` + pages.join("") + `</mxfile>`].join("\n");
 }

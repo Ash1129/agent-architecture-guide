@@ -9,14 +9,14 @@ import type { Recommendation } from "./rules";
 
 const MAX_TASK = 200;
 
-function toBase64Url(s: string): string {
+export function toBase64Url(s: string): string {
   const bytes = new TextEncoder().encode(s);
   let bin = "";
   bytes.forEach((b) => (bin += String.fromCharCode(b)));
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function fromBase64Url(s: string): string {
+export function fromBase64Url(s: string): string {
   const b64 = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
   const bin = atob(b64);
   return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
@@ -33,6 +33,11 @@ export function decodeAnswers(code: string): Answers | null {
   } catch {
     return null;
   }
+  return validateAnswers(raw);
+}
+
+/** Keeps only answers that fit the question definitions; null when there's nothing to read. */
+export function validateAnswers(raw: unknown): Answers | null {
   if (!raw || typeof raw !== "object") return null;
   const input = raw as Record<string, unknown>;
   const out: Record<string, unknown> = {};
@@ -67,7 +72,7 @@ export function resultUrl(a: Answers, base = window.location.href): string {
 }
 
 /** A plain-text version of the result, suitable for email, chat or a document. */
-export function resultAsText(r: Recommendation, link?: string, steps?: string[]): string {
+export function resultAsText(r: Recommendation, link?: string, steps?: string[], cost?: string[]): string {
   const lines: string[] = [];
   const add = (...l: string[]) => lines.push(...l);
   const flow = [TOPOLOGIES[r.topology.primary].name, ...r.topology.addOns.map((t) => TOPOLOGIES[t].name)].join(", then ");
@@ -91,6 +96,7 @@ export function resultAsText(r: Recommendation, link?: string, steps?: string[])
   } else {
     add(`MODELS`, "No AI model is needed for this task.", "");
   }
+  if (cost?.length) add(`COST AND EFFORT (ESTIMATE)`, ...cost, "");
   add(`SIMPLER WAY TO START`, `${r.simpler.title}. ${r.simpler.body}`, "");
   add(`GOTCHAS`, ...r.gotchas.map((g) => `- ${g.title}. ${g.body}`), "");
   add(`FIRST STEPS`, ...r.firstSteps.map((s, i) => `${i + 1}. ${s}`));

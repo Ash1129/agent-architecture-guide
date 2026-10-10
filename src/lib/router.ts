@@ -14,6 +14,10 @@ export type Route =
   | { name: "details" }
   /** The answers at a glance, after a problem was described on the start page. */
   | { name: "review" }
+  /** A described problem read as several jobs, for the owner to confirm. */
+  | { name: "split" }
+  /** Several jobs designed as one process, joined by their handoffs. */
+  | { name: "process"; code?: string }
   | { name: "result"; code?: string; view?: ResultView }
   | { name: "how"; section?: string }
   | { name: "history" };
@@ -23,6 +27,7 @@ export function parseHash(hash: string): Route {
   const parts = path.split("/").filter(Boolean);
   if (parts[0] === "guide" && parts[1] === "details") return { name: "details" };
   if (parts[0] === "guide" && parts[1] === "review") return { name: "review" };
+  if (parts[0] === "guide" && parts[1] === "split") return { name: "split" };
   if (parts[0] === "guide" && parts[1] && parts[1] in QUESTION_BY_ID) {
     return { name: "guide", q: parts[1] as QuestionId };
   }
@@ -33,6 +38,7 @@ export function parseHash(hash: string): Route {
     const v = params.get("v") as ResultView | null;
     return { name: "result", code, ...(v && VIEWS.includes(v) && v !== "solution" ? { view: v } : {}) };
   }
+  if (parts[0] === "process") return { name: "process", code: new URLSearchParams(query).get("p") ?? undefined };
   if (parts[0] === "how") return { name: "how", section: parts[1] };
   if (parts[0] === "history") return { name: "history" };
   return { name: "home" };
@@ -48,6 +54,10 @@ export function href(route: Route): string {
       return "#/guide/details";
     case "review":
       return "#/guide/review";
+    case "split":
+      return "#/guide/split";
+    case "process":
+      return route.code ? `#/process?p=${route.code}` : "#/process";
     case "result": {
       const q = [route.code && `a=${route.code}`, route.view && route.view !== "solution" && `v=${route.view}`].filter(Boolean).join("&");
       return q ? `#/result?${q}` : "#/result";

@@ -110,8 +110,8 @@ last_verified: 2026-10-05
   having staff to run the hardware. A large company with occasional use
   still pays for idle hardware.
 - Local hardware pays off only through **high, steady use**. Occasional or
-  uncertain volume favours paying per use. This supports rules H4, H5 and
-  G20.
+  uncertain volume favours paying per use. This supports rules H4, H5, H6
+  and G20.
 - Published break-even figures are a best case: they assume the hardware is
   always busy and leave out staff. A business without IT staff should not
   count on them (rule H3).

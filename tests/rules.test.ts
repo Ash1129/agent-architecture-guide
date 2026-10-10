@@ -166,6 +166,29 @@ describe("decision paths", () => {
     expect(r.simpler.title).toBe("One agent first");
   });
 
+  it("restricted region at high volume keeps to available models and adds own hardware for the bulk", () => {
+    // For example, a company in China, where OpenAI isn't available, running AI hundreds of times a day.
+    const a: Answers = { ...marketResearch, volume: "high" };
+    const r = recommend(a);
+    expect(r.fired).toEqual(expect.arrayContaining(["H1", "H6"]));
+    expect(r.fired).not.toContain("H4");
+    expect(r.hosting.title).toMatch(/available where you operate/);
+    expect(r.hosting.body).toMatch(/your own hardware/);
+    expect(r.hosting.why.ruleId).toBe("H1");
+    expect(r.hosting.also?.map((w) => w.ruleId)).toEqual(["H6"]);
+    expect(r.gotchas.map((g) => g.id)).toContain("G20");
+  });
+
+  it("restricted region at lower volume, or without a large organisation, stays with H1 alone", () => {
+    for (const a of [marketResearch, { ...marketResearch, volume: "high", team: "mid" } as Answers]) {
+      const r = recommend(a);
+      expect(r.fired).toContain("H1");
+      expect(r.fired).not.toContain("H6");
+      expect(r.hosting.also).toBeUndefined();
+      expect(r.gotchas.map((g) => g.id)).not.toContain("G20");
+    }
+  });
+
   it("scheduled agent without restrictions uses Claude as an agent", () => {
     const a: Answers = { ...marketResearch, location: "open", knowledge: ["none"], roles: "one" };
     expect(coreTool(a)).toBe("cowork");

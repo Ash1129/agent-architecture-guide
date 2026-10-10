@@ -13,7 +13,7 @@ import { type Recommendation, recommend } from "../src/lib/rules";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
-import { type Chunk, selectChunks } from "./knowledge";
+import { type Chunk, knowledgeFingerprint, selectChunks } from "./knowledge";
 import { type Complete, extractJson, openAIComplete } from "./ai";
 
 export type DesignEnv = { apiKey?: string; model?: string; cache?: Cache };
@@ -42,7 +42,7 @@ Return only the JSON object. No prose, no code fences.`;
 /** Changes whenever the instructions change, so old designs aren't reused. */
 export const DESIGN_VERSION = fingerprint(INSTRUCTIONS);
 
-export const designKey = (answers: Answers, model: string) => `${DESIGN_VERSION}:${model}:${resultCode(answers)}`;
+export const designKey = (answers: Answers, model: string) => `${DESIGN_VERSION}:${knowledgeFingerprint()}:${model}:${resultCode(answers)}`;
 
 /** What the checks need: the rules' design for these answers and the chunks the model was given. */
 function contextFor(answers: Answers) {

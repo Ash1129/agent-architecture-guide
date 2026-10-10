@@ -7,6 +7,7 @@ import type { IncomingMessage } from "node:http";
  * Serves the AI endpoints during local development, reading the OpenAI key
  * from .env on the server side only:
  *   POST /api/interview  adapts the guide's questions to a task
+ *   POST /api/split      reads a described problem into one or more jobs
  *   POST /api/design     drafts the architecture for a finished set of answers
  *   POST /api/kit        writes the task-specific text of the starter kit
  *   POST /api/tailor     tailors the n8n workflow to a finished design
@@ -40,6 +41,10 @@ function aiApi(): Plugin {
         "/api/kit": async (body) => {
           const [{ handleKit }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/kit.ts"), server.ssrLoadModule("/server/cache.ts")]);
           return handleKit(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+        },
+        "/api/split": async (body) => {
+          const [{ handleSplit }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/split.ts"), server.ssrLoadModule("/server/cache.ts")]);
+          return handleSplit(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
         },
         "/api/interview": async (body) => {
           const [{ handleInterview }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/interview.ts"), server.ssrLoadModule("/server/cache.ts")]);

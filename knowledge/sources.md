@@ -54,6 +54,10 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | anthropic-docs-models-overview | Anthropic. (n.d.). Models overview. Claude Platform documentation. https://platform.claude.com/docs/en/models/overview | C | 2026-10-05 |
 | anthropic-docs-choosing-a-model | Anthropic. (n.d.). Choosing a model. Claude Platform documentation. https://platform.claude.com/docs/en/about-claude/models/choosing-a-model | C | 2026-10-05 |
 | anthropic-docs-pricing | Anthropic. (n.d.). Pricing. Claude Platform documentation. https://platform.claude.com/docs/en/about-claude/pricing | C | 2026-10-05 |
+| claude-2026-plans-pricing | Anthropic. (n.d., read 2026). Pricing: plans and API. https://claude.com/pricing | C | 2026-10-10 |
+| n8n-2026-pricing | n8n. (n.d., read 2026). Plans and pricing. https://n8n.io/pricing/ | C | 2026-10-10 |
+| deepseek-docs-pricing | DeepSeek. (n.d., read 2026). Models & pricing. DeepSeek API documentation. https://api-docs.deepseek.com/quick_start/pricing | C | 2026-10-10 |
+| moonshot-docs-pricing | Moonshot AI. (n.d., read 2026). Chat model pricing. Kimi Open Platform documentation. https://platform.kimi.com/docs/pricing/chat | C | 2026-10-10 |
 | chen-2024-frugalgpt | Chen, L., Zaharia, M., & Zou, J. (2024). FrugalGPT: How to use large language models while reducing cost and improving performance. Transactions on Machine Learning Research (12/2024). arXiv:2305.05176 | A | 2026-10-05 |
 | ong-2025-routellm | Ong, I., Almahairi, A., Wu, V., Chiang, W.-L., Wu, T., Gonzalez, J. E., Kadous, M. W., & Stoica, I. (2025). RouteLLM: Learning to route LLMs from preference data. ICLR 2025. arXiv:2406.18665 | A | 2026-10-05 |
 | epoch-2026-open-closed-gap | Edwards, J., & Emberson, L. (2026, May 29). Open models lag state-of-the-art closed models by 4 months. Epoch AI Data Insight. https://epoch.ai/data-insights/open-closed-eci-gap | D | 2026-10-05 |
@@ -133,10 +137,73 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
   - **nous-hermes-site:** still unread.
   - **EU AI Act:** read from community copies of the Official Journal text
     on GitHub (see eu-2024-ai-act-high-risk).
-- **Site attributions to unread sources.** Rules H2-H5, G6 and G20 still name
+- **Site attributions to unread sources.** Rules H2-H6, G6 and G20 still name
   MindStudio, and G11-G12 name selfhosting.sh, as the team's sources. The
   knowledge base backs them through other chunks, not through those
   articles.
 - **"Anthropic. (2026). Claude Sonnet 5.5"** is listed in the team's
   bibliography as a tool used while researching. It is not a source of
   claims and is not cited here.
+
+## n8n engineering: sources read on 2026-10-10
+
+| ID | Source | Tier | Read |
+| --- | --- | --- | --- |
+| n8n-2026-data-structure | n8n. Official documentation. https://docs.n8n.io/build/work-with-data/understand-n8ns-data-structure.md | C | 2026-10-10 |
+| n8n-2026-item-linking | n8n. Official documentation. https://docs.n8n.io/build/work-with-data/reference-data/link-data-items/item-linking-errors.md | C | 2026-10-10 |
+| n8n-2026-merge | n8n. Official documentation. https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.merge | C | 2026-10-10 |
+| n8n-2026-subworkflows | n8n. Official documentation. https://docs.n8n.io/build/flow-logic/break-workflows-into-smaller-parts.md | C | 2026-10-10 |
+| n8n-2026-errors | n8n. Official documentation. https://docs.n8n.io/build/flow-logic/handle-errors-gracefully.md | C | 2026-10-10 |
+| n8n-2026-error-trigger | n8n. Official documentation. https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.errortrigger | C | 2026-10-10 |
+| n8n-2026-rate-limits | n8n. Official documentation. https://docs.n8n.io/integrations/builtin/handle-rate-limits.md | C | 2026-10-10 |
+| n8n-2026-http-request | n8n. Official documentation. https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest | C | 2026-10-10 |
+| n8n-2026-pinning | n8n. Official documentation. https://docs.n8n.io/build/work-with-data/pin-and-mock-data.md | C | 2026-10-10 |
+| n8n-2026-execution-data | n8n. Official documentation. https://docs.n8n.io/deploy/host-n8n/configure-n8n/scaling/manage-execution-data.md | C | 2026-10-10 |
+| n8n-2026-webhook | n8n. Official documentation. https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.webhook | C | 2026-10-10 |
+| n8n-2026-human-review | n8n. Official documentation. https://docs.n8n.io/build/integrate-ai/ai-examples/human-in-the-loop-for-tools.md | C | 2026-10-10 |
+| n8n-2026-credentials | n8n. Official documentation. https://docs.n8n.io/build/understand-workflows/create-and-edit-credentials.md | C | 2026-10-10 |
+| stripe-2026-idempotency | Stripe. Official documentation. https://docs.stripe.com/api/idempotent_requests | C | 2026-10-10 |
+
+## Airflow engineering: sources read on 2026-10-10
+
+| ID | Source | Tier | Read |
+| --- | --- | --- | --- |
+| airflow-2026-dag-runs | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dag-run.html | C | 2026-10-10 |
+| airflow-2026-assets | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/authoring-and-scheduling/asset-scheduling.html | C | 2026-10-10 |
+| airflow-2026-external-sensor | Apache Software Foundation. Official standard provider 1.20.0 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow-providers-standard/stable/sensors/external_task_sensor.html | C | 2026-10-10 |
+| airflow-2026-xcoms | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/xcoms.html | C | 2026-10-10 |
+| airflow-2026-best-practices | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/stable/best-practices.html | C | 2026-10-10 |
+| airflow-2026-tasks | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/tasks.html | C | 2026-10-10 |
+| airflow-2026-backfill | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/backfill.html | C | 2026-10-10 |
+| airflow-2026-callbacks | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/administration-and-deployment/logging-monitoring/callbacks.html | C | 2026-10-10 |
+| airflow-2026-public-interface | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/public-airflow-interface.html | C | 2026-10-10 |
+| airflow-2026-debug | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/core-concepts/debug.html | C | 2026-10-10 |
+| airflow-2026-secrets | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/security/secrets/secrets-backend/index.html | C | 2026-10-10 |
+| airflow-2026-pools | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/administration-and-deployment/pools.html | C | 2026-10-10 |
+| airflow-2026-deferring | Apache Software Foundation. Official Airflow 3.3.2 documentation, read at the linked page. https://airflow.apache.org/docs/apache-airflow/3.3.2/authoring-and-scheduling/deferring.html | C | 2026-10-10 |
+
+## Hermes engineering: sources read on 2026-10-10
+
+| ID | Source | Tier | Read |
+| --- | --- | --- | --- |
+| hermes-2026-security | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/security/ | C | 2026-10-10 |
+| hermes-2026-mcp | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp/ | C | 2026-10-10 |
+| hermes-2026-profiles | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/profiles/ | C | 2026-10-10 |
+| hermes-2026-memory | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/features/memory/ | C | 2026-10-10 |
+| hermes-2026-skills | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/features/skills/ | C | 2026-10-10 |
+| hermes-2026-cron | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/features/cron/ | C | 2026-10-10 |
+| hermes-2026-configuration | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/configuration/ | C | 2026-10-10 |
+| hermes-2026-recovery | Nous Research. Official Hermes Agent documentation. https://hermes-agent.nousresearch.com/docs/user-guide/session-storage-recovery/ | C | 2026-10-10 |
+
+## LangGraph, testing and observability: sources read on 2026-10-10
+
+| ID | Source | Tier | Read |
+| --- | --- | --- | --- |
+| langgraph-2026-overview | Official product documentation. https://docs.langchain.com/oss/python/langgraph/overview | C | 2026-10-10 |
+| langgraph-2026-graph-api | Official product documentation. https://docs.langchain.com/oss/python/langgraph/graph-api | C | 2026-10-10 |
+| langgraph-2026-persistence | Official product documentation. https://docs.langchain.com/oss/python/langgraph/persistence | C | 2026-10-10 |
+| langgraph-2026-interrupts | Official product documentation. https://docs.langchain.com/oss/python/langgraph/interrupts | C | 2026-10-10 |
+| promptfoo-2026-intro | Official product documentation. https://www.promptfoo.dev/docs/intro/ | C | 2026-10-10 |
+| promptfoo-2026-assertions | Official product documentation. https://www.promptfoo.dev/docs/configuration/expected-outputs/ | C | 2026-10-10 |
+| langfuse-2026-overview | Official product documentation. https://langfuse.com/docs | C | 2026-10-10 |
+| langfuse-2026-masking | Official product documentation. https://langfuse.com/docs/observability/features/masking | C | 2026-10-10 |

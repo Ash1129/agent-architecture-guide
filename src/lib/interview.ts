@@ -163,8 +163,8 @@ export function validateDetailAnswers(v: unknown): Detail[] | undefined {
   return out;
 }
 
-/** The longest problem description the start page sends to be read (the survey's task stays a short title). */
-export const MAX_DESCRIPTION = 600;
+/** The longest description the questions are adapted from: a short problem, or one job of a longer one (the survey's task stays a short title). */
+export const MAX_DESCRIPTION = 1000;
 /** The longest task title, as carried in answers and share links. */
 export const MAX_TASK_TITLE = 200;
 

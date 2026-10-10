@@ -11,11 +11,19 @@ import type { Blueprint } from "../src/lib/blueprint";
 import type { KbChunk } from "../src/lib/design";
 import { MODEL_RULES } from "../src/lib/models";
 import { RULES, type Recommendation } from "../src/lib/rules";
+import { fingerprint } from "../src/lib/tailored";
 
 export type Chunk = KbChunk & { text: string };
 
 const ALWAYS = ["P01"];
-export const MAX_CHUNKS = 8;
+// Three mandatory kit chunks plus four platforms and shared AI quality guidance.
+export const MAX_CHUNKS = 17;
+export const N8N_ENGINEERING = ["N01", "N02", "N03"];
+export const AIRFLOW_ENGINEERING = ["R01", "R02", "R03"];
+export const HERMES_ENGINEERING = ["H01", "H02", "H03"];
+export const LANGGRAPH_ENGINEERING = ["J01", "J02", "J03"];
+export const AI_QUALITY = ["O01", "O02"];
+const RETRIEVAL_VERSION = "platform-engineering-4";
 
 let cache: Map<string, Chunk> | undefined;
 
@@ -34,6 +42,11 @@ export function loadChunks(root = join(process.cwd(), "knowledge", "chunks")): M
   return (cache = out);
 }
 
+/** Invalidate generated results when evidence or retrieval policy changes. */
+export function knowledgeFingerprint(all = loadChunks()): string {
+  return fingerprint(JSON.stringify([RETRIEVAL_VERSION, [...all.values()].sort((a, b) => a.id.localeCompare(b.id))]));
+}
+
 /** The chunks most relevant to this design, most relevant first. */
 export function selectChunks(r: Recommendation, baseline: Blueprint, all = loadChunks(), max = MAX_CHUNKS, always = ALWAYS): Chunk[] {
   const score = new Map<string, number>();
@@ -45,6 +58,21 @@ export function selectChunks(r: Recommendation, baseline: Blueprint, all = loadC
     if (n.engine?.kind === "model") add(MODEL_RULES.find((m) => m.role === (n.engine as { role: string }).role)?.kb ?? [], 1);
   }
   always.forEach((id, i) => add([id], 1000 - i));
+  // Reserve engineering context for every n8n role, including a Hermes handoff.
+  // Keep the caller's mandatory chunks first and the shared budget intact.
+  if (r.tools.some(({ tool }) => tool === "n8n" || tool === "n8n-agent")) {
+    N8N_ENGINEERING.forEach((id, i) => add([id], 500 - i));
+  }
+  if (r.tools.some(({ tool }) => tool === "airflow")) {
+    AIRFLOW_ENGINEERING.forEach((id, i) => add([id], 500 - i));
+  }
+  if (r.tools.some(({ tool }) => tool === "hermes")) {
+    HERMES_ENGINEERING.forEach((id, i) => add([id], 500 - i));
+  }
+  if (r.tools.some(({ tool }) => tool === "langgraph")) {
+    LANGGRAPH_ENGINEERING.forEach((id, i) => add([id], 500 - i));
+  }
+  if (r.models.needed) AI_QUALITY.forEach((id, i) => add([id], 450 - i));
   return [...score]
     .filter(([id]) => all.has(id))
     .sort(([x, a], [y, b]) => b - a || x.localeCompare(y))

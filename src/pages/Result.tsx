@@ -24,6 +24,7 @@ import {
   Play,
   X,
   FileCode,
+  CurrencyDollar,
 } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
@@ -33,9 +34,10 @@ import { Walkthrough } from "../components/Walkthrough";
 import { StarterKit, type TailoringState } from "../components/StarterKit";
 import { keySteps, leadStep } from "../components/ArchitectureArt";
 import { BuildInvite } from "../components/BuildInvite";
-import { StudioShell } from "../components/StudioShell";
+import { type SystemNav, StudioShell } from "../components/StudioShell";
 import { buildStarterKit, slugify } from "../lib/starter";
 import { drawioXml } from "../lib/exportxml";
+import { type CostEstimate, PRICES_CHECKED, costLines, estimateCost, hoursRange, moneyRange, weeksRange } from "../lib/cost";
 import { AutonomyScale, Ladder } from "../components/Scales";
 import { ModelGuidance, StepPanel } from "../components/StepPanel";
 import { BasisLabel, Term, WhyList, btn } from "../components/ui";
@@ -78,11 +80,13 @@ type Props = {
   view: ResultView;
   onView: (view: ResultView) => void;
   historyCount: number;
+  /** When this result is one job of a process: the process's place in the sidebar. */
+  system?: SystemNav;
 };
 
-export function Result({ answers, saved = false, onChange, onStartOver, invalidLink, view, onView, historyCount }: Props) {
+export function Result({ answers, saved = false, onChange, onStartOver, invalidLink, view, onView, historyCount, system }: Props) {
   if (!isComplete(answers)) return <NotReady answers={answers} invalidLink={invalidLink} onStartOver={onStartOver} />;
-  return <Ready answers={answers} saved={saved} onChange={onChange} onStartOver={onStartOver} view={view} onView={onView} historyCount={historyCount} />;
+  return <Ready answers={answers} saved={saved} onChange={onChange} onStartOver={onStartOver} view={view} onView={onView} historyCount={historyCount} system={system} />;
 }
 
 // ------------------------------------------------------------------ empty state
@@ -152,7 +156,7 @@ function Actions({ r, bp, answers, onEdit }: { r: Recommendation; bp: Blueprint;
           <PencilSimple size={16} aria-hidden />
           Edit answers
         </button>
-        <button type="button" className={btn.small} onClick={() => copy("text", resultAsText(r, link, flowAsText(bp)))}>
+        <button type="button" className={btn.small} onClick={() => copy("text", resultAsText(r, link, flowAsText(bp), costLines(estimateCost(r, bp, answers))))}>
           {copied === "text" ? <Check size={16} weight="bold" aria-hidden /> : <Copy size={16} aria-hidden />}
           {copied === "text" ? "Copied" : "Copy summary"}
         </button>
@@ -443,6 +447,66 @@ function Compare({ r, full, simple }: { r: Recommendation; full: Blueprint; simp
 }
 
 /** Which model or method runs where, at a glance. Each chip jumps to its first step. */
+/** What it costs to run and build, as ranges, with what each figure assumes. */
+export function CostBreakdown({ cost }: { cost: CostEstimate }) {
+  const runs = cost.runsPerMonth.map((n) => n.toLocaleString("en-US")).join("–");
+  const card = (title: string, figure: string, children: ReactNode) => (
+    <li className="rounded-2xl border border-line p-5">
+      <p className="text-[12.5px] font-medium text-muted">{title}</p>
+      <p className="mt-0.5 text-[20px] font-semibold tracking-tight text-ink">{figure}</p>
+      <div className="mt-2 space-y-1.5 text-[14px] leading-relaxed text-muted">{children}</div>
+    </li>
+  );
+  return (
+    <>
+      <p className="max-w-[65ch] text-[14px] text-muted">
+        Estimates, always as ranges. Prices as of {PRICES_CHECKED}; build and review time are the guide's own estimates.{" "}
+        <a href={href({ name: "how", section: "cost" })} className="text-accent underline-offset-4 hover:underline">
+          How these are estimated
+        </a>
+      </p>
+      <ul className="mt-4 grid gap-3 md:grid-cols-2">
+        {card(
+          "Running cost",
+          `${moneyRange(cost.monthly)} a month`,
+          <>
+            <p>For {runs} runs a month.</p>
+            {cost.models &&
+              (cost.models.includedInPlan ? (
+                <p>
+                  AI models: included in the {cost.platform.label} plan, within its usage limits. The same work on the API would cost{" "}
+                  {moneyRange(cost.models.perThousand)} per 1,000 runs.
+                </p>
+              ) : (
+                <p>
+                  AI models: {moneyRange(cost.models.perThousand)} per 1,000 runs, {moneyRange(cost.models.perMonth)} a month.
+                  {cost.models.savings.length > 0 && <> The low end assumes {cost.models.savings.join(" and ")}.</>}
+                </p>
+              ))}
+            <p>
+              {cost.platform.label}: {cost.platform.perMonth ? `${moneyRange(cost.platform.perMonth)} a month. ` : ""}
+              {cost.platform.note}
+            </p>
+          </>,
+        )}
+        {card(
+          "Build",
+          weeksRange(cost.build.weeks),
+          <>
+            <p>
+              For a first version of {cost.build.what}
+              {cost.build.drivers.length > 0 ? `, with extra time because ${cost.build.drivers.join(", and ")}` : ""}.
+            </p>
+            <p>{cost.build.who}</p>
+          </>,
+        )}
+        {cost.review && card("Review time", `${hoursRange(cost.review.hoursPerWeek)} a week`, <p>{cost.review.note}</p>)}
+        {cost.hardware && card("Own hardware", `${moneyRange(cost.hardware.upfront)} upfront`, <p>{cost.hardware.when}</p>)}
+      </ul>
+    </>
+  );
+}
+
 function CheckList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2.5">
@@ -466,6 +530,7 @@ function Ready({
   view,
   onView,
   historyCount,
+  system,
 }: {
   answers: Answers;
   saved: boolean;
@@ -474,6 +539,7 @@ function Ready({
   view: ResultView;
   onView: (view: ResultView) => void;
   historyCount: number;
+  system?: SystemNav;
 }) {
   const r = useMemo(() => recommend(answers), [answers]);
   const ruleDesign = useMemo(() => buildBlueprint(r, answers), [r, answers]);
@@ -635,6 +701,7 @@ function Ready({
   const designCount = RULES.filter((x) => r.fired.includes(x.id) && x.basis.kind === "design").length;
 
   const plan = modelPlan(full);
+  const cost = useMemo(() => estimateCost(r, full, answers), [r, full, answers]);
   const SHORT_TITLE = { automation: "Plain automation, no AI", workflow: "A workflow with AI steps", agent: "One AI agent", multi: "A coordinator with specialist agents" };
   const facts: { label: string; value: string; icon: ReactNode }[] = [
     { label: "Agents", value: r.approach.agents, icon: <Robot size={15} aria-hidden /> },
@@ -648,6 +715,7 @@ function Ready({
     { label: "Main tool", value: TOOLS[core.tool].name, icon: <Toolbox size={15} aria-hidden /> },
     { label: "Autonomy", value: `Level ${r.autonomy.level}: ${AUTONOMY[r.autonomy.level].name}`, icon: <UserCheck size={15} aria-hidden /> },
     { label: "Runs on", value: r.hosting.title, icon: <Cloud size={15} aria-hidden /> },
+    { label: "Running cost (estimate)", value: `About ${moneyRange(cost.monthly)} a month`, icon: <CurrencyDollar size={15} aria-hidden /> },
   ];
 
   // ---------------------------------------------------------------- shared pieces of the three views
@@ -883,8 +951,12 @@ function Ready({
             <div className="mt-6 border-t border-line pt-5">
               <h3 className="text-[15px] font-semibold text-ink">Where it runs: {r.hosting.title}</h3>
               <p className="mt-1.5 max-w-[65ch] text-[14.5px] leading-relaxed text-muted">{r.hosting.body}</p>
-              <WhyList items={[r.hosting.why]} className="mt-4" />
+              <WhyList items={[r.hosting.why, ...(r.hosting.also ?? [])]} className="mt-4" />
             </div>
+          </Disclosure>
+
+          <Disclosure id="cost" title="Cost and effort" meta={`About ${moneyRange(cost.monthly)} a month to run. ${weeksRange(cost.build.weeks)} to build a first version.`}>
+            <CostBreakdown cost={cost} />
           </Disclosure>
 
           <Disclosure id="autonomy" title="Autonomy and safeguards" meta={`Level ${r.autonomy.level} of 4: ${AUTONOMY[r.autonomy.level].name}.`}>
@@ -1221,7 +1293,7 @@ function Ready({
   );
 
   return (
-    <StudioShell view={view} onView={go} historyCount={historyCount} building={building}>
+    <StudioShell view={view} onView={go} historyCount={historyCount} building={building} system={system}>
       {walking && <Walkthrough bp={bp} onClose={endWalk} />}
       <main id="main" className={`studio-page${view === "workflow" ? " is-wide" : ""}`}>
         {/* A new view swaps in at once and fades up; it never waits on the old one to leave. */}

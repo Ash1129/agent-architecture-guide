@@ -141,7 +141,7 @@ describe("AI design hard limits", () => {
 });
 
 describe("knowledge retrieval for the design", () => {
-  it("picks at most eight real chunks, always including the workflow patterns, the same way every time", async () => {
+  it("respects the chunk budget, always including the workflow patterns, the same way every time", async () => {
     const { loadChunks, selectChunks, MAX_CHUNKS } = await import("../server/knowledge");
     const all = loadChunks();
     for (const a of [emails, invoices]) {

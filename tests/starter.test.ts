@@ -36,7 +36,7 @@ describe("starter kit for named designs", () => {
   it("customer support: a paste-ready n8n workflow with the brief built in", () => {
     const { files, tools } = kit(support);
     // MCP lives inside the workflow as a tool node; the playbook lives in the agent's instructions.
-    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "system-prompt.md", "n8n/workflow.json", "evals/examples.csv"]);
+    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "system-prompt.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "evals/ENGINEERING.md", "observability/ENGINEERING.md", "evals/examples.csv"]);
     expect(tools.map((t) => [t.id, t.action.label])).toEqual([["n8n", "Copy for n8n"]]);
     const agent = JSON.parse(file(files, "n8n/workflow.json")!.content).nodes.find((n: { type: string }) => n.type === "@n8n/n8n-nodes-langchain.agent");
     expect(agent.parameters.options.systemMessage).toBe(file(files, "system-prompt.md")!.content);
@@ -83,9 +83,14 @@ describe("starter kit for named designs", () => {
 
   it("rules-only automation: no model, decision table, n8n with IF branches", () => {
     const { files } = kit(reminders);
-    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "n8n/workflow.json", "rules/decision-table.csv", "evals/examples.csv"]);
+    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "rules/decision-table.csv", "evals/examples.csv"]);
     const wf = JSON.parse(file(files, "n8n/workflow.json")!.content);
     expect(wf.nodes.filter((n: { type: string }) => n.type === "n8n-nodes-base.if")).toHaveLength(1);
+    expect(wf.active).toBe(false);
+    // "no match" contains "match": substring comparisons silently take the wrong action.
+    const condition = wf.nodes.find((n: { type: string }) => n.type === "n8n-nodes-base.if").parameters.conditions.string[0];
+    expect(condition.operation).toBe("equal");
+    expect(condition.value2).toBe("match");
     expect(file(files, "BUILD.md")!.content).toMatch(/No AI model/);
   });
 

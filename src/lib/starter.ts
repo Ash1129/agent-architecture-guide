@@ -5,11 +5,28 @@
 // file is enough.
 
 import { AUTONOMY, LAST_REVIEWED, TOOLS, TOPOLOGIES } from "./catalog";
+import { costLines, estimateCost } from "./cost";
 import { type BNode, type Blueprint, KIND_LABEL, incoming, outgoing } from "./blueprint";
 import type { ModelId } from "./models";
 import { type Answers, effectiveAnswers, said } from "./questions";
 import { type KitText, csvCell } from "./kittext";
 import type { Recommendation } from "./rules";
+import n8nData from "../../knowledge/chunks/09-n8n-engineering/N01-data-contracts-and-item-linking.md?raw";
+import n8nRecovery from "../../knowledge/chunks/09-n8n-engineering/N02-failure-recovery-and-testing.md?raw";
+import n8nActions from "../../knowledge/chunks/09-n8n-engineering/N03-safe-external-actions.md?raw";
+import airflowData from "../../knowledge/chunks/10-airflow-engineering/R01-data-intervals-and-dependencies.md?raw";
+import airflowRecovery from "../../knowledge/chunks/10-airflow-engineering/R02-retries-backfills-and-failure-signals.md?raw";
+import airflowOperations from "../../knowledge/chunks/10-airflow-engineering/R03-testing-security-and-operation.md?raw";
+import hermesActions from "../../knowledge/chunks/11-hermes-engineering/H01-tool-boundaries-and-actions.md?raw";
+import hermesLearning from "../../knowledge/chunks/11-hermes-engineering/H02-memory-and-skill-review.md?raw";
+import hermesRecovery from "../../knowledge/chunks/11-hermes-engineering/H03-unattended-operation-and-recovery.md?raw";
+
+import { langgraphKit } from "./langgraph-kit";
+import langgraphState from "../../knowledge/chunks/12-langgraph-engineering/J01-state-and-agent-boundaries.md?raw";
+import langgraphPersistence from "../../knowledge/chunks/12-langgraph-engineering/J02-persistence-and-replay.md?raw";
+import langgraphReview from "../../knowledge/chunks/12-langgraph-engineering/J03-human-review-and-deployment.md?raw";
+import aiEvaluations from "../../knowledge/chunks/13-testing-and-observability/O01-evaluations-and-release-gates.md?raw";
+import aiTracing from "../../knowledge/chunks/13-testing-and-observability/O02-tracing-privacy-and-cost.md?raw";
 
 export type KitFile = {
   path: string;
@@ -20,7 +37,7 @@ export type KitFile = {
 
 /** A ready-to-use artifact for one external tool, with the one action needed to use it. */
 export type KitTool = {
-  id: "n8n" | "claude-plugin" | "hermes" | "airflow";
+  id: "n8n" | "claude-plugin" | "hermes" | "airflow" | "langgraph";
   name: string;
   how: string;
   action:
@@ -60,6 +77,15 @@ const fence = (lang: string, body: string) => "```" + lang + "\n" + body.trimEnd
 const has = (r: Recommendation, t: string) => r.tools.some((x) => x.tool === t);
 const coreOf = (r: Recommendation) => r.tools.find((t) => t.core)!.tool;
 
+/** Export the same evidence used by retrieval, without a second copy to maintain. */
+function engineeringGuide(platform: string, chapters: string[]): string {
+  return `# ${platform} engineering guide\n\nApply these recommendations when completing the scaffold. The exported workflow does not automatically implement these protections.\n\n` +
+    chapters.map((raw) => {
+      const title = /^title: (.+)$/m.exec(raw)?.[1] ?? "Engineering guidance";
+      return `## ${title}\n\n${raw.replace(/^---[\s\S]*?---\s*/, "").replace(/^## /gm, "### ")}`;
+    }).join("\n\n");
+}
+
 // ------------------------------------------------------------------ public
 
 /**
@@ -82,6 +108,11 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
   if (core === "n8n" || core === "n8n-agent" || (core === "hermes" && has(r, "n8n"))) {
     const wf = core === "hermes" ? n8nHandoff(task, slug, a) : n8nWorkflow(r, bp, a, task, slug, prompt);
     files.push({ path: "n8n/workflow.json", lang: "json", purpose: "Paste onto an empty n8n canvas, or use Import from File.", content: JSON.stringify(wf, null, 2) });
+    files.push({
+      path: "n8n/ENGINEERING.md", lang: "markdown",
+      purpose: "Source-backed implementation guidance and acceptance checks for the workflow builder.",
+      content: engineeringGuide("n8n", [n8nData, n8nRecovery, n8nActions]),
+    });
     tools.push({
       id: "n8n",
       name: "n8n workflow",
@@ -104,12 +135,24 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
   // Hermes Agent: settings, persona, skill and a setup script.
   if (core === "hermes") {
     for (const f of hermesSetup(r, bp, a, task, slug, prompt, text)) files.push(f);
+    files.push({
+      path: "hermes/ENGINEERING.md",
+      lang: "markdown",
+      purpose: "Source-backed rules for tool permissions, reviewed learning and unattended recovery.",
+      content: engineeringGuide("Hermes Agent", [hermesActions, hermesLearning, hermesRecovery]),
+    });
     tools.push({
       id: "hermes",
       name: "Hermes Agent setup",
       how: "Unzip, read setup.sh, then run sh setup.sh. It installs the skill and persona into ~/.hermes and creates the schedule.",
       action: { kind: "zip", label: "Download setup", prefix: "hermes/", filename: `${slug}-hermes.zip` },
     });
+  }
+
+  if (core === "langgraph") {
+    files.push(...langgraphKit(bp, task, prompt));
+    files.push({ path: "langgraph/ENGINEERING.md", lang: "markdown", purpose: "State, recovery and human review contracts for the developer.", content: engineeringGuide("LangGraph", [langgraphState, langgraphPersistence, langgraphReview]) });
+    tools.push({ id: "langgraph", name: "LangGraph starter", how: "Unzip and follow README.md to run the credential-free fixture, then implement the supplied design.", action: { kind: "zip", label: "Download Python starter", prefix: "langgraph/", filename: `${slug}-langgraph.zip` } });
   }
 
   // MCP for Claude Code users building it themselves (plugins and Hermes carry their own).
@@ -122,10 +165,19 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
   if (has(r, "airflow")) {
     const path = `airflow/dags/${slug.replace(/-/g, "_")}.py`;
     files.push({ path, lang: "python", purpose: "An Airflow DAG with the dependency waits built in.", content: airflowDag(bp, task, slug, core !== "airflow") });
+    files.push({
+      path: "airflow/ENGINEERING.md", lang: "markdown",
+      purpose: "Source-backed Airflow implementation guidance and acceptance checks for the workflow builder.",
+      content: engineeringGuide("Apache Airflow", [airflowData, airflowRecovery, airflowOperations]),
+    });
     tools.push({ id: "airflow", name: "Airflow DAG", how: "Save into your Airflow dags folder, then point the two sensors at your real upstream jobs.", action: { kind: "download", label: "Download DAG", path } });
   }
   if (r.approach.id === "automation")
     files.push({ path: "rules/decision-table.csv", lang: "csv", purpose: "The rules, one row each. The first matching row wins.", content: decisionTable() });
+  if (ai) {
+    files.push({ path: "evals/ENGINEERING.md", lang: "markdown", purpose: "Repeatable evaluation and release checks with Promptfoo.", content: engineeringGuide("AI evaluations", [aiEvaluations]) });
+    files.push({ path: "observability/ENGINEERING.md", lang: "markdown", purpose: "Privacy-aware tracing, quality and cost checks with Langfuse.", content: engineeringGuide("AI observability", [aiTracing]) });
+  }
   files.push({ path: "evals/examples.csv", lang: "csv", purpose: "Your test set: real past cases and what good looked like.", content: examplesCsv(r, text) });
 
   files.unshift({
@@ -173,6 +225,10 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     `- Main tool: ${TOOLS[coreOf(r)].name}`,
     `- Runs on: ${r.hosting.title}`,
     `- Autonomy: level ${level} of 4, ${AUTONOMY[level].name.toLowerCase()}. ${AUTONOMY[level].plain}`,
+    "",
+    "What it should cost (the guide's estimate; tell the owner before anything adds cost beyond this):",
+    "",
+    ...costLines(estimateCost(r, bp, a)),
     "",
     "Why this design (from the owner's answers):",
     "",
@@ -290,6 +346,9 @@ function stepsForCore(r: Recommendation, a: Answers): string[] {
     if (has(r, "mcp")) out.push("Replace the MCP server address in the plugin's `.mcp.json` with the owner's connector, read-only first.");
     if (a.trigger === "schedule") out.push("Set up the schedule in Claude by asking it to run the skill at the agreed time.");
     if (has(r, "project")) out.push("Create a Claude Project for this task and add the reference documents to it.");
+  } else if (core === "langgraph") {
+    out.push("Read `langgraph/README.md` and run the credential-free fixture in a dedicated Python environment. Implement the full architecture in `langgraph/design.json` with validated adapters.");
+    out.push("Add persistent checkpoints and an authenticated review interface, then test restart recovery and action deduplication before connecting real services.");
   } else if (core === "hermes") {
     out.push("Install Hermes Agent, then run `hermes/setup.sh` and merge `hermes/config.yaml` into `~/.hermes/config.yaml`.");
     out.push("Fill in the House rules section of the Skill and the [Fill in] parts of `SOUL.md` with the owner.");
@@ -612,6 +671,7 @@ function n8nHandoff(task: string, slug: string, a: Answers) {
       : { parameters: { rule: { interval: [{ field: "days", triggerAtHour: 6 }] } }, name: "1. Data jobs finish", type: "n8n-nodes-base.scheduleTrigger", typeVersion: 1.2 };
   return {
     name: `${task} (hand-off to Hermes Agent)`,
+    active: false,
     nodes: [
       { ...trigger, id: "aag-0001", position: [260, 300] },
       {
@@ -792,9 +852,9 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
           conditions: {
             string: [
               {
-                value1: "={{ String($json.text ?? $json.route ?? '').toLowerCase() }}",
-                operation: "contains",
-                value2: branchLabel(edge.label, node).toLowerCase(),
+                value1: "={{ String($json.text ?? $json.route ?? '').trim().toLowerCase() }}",
+                operation: "equal",
+                value2: branchLabel(edge.label, node).trim().toLowerCase(),
               },
             ],
           },
@@ -832,7 +892,7 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
     position: [-220, 120],
   });
 
-  return { name: `${task} (Agent Architecture Guide)`, nodes, connections, settings: { executionOrder: "v1" }, pinData: {} };
+  return { name: `${task} (Agent Architecture Guide)`, active: false, nodes, connections, settings: { executionOrder: "v1" }, pinData: {} };
 }
 
 function branchLabel(label: string | undefined, node: BNode): string {

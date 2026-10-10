@@ -52,6 +52,7 @@ const TOOL_ICON: Record<KitTool["id"], typeof FlowArrow> = {
   "claude-plugin": Package,
   hermes: Robot,
   airflow: TreeStructure,
+  langgraph: TreeStructure,
 };
 
 /** Zip a set of files, optionally re-rooted (a .plugin is a zip of the plugin folder itself). */

@@ -11,6 +11,9 @@ export type ToolId =
   | "cowork"
   | "claude"
   | "hermes"
+  | "langgraph"
+  | "promptfoo"
+  | "langfuse"
   | "n8n-agent"
   | "skill"
   | "mcp"
@@ -30,6 +33,21 @@ export type Tool = {
 };
 
 export const TOOLS: Record<ToolId, Tool> = {
+  langgraph: {
+    id: "langgraph", name: "LangGraph", product: true,
+    plain: "A developer framework for agents with explicit steps, shared state and human review. Your team writes and operates the workflow in code.",
+    link: "https://docs.langchain.com/oss/python/langgraph/overview",
+  },
+  promptfoo: {
+    id: "promptfoo", name: "Promptfoo", product: true,
+    plain: "Tests AI outputs against examples and checks for regressions or unsafe behavior before changes go live.",
+    link: "https://www.promptfoo.dev/docs/intro/",
+  },
+  langfuse: {
+    id: "langfuse", name: "Langfuse", product: true,
+    plain: "Records traces of AI runs so you can investigate failures, latency, cost and output quality.",
+    link: "https://langfuse.com/docs",
+  },
   n8n: {
     id: "n8n",
     name: "n8n",

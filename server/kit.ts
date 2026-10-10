@@ -17,13 +17,13 @@ import { fingerprint } from "../src/lib/tailored";
 import { type Complete, extractJson, openAIComplete } from "./ai";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
-import { type Chunk, selectChunks } from "./knowledge";
+import { type Chunk, MAX_CHUNKS, knowledgeFingerprint, selectChunks } from "./knowledge";
 
 export type KitEnv = { apiKey?: string; model?: string; cache?: Cache };
 export type KitResult = { status: number; body: Record<string, unknown> };
 
 /** Chunks about the kit's own subjects: system prompts, testing, and Skills. */
-const KIT_CHUNKS = ["T06", "G04", "T05"];
+export const KIT_CHUNKS = ["T06", "G04", "T05"];
 
 export const INSTRUCTIONS = `You write the task-specific text of a starter kit: the files a business owner hands to an AI coding assistant to build their system. The design (steps, models, safeguards) is already fixed and is given to you; you never change it. Write for a busy business owner and the assistant building for them: plain English, concrete, specific to this task.
 
@@ -57,13 +57,13 @@ function contextFor(answers: Answers, env: KitEnv) {
   const r = recommend(answers);
   const ai = cachedDesign(answers, env);
   const bp = ai ?? buildBlueprint(r, answers);
-  const chunks = selectChunks(r, bp, undefined, 8, KIT_CHUNKS);
+  const chunks = selectChunks(r, bp, undefined, MAX_CHUNKS, KIT_CHUNKS);
   const lead = bp.nodes.find((n) => n.engine?.kind === "model" && n.engine.role === "coordinator");
   const briefIds = r.approach.id === "multi" ? bp.nodes.filter((n) => n === lead || (n.engine?.kind === "model" && n.engine.role === "specialist")).map((n) => n.id) : [];
   return { r, bp, design: (ai ? "ai" : "rules") as KitResponse["design"], chunks, ctx: { r, bp, chunks: chunks.map(({ id, title }) => ({ id, title })), briefIds } };
 }
 
-const kitKey = (answers: Answers, bp: Blueprint, model: string) => `${KIT_VERSION}:${model}:${fingerprint(JSON.stringify(bp))}:${resultCode(answers)}`;
+const kitKey = (answers: Answers, bp: Blueprint, model: string) => `${KIT_VERSION}:${knowledgeFingerprint()}:${model}:${fingerprint(JSON.stringify(bp))}:${resultCode(answers)}`;
 
 /** Checks a model's text and assembles the kit with it; undefined if the kit fails the structural checks. */
 function assemble(raw: unknown, answers: Answers, c: ReturnType<typeof contextFor>): { text: KitText; dropped: string[] } | undefined {
