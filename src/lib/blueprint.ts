@@ -11,6 +11,9 @@ import type { Recommendation, Why } from "./rules";
 export type NodeKind = "start" | "ai" | "fixed" | "decision" | "human" | "tool" | "end";
 export type Gate = { kind: "human" | "stop"; text: string };
 
+/** The tool gate that means a person approves every change the agent makes. */
+export const OK_EVERY_ACTION = "You OK every action";
+
 export type BNode = {
   id: string;
   step: number;
@@ -28,6 +31,8 @@ export type BNode = {
   why: string;
   passes: string;
   rules: string[];
+  /** Knowledge-base chunks an AI-drafted step cites (see src/lib/design.ts). */
+  kb?: { id: string; title: string }[];
 };
 
 export type EdgeStyle = "flow" | "loop" | "assign";
@@ -59,9 +64,10 @@ export const KIND_LABEL: Record<NodeKind, string> = {
 const TOOL_SHORT: Record<string, string> = {
   n8n: "n8n",
   airflow: "Airflow",
-  cowork: "Claude Cowork",
+  cowork: "Claude",
   claude: "Claude",
   hermes: "Hermes Agent",
+  langgraph: "LangGraph",
   "n8n-agent": "n8n",
 };
 
@@ -127,6 +133,7 @@ function whyOf(r: Recommendation, ruleId: string): Why | undefined {
     ...r.topology.why,
     ...r.tools.flatMap((t) => t.why),
     r.hosting.why,
+    ...(r.hosting.also ?? []),
     ...r.autonomy.why,
     r.simpler.why,
   ];
@@ -149,6 +156,7 @@ function triggerEngine(a: Answers): Engine {
 function startNode(g: Graph, r: Recommendation, a: Answers, home: string): Draft {
   const t = a.trigger;
   // When Hermes runs the agent, n8n is what watches for events (rule TL9).
+  const customGraph = coreTool(r) === "langgraph";
   const watcher = coreTool(r) === "hermes" && has(r, "n8n") ? "n8n" : home;
   return g.add({
     id: "start",
@@ -159,9 +167,9 @@ function startNode(g: Graph, r: Recommendation, a: Answers, home: string): Draft
       t === "manual"
         ? `In ${home}`
         : t === "schedule"
-          ? `${home} schedule`
+          ? customGraph ? "Application scheduler" : `${home} schedule`
           : t === "event"
-            ? `${watcher} trigger`
+            ? customGraph ? "Authenticated event endpoint" : `${watcher} trigger`
             : coreTool(r) === "airflow" || has(r, "airflow")
               ? "Airflow dependency"
               : "Timed after imports",
@@ -393,6 +401,13 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       g.link(rules, actB, "no match");
       approvalAndEnd(g, r, a, [actA, actB]);
     }
+    if (a.requirements?.includes("approval") && a.systems === "act") {
+      for (const n of g.nodes.filter(n => n.kind === "fixed")) {
+        n.name = `Prepare: ${n.name}`;
+        n.what = "Prepare a proposed change only. Do not write to external systems here. Release or execute it only after the named reviewer approves. " + n.what;
+        (n.gates ??= []).push({ kind: "human", text: OK_EVERY_ACTION });
+      }
+    }
     return g.finish("recommended", r.approach.title, summaryOf(r, home), TOOLS[core].name);
   }
 
@@ -580,7 +595,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
 
   const toolGate: Gate[] =
     a.systems === "act" && level <= 3
-      ? [{ kind: "human", text: level <= 2 ? "You OK every action" : "You OK risky actions" }]
+      ? [{ kind: "human", text: level <= 2 ? OK_EVERY_ACTION : "You OK risky actions" }]
       : [];
   const toolNode = (track: number, stage?: number): Draft =>
     g.add({

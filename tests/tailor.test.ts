@@ -1,3 +1,4 @@
+import { APIConnectionTimeoutError } from "openai";
 import { describe, expect, it } from "vitest";
 import { buildBlueprint } from "../src/lib/blueprint";
 import type { Answers } from "../src/lib/questions";
@@ -12,6 +13,20 @@ const template = (a: Answers) => {
   const r = recommend(a);
   const bp = buildBlueprint(r, a);
   return { bp, wf: JSON.parse(buildStarterKit(r, bp, a).files.find((f) => f.path === "n8n/workflow.json")!.content) };
+};
+
+type Wf = { nodes: { name: string; type: string }[]; connections: Record<string, Record<string, { node: string; type: string; index: number }[][]>> };
+
+/** The generated workflow, with step 5's tool taken off the agent and put behind a person's approval. */
+const approved = (a: Answers) => {
+  const { bp, wf } = template(a);
+  const w = structuredClone(wf) as Wf;
+  const tool = "5. Uses your systems";
+  w.nodes = w.nodes.map((n) => (n.name === tool ? { ...n, type: "n8n-nodes-base.httpRequest", typeVersion: 4.2, parameters: {} } : n));
+  w.nodes.push({ name: "5. Wait for approval", type: "n8n-nodes-base.wait", typeVersion: 1.1, position: [0, 0], parameters: { resume: "webhook" } } as Wf["nodes"][number]);
+  w.connections["5. Wait for approval"] = { main: [[{ node: tool, type: "main", index: 0 }]] };
+  w.connections[tool] = { main: [[{ node: "4. Agent works the case", type: "main", index: 0 }]] };
+  return { bp, wf: w };
 };
 
 /** A fake model that returns the given replies in order, recording what it was sent. */
@@ -46,7 +61,7 @@ describe("AI tailoring endpoint", () => {
   });
 
   it("sends the rules, the architecture and the generated workflow, and returns a workflow that passes the checks", async () => {
-    const { wf } = template(emails);
+    const { wf } = approved(emails);
     const f = fake("Here you go:\n```json\n" + JSON.stringify(wf) + "\n```");
     const out = await handleTailor({ answers: emails }, env, f.complete);
     expect(out.status).toBe(200);
@@ -58,8 +73,8 @@ describe("AI tailoring endpoint", () => {
   });
 
   it("asks once for a repair when the first answer fails the checks", async () => {
-    const { wf } = template(emails);
-    const broken = { ...wf, nodes: wf.nodes.filter((n: { name: string }) => !n.name.startsWith("4. ")) };
+    const { wf } = approved(emails);
+    const broken = { ...wf, nodes: wf.nodes.filter((n) => !n.name.startsWith("4. ")) };
     const f = fake(JSON.stringify(broken), JSON.stringify(wf));
     const out = await handleTailor({ answers: emails }, env, f.complete);
     expect(out.status).toBe(200);
@@ -68,11 +83,11 @@ describe("AI tailoring endpoint", () => {
     expect(f.calls[1].input).toMatch(/Step 4 \(Agent works the case\) is missing/);
   });
 
-  it("keeps the generated version when the repair also fails", async () => {
+  it("reports a failure when the repair also fails", async () => {
     const f = fake("not json at all", "still not json");
     const out = await handleTailor({ answers: emails }, env, f.complete);
     expect(out.status).toBe(502);
-    expect(out.body.error).toMatch(/generated version was kept/);
+    expect(out.body.error).toMatch(/didn't pass the checks/);
   });
 
   it("explains a bad key or unknown model in plain words", async () => {
@@ -82,17 +97,51 @@ describe("AI tailoring endpoint", () => {
     expect((await handleTailor({ answers: emails }, env, fail(401))).body.error).toMatch(/rejected the API key/);
     expect((await handleTailor({ answers: emails }, env, fail(404))).body.error).toMatch(/doesn't recognise the model "gpt-6.1-sol"/);
   });
+
+  it("says plainly when the AI takes too long", async () => {
+    const slow: Complete = async () => {
+      throw new APIConnectionTimeoutError();
+    };
+    const out = await handleTailor({ answers: emails }, env, slow);
+    expect(out.status).toBe(504);
+    expect(out.body.error).toMatch(/took longer than 6 minutes/);
+  });
 });
 
 describe("workflow checks", () => {
-  it("accept the generated workflow", () => {
-    const { bp, wf } = template(emails);
+  it("accept a workflow that puts system actions behind a person's approval", () => {
+    const { bp, wf } = approved(emails);
     expect(checkWorkflow(wf, bp)).toEqual([]);
   });
 
-  it("catch missing steps, broken connections, unattached models, foreign nodes and leaked keys", () => {
+  it("catch an agent that can act on systems when a person must OK every action", () => {
+    // The generated workflow leaves this approval to a note, so the check flags it too.
     const { bp, wf } = template(emails);
-    const bad = structuredClone(wf);
+    const p = checkWorkflow(wf, bp).join("\n");
+    expect(p).toMatch(/Step 5 .* says "You OK every action" but has no Wait or send-and-wait approval node/);
+    expect(p).toMatch(/Tool "5\. Uses your systems" is attached straight to an agent/);
+  });
+
+  it("accept a send-and-wait node as the approval", () => {
+    const { bp, wf } = approved(emails);
+    const w = structuredClone(wf);
+    w.nodes = w.nodes.map((n) => (n.name === "5. Wait for approval" ? { ...n, type: "n8n-nodes-base.slack", parameters: { operation: "sendAndWait" } } : n));
+    expect(checkWorkflow(w, bp)).toEqual([]);
+  });
+
+  it("ask for approval nodes only when every action needs a person's OK", () => {
+    const { bp, wf } = template({ ...emails, systems: "read" });
+    expect(checkWorkflow(wf, bp)).toEqual([]);
+  });
+
+  it("tell the model how to enforce the approval", () => {
+    expect(INSTRUCTIONS).toMatch(/Enforce every safeguard with nodes, never only with a note/);
+    expect(INSTRUCTIONS).toMatch(/"You OK every action", the agent must not hold any tool/);
+  });
+
+  it("catch missing steps, broken connections, unattached models, foreign nodes and leaked keys", () => {
+    const { bp, wf } = approved(emails);
+    const bad = structuredClone(wf) as Wf & { nodes: object[] };
     bad.nodes = bad.nodes.filter((n: { name: string }) => !/^2\. Model/.test(n.name) && !n.name.startsWith("6. "));
     bad.nodes.push({ name: "7. Community thing", type: "n8n-nodes-community.foo", typeVersion: 1, position: [0, 0], parameters: { token: `sk-${"x".repeat(32)}` } }); // built at runtime so secret scanners don't flag a fake key
     bad.connections["Ghost"] = { main: [[{ node: "Nowhere", type: "main", index: 0 }]] };

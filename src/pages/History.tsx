@@ -1,10 +1,13 @@
-import { ArrowRight, ClockCounterClockwise, Cpu, MagnifyingGlass, Trash, UserCheck, Wrench } from "@phosphor-icons/react";
+import { ArrowRight, ClockCounterClockwise, Cpu, MagnifyingGlass, Trash, TreeStructure, UserCheck, Wrench } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useMemo, useState } from "react";
 import { btn } from "../components/ui";
-import { AI_TAILORING } from "../lib/features";
+import { AI_ENABLED } from "../lib/features";
 import { AUTONOMY, type AutonomyLevel } from "../lib/catalog";
 import { type HistoryEntry, clearHistory, removeHistory, restoreHistory } from "../lib/history";
+import { type SavedTailoring, clearTailored, putTailored, takeTailored } from "../lib/tailored";
+import { type SavedProcess } from "../lib/process";
+import { href } from "../lib/router";
 
 export const SHORT_TITLE: Record<HistoryEntry["approach"], string> = {
   automation: "Plain automation, no AI",
@@ -30,8 +33,15 @@ export function History({
   onChange,
   onOpen,
   onStart,
+  systems = [],
+  onRemoveSystem,
+  onClearSystems,
 }: {
   entries: HistoryEntry[];
+  /** Saved processes: several jobs designed together. */
+  systems?: SavedProcess[];
+  onRemoveSystem?: (id: string) => void;
+  onClearSystems?: () => void;
   currentId: string;
   onChange: (next: HistoryEntry[]) => void;
   onOpen: (entry: HistoryEntry) => void;
@@ -39,7 +49,7 @@ export function History({
 }) {
   const reduce = useReducedMotion();
   const [query, setQuery] = useState("");
-  const [undo, setUndo] = useState<{ entry: HistoryEntry; index: number } | null>(null);
+  const [undo, setUndo] = useState<{ entry: HistoryEntry; index: number; tailored?: SavedTailoring } | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
 
   const shown = useMemo(() => {
@@ -49,8 +59,11 @@ export function History({
   }, [entries, query]);
 
   const remove = (e: HistoryEntry) => {
-    setUndo({ entry: e, index: entries.findIndex((x) => x.id === e.id) });
-    onChange(removeHistory(e.id));
+    const next = removeHistory(e.id);
+    // Its AI-tailored workflow goes too, unless another saved result shares the same answers.
+    const tailored = next.some((x) => x.code === e.code) ? undefined : takeTailored(e.code);
+    setUndo({ entry: e, index: entries.findIndex((x) => x.id === e.id), tailored });
+    onChange(next);
   };
 
   return (
@@ -59,10 +72,10 @@ export function History({
         <div>
           <h1 className="text-[1.875rem] font-semibold tracking-tight text-ink sm:text-[2.25rem]">History</h1>
           <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-muted">
-            Every result you reach is saved here automatically, in this browser only.{AI_TAILORING ? "" : " Nothing is sent anywhere."}
+            Every result you reach is saved here automatically, in this browser only.{AI_ENABLED ? "" : " Nothing is sent anywhere."}
           </p>
         </div>
-        {entries.length > 0 &&
+        {entries.length + systems.length > 0 &&
           (confirmClear ? (
             <div className="flex items-center gap-1.5">
               <button
@@ -70,12 +83,14 @@ export function History({
                 className={btn.danger}
                 onClick={() => {
                   clearHistory();
+                  onClearSystems?.();
+                  clearTailored();
                   onChange([]);
                   setConfirmClear(false);
                   setUndo(null);
                 }}
               >
-                Delete all {entries.length}
+                Delete all {entries.length + systems.length}
               </button>
               <button type="button" className={btn.quiet} onClick={() => setConfirmClear(false)}>
                 Keep them
@@ -88,6 +103,56 @@ export function History({
             </button>
           ))}
       </header>
+
+      {systems.length > 0 && (
+        <section className="mt-10" aria-labelledby="systems-title">
+          <h2 id="systems-title" className="text-[13px] font-medium uppercase tracking-[0.08em] text-muted">
+            Your systems
+          </h2>
+          <ul className="mt-3 grid gap-3">
+            {systems.map((p) => (
+              <li key={p.id} className="grid gap-4 rounded-2xl border border-line bg-surface p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                <div className="min-w-0">
+                  <h3 className="flex items-center gap-2 text-[16.5px] font-semibold leading-snug text-ink">
+                    <TreeStructure size={18} aria-hidden className="shrink-0 text-accent" />
+                    {p.title}
+                  </h3>
+                  <ol className="mt-2 grid gap-1 text-[14px] text-muted">
+                    {p.jobs.map((j, i) => (
+                      <li key={i}>
+                        {i + 1}. {j}
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="mt-3 text-[12.5px] text-muted">
+                    Saved {when(p.createdAt)}
+                    {p.updatedAt - p.createdAt > 60_000 && <>. Updated {when(p.updatedAt)}</>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <a href={href({ name: "process", code: p.code })} className={btn.primarySmall} aria-label={`Open the system ${p.title}`}>
+                    Open
+                    <ArrowRight size={15} weight="bold" aria-hidden />
+                  </a>
+                  {onRemoveSystem && (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveSystem(p.id)}
+                      aria-label={`Delete the saved system ${p.title}`}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+                    >
+                      <Trash size={17} aria-hidden />
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          {entries.length > 0 && (
+            <h2 className="mt-10 text-[13px] font-medium uppercase tracking-[0.08em] text-muted">Your results</h2>
+          )}
+        </section>
+      )}
 
       {entries.length > 5 && (
         <div className="mt-8">
@@ -126,6 +191,7 @@ export function History({
               type="button"
               className="font-medium text-accent underline-offset-4 hover:underline"
               onClick={() => {
+                if (undo.tailored) putTailored(undo.entry.code, undo.tailored);
                 onChange(restoreHistory(undo.entry, undo.index));
                 setUndo(null);
               }}

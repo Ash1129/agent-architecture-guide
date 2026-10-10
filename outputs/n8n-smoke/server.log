@@ -1,0 +1,20 @@
+Initializing n8n process
+Error tracking disabled because this release is older than 6 weeks.
+n8n ready on 127.0.0.1, port 60012
+
+There are deprecations related to your environment variables. Please take the recommended actions to update your configuration:
+ - DB_SQLITE_POOL_SIZE -> Running SQLite without a pool of read connections is deprecated. Please set `DB_SQLITE_POOL_SIZE` to a value higher than zero. See: https://docs.n8n.io/hosting/configuration/environment-variables/database/#sqlite
+ - N8N_RUNNERS_ENABLED -> Running n8n without task runners is deprecated. Task runners will be turned on by default in a future version. Please set `N8N_RUNNERS_ENABLED=true` to enable task runners now and avoid potential issues in the future. Learn more: https://docs.n8n.io/hosting/configuration/task-runners/
+
+[license SDK] Skipping renewal on init: license cert is not initialized
+Received request for unknown webhook: The requested webhook "POST smoke-failure" is not registered.
+404 The requested webhook "POST smoke-failure" is not registered.
+Version: 1.107.4
+Start Active Workflows:
+Activated workflow "SmokeFailure" (ID: SmokeFailure)
+
+Editor is now accessible via:
+http://127.0.0.1:60012
+Received SIGTERM. Shutting down...
+
+Stopping n8n...

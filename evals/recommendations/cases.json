@@ -1,0 +1,940 @@
+{
+  "version": 1,
+  "authorship": "Assistant-authored synthetic business scenarios; not independently expert-reviewed.",
+  "cases": [
+    {
+      "id": "invoice-reminders",
+      "category": "simplicity",
+      "brief": "Send fixed overdue-invoice reminders on a daily schedule.",
+      "answers": {
+        "task": "Send fixed overdue-invoice reminders on a daily schedule.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "schedule",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small"
+      },
+      "expected": {
+        "approaches": [
+          "automation"
+        ],
+        "cores": [
+          "n8n"
+        ],
+        "maxTools": 2,
+        "maxSpecialists": 0,
+        "noAI": true,
+        "forbiddenTools": [
+          "mcp",
+          "skill",
+          "langfuse",
+          "promptfoo"
+        ]
+      },
+      "rationale": "A fixed reminder policy needs scheduling and app connections, not a model.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "csv-normalization",
+      "category": "simplicity",
+      "brief": "Normalize column names and validate required fields in CSV files on request.",
+      "answers": {
+        "task": "Normalize column names and validate required fields in CSV files on request.",
+        "shape": "rules",
+        "systems": "none",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small"
+      },
+      "expected": {
+        "approaches": [
+          "automation"
+        ],
+        "cores": [
+          "n8n"
+        ],
+        "maxTools": 1,
+        "maxSpecialists": 0,
+        "noAI": true
+      },
+      "rationale": "Deterministic transformations should stay free of AI.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "data-dependencies",
+      "category": "data",
+      "brief": "Wait for sales and inventory imports to finish before computing a margin report.",
+      "answers": {
+        "task": "Wait for sales and inventory imports to finish before computing a margin report.",
+        "shape": "rules",
+        "systems": "read",
+        "trigger": "data",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "automation"
+        ],
+        "cores": [
+          "airflow"
+        ],
+        "maxTools": 2,
+        "maxSpecialists": 0,
+        "noAI": true,
+        "requiredTools": [
+          "airflow"
+        ]
+      },
+      "rationale": "Explicit upstream dependencies justify a developer-owned data scheduler.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "data-small-team",
+      "category": "data",
+      "brief": "A small team imports two files nightly and wants a fixed report after both are ready.",
+      "answers": {
+        "task": "A small team imports two files nightly and wants a fixed report after both are ready.",
+        "shape": "rules",
+        "systems": "read",
+        "trigger": "data",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small"
+      },
+      "expected": {
+        "approaches": [
+          "automation"
+        ],
+        "cores": [
+          "n8n",
+          "airflow"
+        ],
+        "maxTools": 2,
+        "maxSpecialists": 0,
+        "noAI": true,
+        "requiredCaveat": "dependenc|data jobs|data itself"
+      },
+      "rationale": "A visual solution can be acceptable only if readiness limitations are disclosed.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "refund-fixed-policy",
+      "category": "safety",
+      "brief": "Issue refunds using fixed eligibility rules, with approval before irreversible changes.",
+      "answers": {
+        "task": "Issue refunds using fixed eligibility rules, with approval before irreversible changes.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "irreversible"
+        ],
+        "location": "open",
+        "team": "small"
+      },
+      "expected": {
+        "approaches": [
+          "automation"
+        ],
+        "cores": [
+          "n8n"
+        ],
+        "maxTools": 2,
+        "maxSpecialists": 0,
+        "noAI": true,
+        "maxAutonomy": 3,
+        "humanReview": true
+      },
+      "rationale": "Predictability removes the need for AI, not the need for review of consequential writes.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "document-summary",
+      "category": "simplicity",
+      "brief": "Summarize supplied meeting notes manually against a clear internal checklist.",
+      "answers": {
+        "task": "Summarize supplied meeting notes manually against a clear internal checklist.",
+        "shape": "judgement",
+        "kinds": "no",
+        "quality": "clear",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "none",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "claude",
+          "n8n"
+        ],
+        "maxTools": 3,
+        "maxSpecialists": 0,
+        "forbiddenTools": [
+          "langgraph",
+          "airflow",
+          "langfuse",
+          "promptfoo"
+        ]
+      },
+      "rationale": "One summarization workflow needs neither autonomous planning nor specialist agents.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "invoice-extraction",
+      "category": "workflow",
+      "brief": "Extract invoice fields with a fixed schema whenever a file arrives.",
+      "answers": {
+        "task": "Extract invoice fields with a fixed schema whenever a file arrives.",
+        "shape": "judgement",
+        "kinds": "no",
+        "quality": "clear",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "read",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "mid",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "n8n"
+        ],
+        "maxTools": 4,
+        "maxSpecialists": 0,
+        "forbiddenTools": [
+          "langgraph",
+          "hermes"
+        ]
+      },
+      "rationale": "A fixed extraction step belongs inside a triggered workflow.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "batch-ai-report",
+      "category": "data",
+      "brief": "Generate a daily narrative only after the analytics data jobs finish.",
+      "answers": {
+        "task": "Generate a daily narrative only after the analytics data jobs finish.",
+        "shape": "judgement",
+        "kinds": "no",
+        "quality": "partly",
+        "knowledge": [
+          "reference"
+        ],
+        "systems": "read",
+        "trigger": "data",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "airflow"
+        ],
+        "maxTools": 7,
+        "maxSpecialists": 0,
+        "requiredTools": [
+          "airflow"
+        ]
+      },
+      "rationale": "A model can write the narrative without turning dependency orchestration into an agent.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "manual-vendor-independent",
+      "category": "portability",
+      "brief": "Follow a supplied drafting playbook using interchangeable model providers.",
+      "answers": {
+        "task": "Follow a supplied drafting playbook using interchangeable model providers.",
+        "shape": "judgement",
+        "kinds": "no",
+        "quality": "partly",
+        "knowledge": [
+          "playbook"
+        ],
+        "systems": "none",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "independence",
+        "team": "small",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "hermes",
+          "n8n",
+          "langgraph"
+        ],
+        "maxTools": 4,
+        "maxSpecialists": 0,
+        "forbiddenTools": [
+          "claude",
+          "cowork",
+          "project"
+        ]
+      },
+      "rationale": "The platform should not require the Claude app when provider independence is a hard constraint.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "support-routing",
+      "category": "agent",
+      "brief": "Handle varied support cases arriving by webhook, escalating uncertain replies for review.",
+      "answers": {
+        "task": "Handle varied support cases arriving by webhook, escalating uncertain replies for review.",
+        "shape": "varies",
+        "kinds": "yes",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "act",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "visible"
+        ],
+        "location": "open",
+        "team": "mid"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "n8n-agent",
+          "hermes"
+        ],
+        "maxTools": 5,
+        "maxSpecialists": 0,
+        "maxAutonomy": 2,
+        "humanReview": true
+      },
+      "rationale": "Event handling and one supervised agent are sufficient for this pilot.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "personal-research-memory",
+      "category": "memory",
+      "brief": "Research competitors weekly and retain verified preferences and past findings.",
+      "answers": {
+        "task": "Research competitors weekly and retain verified preferences and past findings.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "memory",
+          "reference"
+        ],
+        "systems": "read",
+        "trigger": "schedule",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "mid"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "hermes"
+        ],
+        "maxTools": 6,
+        "maxSpecialists": 0,
+        "requiredTools": [
+          "hermes"
+        ]
+      },
+      "rationale": "A persistent assistant is a better initial fit than a custom specialist service.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "occasional-assistant",
+      "category": "simplicity",
+      "brief": "An owner occasionally asks an assistant to investigate an unfamiliar supplier.",
+      "answers": {
+        "task": "An owner occasionally asks an assistant to investigate an unfamiliar supplier.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "none",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "cowork",
+          "hermes"
+        ],
+        "maxTools": 3,
+        "maxSpecialists": 0,
+        "forbiddenTools": [
+          "langgraph",
+          "airflow",
+          "langfuse",
+          "promptfoo"
+        ]
+      },
+      "rationale": "An occasional single-user investigation does not justify a custom graph or data scheduler.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "custom-specialists",
+      "category": "coordination",
+      "brief": "Developers need separate research and verification specialists with explicit handoffs.",
+      "answers": {
+        "task": "Developers need separate research and verification specialists with explicit handoffs.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "specialists",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "read",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "multi"
+        ],
+        "cores": [
+          "langgraph",
+          "hermes"
+        ],
+        "maxTools": 7,
+        "maxSpecialists": 4
+      },
+      "rationale": "Explicitly requested specialist boundaries can justify a custom graph when developers own it.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "nontechnical-specialists",
+      "category": "coordination",
+      "brief": "A nontechnical team wants several perspectives on an open-ended research task.",
+      "answers": {
+        "task": "A nontechnical team wants several perspectives on an open-ended research task.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "specialists",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "none",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small"
+      },
+      "expected": {
+        "approaches": [
+          "multi"
+        ],
+        "cores": [
+          "cowork",
+          "hermes"
+        ],
+        "maxTools": 4,
+        "maxSpecialists": 4,
+        "forbiddenTools": [
+          "langgraph",
+          "airflow",
+          "langfuse",
+          "promptfoo"
+        ]
+      },
+      "rationale": "Keep setup feasible for a team without developers and offer a one-agent pilot.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "memory-specialists",
+      "category": "memory",
+      "brief": "A technical team wants specialist research plus a persistent assistant that learns its playbook.",
+      "answers": {
+        "task": "A technical team wants specialist research plus a persistent assistant that learns its playbook.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "both",
+        "quality": "partly",
+        "knowledge": [
+          "memory",
+          "playbook"
+        ],
+        "systems": "read",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "multi"
+        ],
+        "cores": [
+          "hermes",
+          "langgraph"
+        ],
+        "maxTools": 8,
+        "maxSpecialists": 4
+      },
+      "rationale": "Persistent learning remains important even when several roles are involved.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "restricted-support",
+      "category": "portability",
+      "brief": "Handle support events where Anthropic services are unavailable, with human sign-off.",
+      "answers": {
+        "task": "Handle support events where Anthropic services are unavailable, with human sign-off.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "act",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "visible"
+        ],
+        "location": "restricted",
+        "team": "mid"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "hermes",
+          "n8n-agent",
+          "langgraph"
+        ],
+        "maxTools": 6,
+        "maxSpecialists": 0,
+        "forbiddenTools": [
+          "claude",
+          "cowork",
+          "project"
+        ],
+        "openModelsOnly": true,
+        "maxAutonomy": 2,
+        "humanReview": true
+      },
+      "rationale": "The chosen app and actual model steps must respect provider availability.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "restricted-specialists",
+      "category": "portability",
+      "brief": "Developers need coordinated specialist research in a region without Anthropic access.",
+      "answers": {
+        "task": "Developers need coordinated specialist research in a region without Anthropic access.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "specialists",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "read",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "restricted",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "multi"
+        ],
+        "cores": [
+          "langgraph",
+          "hermes"
+        ],
+        "maxTools": 7,
+        "maxSpecialists": 4,
+        "openModelsOnly": true,
+        "forbiddenTools": [
+          "claude",
+          "cowork",
+          "project"
+        ]
+      },
+      "rationale": "A portable runtime must also choose deployable model types.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "private-analysis",
+      "category": "privacy",
+      "brief": "Analyze sensitive internal records with all model processing on company-controlled servers.",
+      "answers": {
+        "task": "Analyze sensitive internal records with all model processing on company-controlled servers.",
+        "shape": "judgement",
+        "kinds": "no",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "read",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "personal"
+        ],
+        "location": "residency",
+        "team": "large",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "n8n",
+          "airflow",
+          "langgraph"
+        ],
+        "maxTools": 6,
+        "maxSpecialists": 0,
+        "openModelsOnly": true
+      },
+      "rationale": "The actual model plan should support the required local deployment.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "unclear-quality",
+      "category": "safety",
+      "brief": "Draft customer communications whose quality cannot yet be defined by a checklist.",
+      "answers": {
+        "task": "Draft customer communications whose quality cannot yet be defined by a checklist.",
+        "shape": "judgement",
+        "kinds": "no",
+        "quality": "no",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "act",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "visible"
+        ],
+        "location": "open",
+        "team": "small",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "n8n"
+        ],
+        "maxTools": 4,
+        "maxSpecialists": 0,
+        "maxAutonomy": 2,
+        "humanReview": true
+      },
+      "rationale": "Uncheckable customer-facing output needs review before release.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "agent-irreversible",
+      "category": "safety",
+      "brief": "Investigate account issues and propose irreversible changes for approval.",
+      "answers": {
+        "task": "Investigate account issues and propose irreversible changes for approval.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "act",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "irreversible"
+        ],
+        "location": "open",
+        "team": "mid"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "n8n-agent",
+          "hermes",
+          "langgraph"
+        ],
+        "maxTools": 5,
+        "maxSpecialists": 0,
+        "maxAutonomy": 2,
+        "humanReview": true
+      },
+      "rationale": "An autonomous planner should not make irreversible changes without review.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "single-role-developers",
+      "category": "simplicity",
+      "brief": "Developers run one open-ended research role on demand, with no cross-task memory.",
+      "answers": {
+        "task": "Developers run one open-ended research role on demand, with no cross-task memory.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "none",
+        "trigger": "manual",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "cowork",
+          "hermes",
+          "n8n-agent",
+          "langgraph"
+        ],
+        "maxTools": 5,
+        "maxSpecialists": 0
+      },
+      "rationale": "Having developers does not itself require a team of agents.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "agent-after-data",
+      "category": "data",
+      "brief": "Run one investigative agent only after upstream data jobs complete.",
+      "answers": {
+        "task": "Run one investigative agent only after upstream data jobs complete.",
+        "shape": "varies",
+        "kinds": "no",
+        "roles": "one",
+        "quality": "partly",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "read",
+        "trigger": "data",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "agent"
+        ],
+        "cores": [
+          "n8n-agent",
+          "hermes",
+          "langgraph"
+        ],
+        "maxTools": 7,
+        "maxSpecialists": 0,
+        "requiredTools": [
+          "airflow"
+        ]
+      },
+      "rationale": "Separate upstream data readiness from the agent investigation.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "checkable-internal",
+      "category": "workflow",
+      "brief": "Classify internal feedback into known categories with clear acceptance examples.",
+      "answers": {
+        "task": "Classify internal feedback into known categories with clear acceptance examples.",
+        "shape": "judgement",
+        "kinds": "yes",
+        "quality": "clear",
+        "knowledge": [
+          "none"
+        ],
+        "systems": "none",
+        "trigger": "event",
+        "volume": "occasional",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "small",
+        "split": "sequential"
+      },
+      "expected": {
+        "approaches": [
+          "workflow"
+        ],
+        "cores": [
+          "n8n"
+        ],
+        "maxTools": 3,
+        "maxSpecialists": 0
+      },
+      "rationale": "Known categories call for routing and checks rather than an autonomous planner.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "high-volume-fixed",
+      "category": "simplicity",
+      "brief": "Apply the same pricing formula to thousands of records without judgement.",
+      "answers": {
+        "task": "Apply the same pricing formula to thousands of records without judgement.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "event",
+        "volume": "high",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "expected": {
+        "approaches": [
+          "automation"
+        ],
+        "cores": [
+          "n8n",
+          "airflow"
+        ],
+        "maxTools": 2,
+        "maxSpecialists": 0,
+        "noAI": true,
+        "forbiddenTools": [
+          "langgraph",
+          "hermes",
+          "promptfoo",
+          "langfuse",
+          "mcp"
+        ]
+      },
+      "rationale": "Volume alone is not evidence that AI, agents or AI observability are needed.",
+      "reviewStatus": "provisional",
+      "reviewer": null
+    }
+  ]
+}

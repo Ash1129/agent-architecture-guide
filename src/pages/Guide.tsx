@@ -1,8 +1,10 @@
-import { ArrowLeft, ArrowRight, CaretDown, Check } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CaretDown, Check, CircleNotch, PencilSimple, Sparkle } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { PlanState } from "../App";
 import { TaskInput } from "../components/TaskInput";
-import { btn } from "../components/ui";
+import { AI_ENABLED } from "../lib/features";
+import { type Detail, type DetailQuestion, type InterviewPlan, adaptQuestion } from "../lib/interview";
 import {
   type Answers,
   type Question,
@@ -17,37 +19,54 @@ type Props = {
   answers: Answers;
   editing: boolean;
   direction: 1 | -1;
+  /** The AI-adapted questions for this task, when AI is on. */
+  plan?: PlanState;
+  /** A problem described on the start page, while the AI reads it. */
+  reading?: string;
+  /** The questions the AI answered from that description; only the others are asked. */
+  described?: QuestionId[];
+  /** Which job of a split this is, when a described problem was split into several. */
+  job?: { index: number; total: number };
+  onUseStandard: () => void;
   onAnswer: (next: Answers, from: QuestionId) => void;
   onBack: (from: QuestionId) => void;
   onCancelEdit: () => void;
 };
 
-export function Guide({ qid, answers, editing, direction, onAnswer, onBack, onCancelEdit }: Props) {
+export function Guide({ qid, answers, editing, direction, plan, reading, described, job, onUseStandard, onAnswer, onBack, onCancelEdit }: Props) {
   const reduce = useReducedMotion();
-  const q = QUESTION_BY_ID[qid];
+  const ready = plan?.status === "ready" ? plan.response : undefined;
+  const q = adaptQuestion(QUESTION_BY_ID[qid], ready?.plan);
+  // AI_ENABLED is fixed at build time, so the published build drops these screens entirely.
+  const adapting = AI_ENABLED && plan?.status === "loading" && qid !== "task";
   // Until the second answer says whether AI is involved, assume the longer
   // path, so the count never jumps up partway through.
-  const active = activeQuestions(answers.shape ? answers : { ...answers, shape: "judgement" });
+  const all = activeQuestions(answers.shape ? answers : { ...answers, shape: "judgement" });
+  // After a description, count only the questions it left open, so the count reads "1 of 3", not "6 of 12".
+  const open = described ? all.filter((x) => x.id !== "task" && !described.includes(x.id)) : all;
+  const active = open.some((x) => x.id === qid) ? open : all;
   const index = Math.max(0, active.findIndex((x) => x.id === qid));
   const total = active.length;
 
   return (
-    <main id="main" className="mx-auto w-full max-w-2xl px-4 pb-24 pt-8 sm:px-6 sm:pt-12">
-      <div className="mb-10">
-        <div className="mb-3 flex items-center justify-between text-[14px]">
-          <p className="font-medium text-ink" aria-live="polite">
-            Question {index + 1} <span className="text-muted">of {total}</span>
+    <main id="main" className="survey-main">
+      {/* While a description is being read nothing is being asked yet, so there's no count to show. */}
+      <div className={`mb-10${adapting && reading ? " hidden" : ""}`}>
+        <div className="mb-3 flex items-center justify-between gap-4">
+          <p className="section-kicker studio-caption !mb-0" aria-live="polite">
+            <span className="status-dot" aria-hidden />
+            {job && `Job ${job.index + 1} of ${job.total} · `}Question {index + 1} of {total}
           </p>
           {editing ? (
-            <button type="button" onClick={onCancelEdit} className="text-muted underline-offset-4 hover:text-ink hover:underline">
-              Back to your result
+            <button type="button" onClick={onCancelEdit} className="studio-quiet">
+              {described ? "Back to your answers" : "Back to your result"}
             </button>
           ) : (
-            <p className="text-muted">About {Math.max(1, Math.ceil(((total - index) * 12) / 60))} min left</p>
+            <p className="text-[13px] text-muted">About {Math.max(1, Math.ceil(((total - index) * 12) / 60))} min left</p>
           )}
         </div>
         <div
-          className="flex gap-1"
+          className="survey-bar"
           role="progressbar"
           aria-label="Progress through the guide"
           aria-valuemin={1}
@@ -57,38 +76,101 @@ export function Guide({ qid, answers, editing, direction, onAnswer, onBack, onCa
           {active.map((x, i) => (
             <span
               key={x.id}
-              className={`h-1 flex-1 rounded-full transition-colors duration-500 ${i <= index ? "bg-accent" : "bg-line"}`}
+              className={i <= index ? "is-done" : undefined}
             />
           ))}
         </div>
       </div>
 
+      {AI_ENABLED && qid !== "task" && <PlanNote plan={plan} described={described?.length} />}
       <AnimatePresence mode="wait" initial={false} custom={direction}>
         <m.div
-          key={qid}
+          key={adapting ? "adapting" : `${qid}:${ready ? "ai" : "std"}`}
           custom={direction}
           initial={reduce ? { opacity: 0 } : { opacity: 0, x: 24 * direction }}
           animate={{ opacity: 1, x: 0 }}
           exit={reduce ? { opacity: 0 } : { opacity: 0, x: -16 * direction }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         >
-          <QuestionView
-            q={q}
-            answers={answers}
-            editing={editing}
-            onSubmit={(next) => onAnswer(next, qid)}
-            onBack={() => onBack(qid)}
-            isFirst={index === 0}
-          />
+          {adapting ? (
+            <Adapting task={plan!.task} reading={reading} job={job} onUseStandard={onUseStandard} />
+          ) : (
+            <QuestionView
+              q={q}
+              answers={answers}
+              editing={editing}
+              onSubmit={(next) => onAnswer(next, qid)}
+              onBack={() => onBack(qid)}
+              isFirst={index === 0}
+            />
+          )}
         </m.div>
       </AnimatePresence>
     </main>
   );
 }
 
+function Adapting({ task, reading, job, onUseStandard }: { task: string; reading?: string; job?: { index: number; total: number }; onUseStandard: () => void }) {
+  const reduce = useReducedMotion();
+  return (
+    <div role="status" aria-live="polite">
+      <p className="flex items-center gap-2 text-[15px] font-medium text-accent">
+        <CircleNotch size={18} aria-hidden className={reduce ? "" : "animate-spin"} />
+        {reading ? "Reading your description" : "Adapting the questions to your task"}
+      </p>
+      {reading ? (
+        <>
+          <h1 className="survey-title mt-4">{job ? `Job ${job.index + 1} of ${job.total}: ${task}` : "Your problem, in your words."}</h1>
+          <blockquote className="survey-quote">{reading}</blockquote>
+          <p className="survey-help">
+            {job
+              ? "The AI is answering the questions this job's description already settles. You'll only be asked the rest, then you can check every answer."
+              : "The AI is answering the questions your description already settles. If it holds more than one job, you'll see them first. Otherwise you'll only be asked the rest, then you can check every answer."}
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className="survey-title mt-4">{task}</h1>
+          <p className="survey-help">
+            The AI is rewording the questions in your terms and suggesting likely answers. You can change every one of them.
+          </p>
+        </>
+      )}
+      <button type="button" onClick={onUseStandard} className="studio-quiet !mt-8">
+        Use the standard questions instead
+      </button>
+    </div>
+  );
+}
+
+/** One quiet line saying where the questions came from. */
+function PlanNote({ plan, described }: { plan?: PlanState; described?: number }) {
+  if (!plan || plan.status === "loading") return null;
+  const r = plan.response;
+  const text =
+    described
+      ? `Your description answered ${described} question${described === 1 ? "" : "s"}. These are the ones it left open; you'll see every answer before your result.`
+      : plan.status === "standard"
+      ? plan.note
+        ? `Standard questions. ${plan.note}`
+        : null
+      : r?.source === "similar"
+        ? `Adapted to your task, reusing the questions made for a very similar one ("${r.similarTo}").`
+        : r?.source === "cache"
+          ? "Adapted to your task (saved from an earlier run)."
+          : "Adapted to your task by AI. Suggested answers are pre-selected; change any of them.";
+  if (!text) return null;
+  return (
+    <p className="-mt-6 mb-8 flex items-start gap-1.5 text-[13px] leading-snug text-muted">
+      <Sparkle size={14} weight="fill" aria-hidden className="mt-0.5 shrink-0 text-accent" />
+      {text}
+    </p>
+  );
+}
+
 function WhyWeAsk({ text }: { text: string }) {
   return (
-    <details className="group mt-8 rounded-2xl border border-line bg-surface/60 px-4 py-3 open:bg-surface">
+    <details className="survey-why group">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-medium text-ink [&::-webkit-details-marker]:hidden">
         Why we ask
         <CaretDown size={16} aria-hidden className="text-muted transition-transform duration-200 group-open:rotate-180" />
@@ -106,7 +188,7 @@ function QuestionView({
   onSubmit,
   onBack,
 }: {
-  q: Question;
+  q: Question & { suggested?: string | string[]; reason?: string };
   answers: Answers;
   editing: boolean;
   isFirst: boolean;
@@ -115,7 +197,8 @@ function QuestionView({
 }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const pointerPick = useRef(false);
-  const current = answers[q.id];
+  // An answer already given wins; otherwise the AI's suggestion starts selected.
+  const current = answers[q.id] ?? q.suggested;
   const [single, setSingleState] = useState<string | undefined>(typeof current === "string" ? current : undefined);
   const [multi, setMultiState] = useState<string[]>(Array.isArray(current) ? current : []);
   // Mirrors of the selection that update synchronously, so a fast "pick then
@@ -193,14 +276,18 @@ function QuestionView({
 
   const header = (
     <>
-      <h1
-        ref={headingRef}
-        tabIndex={-1}
-        className="text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-ink outline-none sm:text-[2.125rem]"
-      >
+      <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
         {q.title}
       </h1>
-      {q.help && q.kind !== "text" && <p className="mt-3 max-w-[60ch] text-[16px] leading-relaxed text-muted">{q.help}</p>}
+      {q.help && q.kind !== "text" && <p className="survey-help">{q.help}</p>}
+      {q.suggested && q.reason && answers[q.id] === undefined && (
+        <p className="mt-3 flex max-w-[60ch] items-start gap-1.5 text-[14.5px] leading-relaxed text-accent">
+          <Sparkle size={15} weight="fill" aria-hidden className="mt-1 shrink-0" />
+          <span>
+            <span className="font-medium">Suggested:</span> {q.reason}
+          </span>
+        </p>
+      )}
     </>
   );
 
@@ -215,8 +302,8 @@ function QuestionView({
             onSubmit={(task) => onSubmit({ ...answers, task })}
           />
         </div>
-        <button type="button" onClick={onBack} className={`${btn.quiet} mt-6 -ml-3`}>
-          <ArrowLeft size={16} weight="bold" aria-hidden />
+        <button type="button" onClick={onBack} className="studio-quiet !mt-7">
+          <ArrowLeft size={16} aria-hidden />
           {editing ? "Back to your result" : "Back to start"}
         </button>
         <WhyWeAsk text={q.why} />
@@ -235,9 +322,8 @@ function QuestionView({
               <label
                 key={o.value}
                 onPointerDown={() => (pointerPick.current = true)}
-                className={`group flex cursor-pointer items-start gap-4 rounded-2xl border bg-surface px-4 py-4 transition-[border-color,background-color,transform] duration-200 active:scale-[0.995] sm:px-5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
-                  checked ? "border-accent bg-accent-soft" : "border-line-strong/60 hover:border-line-strong"
-                }`}
+                data-checked={checked || undefined}
+                className="survey-option group"
               >
                 <input
                   type={q.kind === "multi" ? "checkbox" : "radio"}
@@ -263,17 +349,20 @@ function QuestionView({
                 />
                 <span
                   aria-hidden
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border transition-colors ${
-                    q.kind === "multi" ? "rounded-md" : "rounded-full"
-                  } ${checked ? "border-accent bg-accent text-accent-ink" : "border-line-strong bg-surface"}`}
+                  className={`survey-mark ${q.kind === "multi" ? "rounded-[5px]" : "rounded-full"}`}
                 >
                   {checked && (q.kind === "multi" ? <Check size={13} weight="bold" /> : <span className="h-2 w-2 rounded-full bg-accent-ink" />)}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[16px] font-medium leading-snug text-ink">{o.label}</span>
+                  <span className="block text-[16px] font-medium leading-snug text-ink">
+                    {o.label}
+                    {answers[q.id] === undefined && (Array.isArray(q.suggested) ? q.suggested.includes(o.value) : q.suggested === o.value) && (
+                      <span className="survey-suggested">Suggested</span>
+                    )}
+                  </span>
                   {o.hint && <span className="mt-1 block text-[14.5px] leading-relaxed text-muted">{o.hint}</span>}
                 </span>
-                <span aria-hidden className="ml-auto hidden pt-0.5 font-mono text-[12px] text-muted sm:block">
+                <span aria-hidden className="survey-key">
                   {i + 1}
                 </span>
               </label>
@@ -283,13 +372,13 @@ function QuestionView({
       </fieldset>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={onBack} className={btn.quiet}>
-          <ArrowLeft size={16} weight="bold" aria-hidden />
+        <button type="button" onClick={onBack} className="studio-quiet">
+          <ArrowLeft size={16} aria-hidden />
           {isFirst ? "Back to start" : "Back"}
         </button>
-        <button type="submit" disabled={!answered} className={btn.primary}>
+        <button type="submit" disabled={!answered} className="start-build">
           {finishing ? "Save and see result" : "Continue"}
-          <ArrowRight size={17} weight="bold" aria-hidden />
+          <ArrowRight size={17} aria-hidden />
         </button>
       </div>
       <p className="mt-3 hidden text-right text-[13px] text-muted sm:block">
@@ -297,5 +386,222 @@ function QuestionView({
       </p>
       <WhyWeAsk text={q.why} />
     </form>
+  );
+}
+
+/** The AI's task-specific questions. Optional: anything left blank is simply not sent. */
+export function Details({
+  questions,
+  answers,
+  ready,
+  onSubmit,
+  onBack,
+}: {
+  questions: DetailQuestion[];
+  answers: Answers;
+  /** False while the questions are still being made. */
+  ready: boolean;
+  onSubmit: (details: Detail[]) => void;
+  onBack: () => void;
+}) {
+  const previous = new Map((answers.details ?? []).map((d) => [d.q, d.a]));
+  const [values, setValues] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(questions.map((d) => [d.id, previous.get(d.title)?.split(", ").filter(Boolean) ?? []])),
+  );
+  const [notes, setNotes] = useState<Record<string, string>>(() =>
+    Object.fromEntries(questions.filter((d) => d.kind === "text").map((d) => [d.id, previous.get(d.title) ?? ""])),
+  );
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus({ preventScroll: true }), []);
+
+  // Nothing to ask (or AI is off): carry on to the result.
+  useEffect(() => {
+    if (ready && !questions.length) onSubmit(answers.details ?? []);
+  }, [ready, questions.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pick = (d: DetailQuestion, option: string) =>
+    setValues((v) => {
+      const cur = v[d.id] ?? [];
+      const next = d.kind === "multi" ? (cur.includes(option) ? cur.filter((x) => x !== option) : [...cur, option]) : cur[0] === option ? [] : [option];
+      return { ...v, [d.id]: next };
+    });
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const out: Detail[] = [];
+    for (const d of questions) {
+      const a = d.kind === "text" ? (notes[d.id] ?? "").trim() : (values[d.id] ?? []).join(", ");
+      if (a) out.push({ q: d.title, a });
+    }
+    onSubmit(out);
+  };
+
+  if (!questions.length) return null;
+  return (
+    <main id="main" className="survey-main">
+      <form onSubmit={submit}>
+        <p className="section-kicker studio-caption">
+          <span className="status-dot" aria-hidden />
+          Last step, optional
+        </p>
+        <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
+          A few details about your task
+        </h1>
+        <p className="survey-help">
+          The AI asked these because the answers change how this particular system is built. Skip any you're unsure of.
+        </p>
+        <div className="mt-8 grid gap-6">
+          {questions.map((d) => (
+            <fieldset key={d.id} className="survey-card">
+              <legend className="sr-only">{d.title}</legend>
+              <p aria-hidden className="text-[16px] font-medium leading-snug text-ink">
+                {d.title}
+              </p>
+              {d.help && <p className="mt-1 text-[14.5px] leading-relaxed text-muted">{d.help}</p>}
+              {d.kind === "text" ? (
+                <input
+                  type="text"
+                  aria-label={d.title}
+                  value={notes[d.id] ?? ""}
+                  maxLength={300}
+                  onChange={(e) => setNotes((n) => ({ ...n, [d.id]: e.target.value }))}
+                  className="survey-input mt-3"
+                  placeholder="Type a short answer"
+                />
+              ) : (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {d.options!.map((o) => {
+                    const on = (values[d.id] ?? []).includes(o);
+                    return (
+                      <button
+                        key={o}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => pick(d, o)}
+                        className="survey-chip"
+                      >
+                        {on && <Check size={13} weight="bold" aria-hidden className="mr-1 inline align-[-1px] text-accent" />}
+                        {o}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </fieldset>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" onClick={onBack} className="studio-quiet">
+            <ArrowLeft size={16} aria-hidden />
+            Back
+          </button>
+          <button type="submit" className="start-build">
+            See your result
+            <ArrowRight size={17} aria-hidden />
+          </button>
+        </div>
+      </form>
+    </main>
+  );
+}
+
+/**
+ * After a problem was described on the start page: every answer at a glance,
+ * the ones read from the description marked (with the words that settled
+ * them), each one changeable, before the result.
+ */
+export function Review({
+  answers,
+  plan,
+  described,
+  job,
+  onChange,
+  onBack,
+  onConfirm,
+}: {
+  answers: Answers;
+  plan?: InterviewPlan;
+  described: QuestionId[];
+  /** Which job of a split this is, and the next job's name. */
+  job?: { index: number; total: number; next?: string };
+  onChange: (q: QuestionId) => void;
+  onBack: () => void;
+  onConfirm: () => void;
+}) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus({ preventScroll: true }), []);
+  const rows = activeQuestions(answers).filter((q) => q.id !== "task");
+  const fromWords = rows.filter((q) => described.includes(q.id)).length;
+
+  return (
+    <main id="main" className="survey-main">
+      <p className="section-kicker studio-caption">
+        <span className="status-dot" aria-hidden />
+        {job ? `Job ${job.index + 1} of ${job.total}` : "Here's what we understood"}
+      </p>
+      <h1 ref={headingRef} tabIndex={-1} className="survey-title outline-none">
+        Check your answers<span className="title-period">.</span>
+      </h1>
+      <p className="survey-help">
+        {answers.task}
+        {fromWords > 0 && (
+          <>
+            {" "}
+            <span className="whitespace-nowrap">
+              {fromWords} of {rows.length} answered from your description.
+            </span>
+          </>
+        )}
+      </p>
+
+      <ul className="review-list" aria-label="Your answers">
+        {rows.map((bank) => {
+          const q = adaptQuestion(bank, plan);
+          const v = answers[q.id];
+          const values = Array.isArray(v) ? v : typeof v === "string" ? [v] : [];
+          const labels = values.map((x) => q.options?.find((o) => o.value === x)?.label ?? x);
+          const read = described.includes(q.id);
+          return (
+            <li key={q.id} className="review-row">
+              <div className="min-w-0">
+                <p className="review-question">{q.title}</p>
+                <p className="review-answer">{labels.length ? labels.join(", ") : "Not assessed yet"}</p>
+                {read && (
+                  <p className="review-source">
+                    <Sparkle size={13} weight="fill" aria-hidden />
+                    <span>
+                      From your description{q.reason ? <>: {q.reason}</> : "."}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <button type="button" className="studio-quiet shrink-0" onClick={() => onChange(q.id)} aria-label={`Change: ${q.title}`}>
+                <PencilSimple size={15} aria-hidden />
+                Change
+              </button>
+            </li>
+          );
+        })}
+        {(answers.details ?? []).map((d) => (
+          <li key={d.q} className="review-row">
+            <div className="min-w-0">
+              <p className="review-question">{d.q}</p>
+              <p className="review-answer">{d.a}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onClick={onBack} className="studio-quiet">
+          <ArrowLeft size={16} aria-hidden />
+          Back
+        </button>
+        <button type="button" className="start-build" onClick={onConfirm}>
+          {!job ? "See your result" : job.next ? "On to the next job" : "See your system"}
+          <ArrowRight size={17} aria-hidden />
+        </button>
+      </div>
+    </main>
   );
 }

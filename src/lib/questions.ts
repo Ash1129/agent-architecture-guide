@@ -2,6 +2,8 @@
 // says the earlier answers make it relevant, so a rules-based task skips
 // everything about AI behaviour.
 
+import type { Detail } from "./interview";
+
 export type Shape = "rules" | "judgement" | "varies";
 export type Kinds = "yes" | "no";
 export type Split = "sections" | "voting" | "sequential";
@@ -16,6 +18,7 @@ export type Location = "open" | "residency" | "restricted" | "independence";
 export type Team = "small" | "mid" | "large";
 
 export type Answers = {
+  requirements?: ("approval" | "embedded" | "sandbox" | "assets" | "unspecified")[];
   task?: string;
   shape?: Shape;
   kinds?: Kinds;
@@ -29,9 +32,11 @@ export type Answers = {
   risks?: Risk[];
   location?: Location;
   team?: Team;
+  /** Answers to the AI's task-specific questions. Optional; the rules don't read them. */
+  details?: Detail[];
 };
 
-export type QuestionId = keyof Answers;
+export type QuestionId = Exclude<keyof Answers, "details">;
 
 export type Option = {
   value: string;
@@ -52,6 +57,7 @@ export type Question = {
   /** For multi-select: choosing this value clears the others. */
   exclusive?: string;
   appliesWhen?: (a: Answers) => boolean;
+  optional?: boolean;
 };
 
 const usesAI = (a: Answers) => a.shape === "judgement" || a.shape === "varies";
@@ -356,6 +362,19 @@ export const QUESTIONS: Question[] = [
       },
     ],
   },
+  {
+    id: "requirements", kind: "multi", optional: true, exclusive: "unspecified",
+    title: "Are any of these requirements essential?",
+    help: "Choose what you know. These constraints can change the setup even when the task itself stays the same.",
+    why: "Explicit approval, product integration, isolated execution and data operations need to be designed into the system. Leaving this unanswered means they have not been assessed.",
+    options: [
+      { value: "approval", label: "A person must approve every result before it is released or acted on", short: "every result requires human approval" },
+      { value: "embedded", label: "The AI must run inside our product or backend service", short: "the AI must be embedded in a product or service" },
+      { value: "sandbox", label: "AI-generated code must run in an isolated, restricted environment", short: "generated code requires isolated execution" },
+      { value: "assets", label: "Data tables need partition-aware backfills, quality gates or self-service operations", short: "data assets need advanced operational controls" },
+      { value: "unspecified", label: "No additional requirements identified yet", short: "additional requirements have not been identified" },
+    ],
+  },
 ];
 
 export const QUESTION_BY_ID = Object.fromEntries(QUESTIONS.map((q) => [q.id, q])) as Record<QuestionId, Question>;
@@ -376,7 +395,7 @@ export function firstUnanswered(a: Answers): Question | undefined {
 }
 
 export function isComplete(a: Answers): boolean {
-  return firstUnanswered(a) === undefined;
+  return activeQuestions(a).every((q) => q.optional || isAnswered(q, a));
 }
 
 /** Drops answers to questions that no longer apply, so stale choices never leak into the result. */
@@ -385,6 +404,7 @@ export function effectiveAnswers(a: Answers): Answers {
   for (const q of activeQuestions(a)) {
     if (a[q.id] !== undefined) (out as Record<string, unknown>)[q.id] = a[q.id];
   }
+  if (a.details?.length) out.details = a.details;
   return out;
 }
 

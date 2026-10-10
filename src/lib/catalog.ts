@@ -11,6 +11,9 @@ export type ToolId =
   | "cowork"
   | "claude"
   | "hermes"
+  | "langgraph"
+  | "promptfoo"
+  | "langfuse"
   | "n8n-agent"
   | "skill"
   | "mcp"
@@ -30,6 +33,21 @@ export type Tool = {
 };
 
 export const TOOLS: Record<ToolId, Tool> = {
+  langgraph: {
+    id: "langgraph", name: "LangGraph", product: true,
+    plain: "A developer framework for agents with explicit steps, shared state and human review. Your team writes and operates the workflow in code.",
+    link: "https://docs.langchain.com/oss/python/langgraph/overview",
+  },
+  promptfoo: {
+    id: "promptfoo", name: "Promptfoo", product: true,
+    plain: "Tests AI outputs against examples and checks for regressions or unsafe behavior before changes go live.",
+    link: "https://www.promptfoo.dev/docs/intro/",
+  },
+  langfuse: {
+    id: "langfuse", name: "Langfuse", product: true,
+    plain: "Records traces of AI runs so you can investigate failures, latency, cost and output quality.",
+    link: "https://langfuse.com/docs",
+  },
   n8n: {
     id: "n8n",
     name: "n8n",
@@ -46,18 +64,19 @@ export const TOOLS: Record<ToolId, Tool> = {
     product: true,
     link: "https://airflow.apache.org",
   },
+  // Formerly Claude Cowork: chat and agent work are now one Claude app. The id stays, so saved results and links still work.
   cowork: {
     id: "cowork",
-    name: "Claude Cowork",
+    name: "Claude, as an agent",
     plain:
-      "Claude working as an agent in the desktop app. It can take a multi-step task, work through it on its own, and run scheduled tasks while you're away.",
+      "The Claude app working as an agent, in the desktop app, on the web or on mobile. It can take a multi-step task, work through it on its own, and run scheduled tasks in the cloud while your computer is off.",
     product: true,
     link: "https://claude.com",
   },
   claude: {
     id: "claude",
-    name: "Claude (chat or desktop app)",
-    plain: "The everyday Claude app. You start each task with a request, and it works on that request.",
+    name: "Claude",
+    plain: "The everyday Claude app, used on request. You start each task, and it works on that request.",
     product: true,
     link: "https://claude.ai",
   },
@@ -157,7 +176,7 @@ export const TOPOLOGIES: Record<TopologyId, Topology> = {
       "Jobs arranged so each one starts only when the jobs it depends on have finished. Engineers call this a DAG.",
     goodFor: "Data work where many jobs feed each other and timing matters.",
     example: "Import sales and inventory overnight, then build the margin report once both imports have landed.",
-    sources: ["selfhosting"],
+    sources: ["selfhosting", "airflowDocs"],
   },
   chain: {
     id: "chain",

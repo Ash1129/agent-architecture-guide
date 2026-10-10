@@ -8,8 +8,14 @@ import { QUESTIONS, type QuestionId } from "../lib/questions";
 import { href, type Route } from "../lib/router";
 import { RULES, RULE_GROUPS } from "../lib/rules";
 import { ALSO_CREDITED, SOURCES } from "../lib/sources";
-import { AI_TAILORING } from "../lib/features";
+
+const SOURCE_GROUPS = [
+  { origin: "assignment", title: "From AI Assignment 4" },
+  { origin: "added", title: "Added for this guide" },
+] as const;
+import { AI_ENABLED } from "../lib/features";
 import { ALGORITHMS, MODELS, MODEL_RULES } from "../lib/models";
+import { BUILD_EXTRA, BUILD_WEEKS, EUR_TO_USD, FULL_TIME_HOURS, HARDWARE, MODEL_PRICES, PRICES_CHECKED, REVIEW, ROLE_MULTIPLIER, RUNS_PER_MONTH, SAVINGS, TOKENS_PER_CALL, money, weeksRange } from "../lib/cost";
 
 const ASKED_WHEN: Partial<Record<QuestionId, string>> = {
   kinds: "Only when AI is involved",
@@ -91,9 +97,9 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
           </p>
         </div>
         <div>
-          <h2 className="text-[16px] font-semibold text-ink">{AI_TAILORING ? "What leaves your browser" : "Your answers stay with you"}</h2>
+          <h2 className="text-[16px] font-semibold text-ink">{AI_ENABLED ? "What leaves your browser" : "Your answers stay with you"}</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
-            {AI_TAILORING
+            {AI_ENABLED
               ? "Everything runs in your browser and there's no account. The one exception is Tailor with AI: if you choose it, your task and answers go to OpenAI through this site's server to tailor the n8n workflow. A shared link carries the answers inside the link itself."
               : "Everything runs in your browser. There's no account and nothing is sent anywhere. A shared link carries the answers inside the link itself."}
           </p>
@@ -250,6 +256,72 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
         </p>
       </section>
 
+      {/* ------------------------------------------------------------ cost */}
+      <section className="mt-20" aria-labelledby="cost">
+        <H2 id="cost">How costs are estimated</H2>
+        <p className="mt-3 max-w-[62ch] text-[16px] leading-relaxed text-muted">
+          Every result estimates what it costs to run and to build, always as a range. Running cost is calculated from the design:
+          each AI step's model at its listed price, times the runs a month your volume answer implies. Prices are from the
+          providers' own pricing pages, read {PRICES_CHECKED}. Build time and review time are this guide's own estimates: no
+          research measures them.
+        </p>
+        <div className="mt-8 grid gap-x-10 gap-y-6 md:grid-cols-2">
+          <div className="border-t border-line pt-3">
+            <h3 className="text-[15px] font-semibold text-ink">Runs a month</h3>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted">
+              A few times a week: {RUNS_PER_MONTH.occasional.join("–")}. Dozens a day: {RUNS_PER_MONTH.daily.map((n) => n.toLocaleString("en-US")).join("–")}.
+              Hundreds a day: {RUNS_PER_MONTH.high.map((n) => n.toLocaleString("en-US")).join("–")}.
+            </p>
+          </div>
+          <div className="border-t border-line pt-3">
+            <h3 className="text-[15px] font-semibold text-ink">Tokens per AI step</h3>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted">
+              {TOKENS_PER_CALL.input.map((n) => n.toLocaleString("en-US")).join("–")} in and {TOKENS_PER_CALL.output.map((n) => n.toLocaleString("en-US")).join("–")} out per call.
+              Agents take several turns, about {ROLE_MULTIPLIER.agent}× a single call; a team of agents adds up across its agents. Alternative paths
+              count once; steps that run at the same time all count.
+            </p>
+          </div>
+          <div className="border-t border-line pt-3">
+            <h3 className="text-[15px] font-semibold text-ink">Model prices, per million tokens</h3>
+            <ul className="mt-1 space-y-0.5 text-[14px] leading-relaxed text-muted">
+              {(Object.keys(MODEL_PRICES) as (keyof typeof MODEL_PRICES)[]).map((id) => (
+                <li key={id}>
+                  {MODELS[id].name}: ${MODEL_PRICES[id].input.filter((v, i, a) => a.indexOf(v) === i).join("–")} in, ${MODEL_PRICES[id].output.filter((v, i, a) => a.indexOf(v) === i).join("–")} out
+                  {id.startsWith("open") && <> ({MODEL_PRICES[id].source})</>}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="border-t border-line pt-3">
+            <h3 className="text-[15px] font-semibold text-ink">The low and high ends</h3>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted">
+              The low end assumes the savings that apply: caching the {SAVINGS.cachedShare * 100}% of each call that repeats (at {SAVINGS.cachePrice * 100}% of the
+              price) when there's a playbook or reference material, and batch processing ({SAVINGS.batch * 100}% off on Claude) for scheduled work. The high end
+              assumes neither.
+            </p>
+          </div>
+          <div className="border-t border-line pt-3">
+            <h3 className="text-[15px] font-semibold text-ink">Platform and hardware</h3>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted">
+              n8n Cloud is sized to your runs (euro prices at {EUR_TO_USD} dollars to the euro); Claude plans count one person; Hermes and Airflow
+              are free software on your own server. Own hardware, when the hosting advice includes it, is {money(HARDWARE.small[0])} for one GPU
+              running small models and {money(HARDWARE.large[0])}–{money(HARDWARE.large[1])} for large ones.
+            </p>
+          </div>
+          <div className="border-t border-line pt-3">
+            <h3 className="text-[15px] font-semibold text-ink">Review and build time</h3>
+            <p className="mt-1 text-[14px] leading-relaxed text-muted">
+              A person reviews every result at levels 1 and 2, {REVIEW.share[3].map((x) => `${x * 100}%`).join("–")} at level 3 and{" "}
+              {REVIEW.share[4].map((x) => `${x * 100}%`).join("–")} at level 4, at {REVIEW.minutes.join("–")} minutes each; past {FULL_TIME_HOURS} hours a week the
+              result says it's more than one person. A first version takes {weeksRange(BUILD_WEEKS.automation)} for plain automation,{" "}
+              {weeksRange(BUILD_WEEKS.workflow)} for a workflow with AI steps, {weeksRange(BUILD_WEEKS.agent)} for one agent and {weeksRange(BUILD_WEEKS.multi)} for
+              a team of agents, plus {weeksRange(BUILD_EXTRA.act)} when it acts in your systems and {weeksRange(BUILD_EXTRA.tests)} to build a test set
+              when results can't be checked against a list.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ------------------------------------------------------------ autonomy */}
       <section className="mt-20" aria-labelledby="autonomy">
         <H2 id="autonomy">The four autonomy levels</H2>
@@ -285,29 +357,37 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
       <section className="mt-20" aria-labelledby="sources">
         <H2 id="sources">Sources</H2>
         <p className="mt-3 max-w-[62ch] text-[16px] leading-relaxed text-muted">
-          All sources are those cited in AI Assignment 4. Counts show how many rules rely on each.
+          Most sources come from AI Assignment 4. The rest were added while building the guide, mainly official documentation
+          for the tools it recommends. Counts show how many rules rely on each.
         </p>
-        <ul className="mt-8 divide-y divide-line border-y border-line">
-          {Object.values(SOURCES).map((s) => (
-            <li key={s.id} className="grid gap-2 py-5 md:grid-cols-[1fr_1fr_6rem] md:gap-8">
-              <div>
-                <p className="text-[15px] font-medium leading-snug text-ink">
-                  {s.url ? (
-                    <a href={s.url} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline">
-                      {s.citation}
-                      <ArrowSquareOut size={13} aria-hidden className="ml-1 inline align-baseline text-muted" />
-                      <span className="sr-only">(opens in a new tab)</span>
-                    </a>
-                  ) : (
-                    s.citation
-                  )}
-                </p>
-              </div>
-              <p className="text-[14.5px] leading-relaxed text-muted">{s.usedFor}</p>
-              <p className="text-[14px] text-muted md:text-right">{citeCount(s.id)} rules</p>
-            </li>
-          ))}
-        </ul>
+        {SOURCE_GROUPS.map((g) => (
+          <div key={g.origin} className="mt-8">
+            <h3 className="text-[15px] font-semibold text-ink">{g.title}</h3>
+            <ul className="mt-3 divide-y divide-line border-y border-line">
+              {Object.values(SOURCES)
+                .filter((s) => s.origin === g.origin)
+                .map((s) => (
+                <li key={s.id} className="grid gap-2 py-5 md:grid-cols-[1fr_1fr_6rem] md:gap-8">
+                  <div>
+                    <p className="text-[15px] font-medium leading-snug text-ink">
+                      {s.url ? (
+                        <a href={s.url} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline">
+                          {s.citation}
+                          <ArrowSquareOut size={13} aria-hidden className="ml-1 inline align-baseline text-muted" />
+                          <span className="sr-only">(opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        s.citation
+                      )}
+                    </p>
+                  </div>
+                  <p className="text-[14.5px] leading-relaxed text-muted">{s.usedFor}</p>
+                  <p className="text-[14px] text-muted md:text-right">{citeCount(s.id)} rules</p>
+                </li>
+                ))}
+            </ul>
+          </div>
+        ))}
         <p className="mt-4 max-w-[70ch] text-[13.5px] leading-relaxed text-muted">Also credited in the assignment: {ALSO_CREDITED}</p>
       </section>
 

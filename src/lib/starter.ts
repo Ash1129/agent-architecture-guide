@@ -5,10 +5,28 @@
 // file is enough.
 
 import { AUTONOMY, LAST_REVIEWED, TOOLS, TOPOLOGIES } from "./catalog";
+import { costLines, estimateCost } from "./cost";
 import { type BNode, type Blueprint, KIND_LABEL, incoming, outgoing } from "./blueprint";
 import type { ModelId } from "./models";
 import { type Answers, effectiveAnswers, said } from "./questions";
+import { type KitText, csvCell } from "./kittext";
 import type { Recommendation } from "./rules";
+import n8nData from "../../knowledge/chunks/09-n8n-engineering/N01-data-contracts-and-item-linking.md?raw";
+import n8nRecovery from "../../knowledge/chunks/09-n8n-engineering/N02-failure-recovery-and-testing.md?raw";
+import n8nActions from "../../knowledge/chunks/09-n8n-engineering/N03-safe-external-actions.md?raw";
+import airflowData from "../../knowledge/chunks/10-airflow-engineering/R01-data-intervals-and-dependencies.md?raw";
+import airflowRecovery from "../../knowledge/chunks/10-airflow-engineering/R02-retries-backfills-and-failure-signals.md?raw";
+import airflowOperations from "../../knowledge/chunks/10-airflow-engineering/R03-testing-security-and-operation.md?raw";
+import hermesActions from "../../knowledge/chunks/11-hermes-engineering/H01-tool-boundaries-and-actions.md?raw";
+import hermesLearning from "../../knowledge/chunks/11-hermes-engineering/H02-memory-and-skill-review.md?raw";
+import hermesRecovery from "../../knowledge/chunks/11-hermes-engineering/H03-unattended-operation-and-recovery.md?raw";
+
+import { langgraphKit } from "./langgraph-kit";
+import langgraphState from "../../knowledge/chunks/12-langgraph-engineering/J01-state-and-agent-boundaries.md?raw";
+import langgraphPersistence from "../../knowledge/chunks/12-langgraph-engineering/J02-persistence-and-replay.md?raw";
+import langgraphReview from "../../knowledge/chunks/12-langgraph-engineering/J03-human-review-and-deployment.md?raw";
+import aiEvaluations from "../../knowledge/chunks/13-testing-and-observability/O01-evaluations-and-release-gates.md?raw";
+import aiTracing from "../../knowledge/chunks/13-testing-and-observability/O02-tracing-privacy-and-cost.md?raw";
 
 export type KitFile = {
   path: string;
@@ -19,7 +37,7 @@ export type KitFile = {
 
 /** A ready-to-use artifact for one external tool, with the one action needed to use it. */
 export type KitTool = {
-  id: "n8n" | "claude-plugin" | "hermes" | "airflow";
+  id: "n8n" | "claude-plugin" | "hermes" | "airflow" | "langgraph";
   name: string;
   how: string;
   action:
@@ -50,13 +68,31 @@ export function slugify(text: string, fallback = "agent-system"): string {
 }
 
 const modelOf = (n: BNode) => (n.engine?.kind === "model" ? n.engine : null);
+const roleOf = (n: BNode) => (n.engine?.kind === "model" ? n.engine.role : undefined);
+/** The lead coordinator: the first coordinator step (later ones combine its specialists' work). */
+const leadCoordinator = (bp: Blueprint) => bp.nodes.find((n) => roleOf(n) === "coordinator");
+/** The agents that each get their own brief: the lead coordinator and every specialist. */
+const briefedAgents = (bp: Blueprint) => bp.nodes.filter((n) => n === leadCoordinator(bp) || roleOf(n) === "specialist");
 const fence = (lang: string, body: string) => "```" + lang + "\n" + body.trimEnd() + "\n```";
 const has = (r: Recommendation, t: string) => r.tools.some((x) => x.tool === t);
 const coreOf = (r: Recommendation) => r.tools.find((t) => t.core)!.tool;
 
+/** Export the same evidence used by retrieval, without a second copy to maintain. */
+function engineeringGuide(platform: string, chapters: string[]): string {
+  return `# ${platform} engineering guide\n\nApply these recommendations when completing the scaffold. The exported workflow does not automatically implement these protections.\n\n` +
+    chapters.map((raw) => {
+      const title = /^title: (.+)$/m.exec(raw)?.[1] ?? "Engineering guidance";
+      return `## ${title}\n\n${raw.replace(/^---[\s\S]*?---\s*/, "").replace(/^## /gm, "### ")}`;
+    }).join("\n\n");
+}
+
 // ------------------------------------------------------------------ public
 
-export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers): Kit {
+/**
+ * `text` is the task-specific writing from the AI kit step (src/lib/kittext.ts).
+ * Every section is optional; without it the kit uses its templates.
+ */
+export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, text: KitText = {}): Kit {
   const a = effectiveAnswers(raw);
   const task = r.task || "the task";
   const slug = slugify(r.task);
@@ -64,7 +100,7 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers):
   const tools: KitTool[] = [];
   const ai = r.models.needed;
   const core = coreOf(r);
-  const prompt = ai ? systemPrompt(r, bp, a, task) : "";
+  const prompt = ai ? systemPrompt(r, bp, a, task, text) : "";
 
   if (ai) files.push({ path: "system-prompt.md", lang: "markdown", purpose: "The standing brief every AI step reads first.", content: prompt });
 
@@ -72,6 +108,11 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers):
   if (core === "n8n" || core === "n8n-agent" || (core === "hermes" && has(r, "n8n"))) {
     const wf = core === "hermes" ? n8nHandoff(task, slug, a) : n8nWorkflow(r, bp, a, task, slug, prompt);
     files.push({ path: "n8n/workflow.json", lang: "json", purpose: "Paste onto an empty n8n canvas, or use Import from File.", content: JSON.stringify(wf, null, 2) });
+    files.push({
+      path: "n8n/ENGINEERING.md", lang: "markdown",
+      purpose: "Source-backed implementation guidance and acceptance checks for the workflow builder.",
+      content: engineeringGuide("n8n", [n8nData, n8nRecovery, n8nActions]),
+    });
     tools.push({
       id: "n8n",
       name: "n8n workflow",
@@ -80,26 +121,38 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers):
     });
   }
 
-  // Claude (chat or Cowork): an installable plugin with the Skill, agents and connectors.
+  // Claude: an installable plugin with the Skill, agents and connectors.
   if (core === "claude" || core === "cowork") {
-    for (const f of claudePlugin(r, bp, a, task, slug, prompt)) files.push(f);
+    for (const f of claudePlugin(r, bp, a, task, slug, prompt, text)) files.push(f);
     tools.push({
       id: "claude-plugin",
       name: "Claude plugin",
-      how: `Drag ${slug}.plugin into a Claude Cowork chat and press Install. In Claude Code, copy its skills folder into .claude/skills.`,
+      how: `Drag ${slug}.plugin into a Claude chat and press Install. In Claude Code, copy its skills folder into .claude/skills.`,
       action: { kind: "zip", label: "Download .plugin", prefix: "claude-plugin/", filename: `${slug}.plugin` },
     });
   }
 
   // Hermes Agent: settings, persona, skill and a setup script.
   if (core === "hermes") {
-    for (const f of hermesSetup(r, bp, a, task, slug, prompt)) files.push(f);
+    for (const f of hermesSetup(r, bp, a, task, slug, prompt, text)) files.push(f);
+    files.push({
+      path: "hermes/ENGINEERING.md",
+      lang: "markdown",
+      purpose: "Source-backed rules for tool permissions, reviewed learning and unattended recovery.",
+      content: engineeringGuide("Hermes Agent", [hermesActions, hermesLearning, hermesRecovery]),
+    });
     tools.push({
       id: "hermes",
       name: "Hermes Agent setup",
       how: "Unzip, read setup.sh, then run sh setup.sh. It installs the skill and persona into ~/.hermes and creates the schedule.",
       action: { kind: "zip", label: "Download setup", prefix: "hermes/", filename: `${slug}-hermes.zip` },
     });
+  }
+
+  if (core === "langgraph") {
+    files.push(...langgraphKit(bp, task, prompt));
+    files.push({ path: "langgraph/ENGINEERING.md", lang: "markdown", purpose: "State, recovery and human review contracts for the developer.", content: engineeringGuide("LangGraph", [langgraphState, langgraphPersistence, langgraphReview]) });
+    tools.push({ id: "langgraph", name: "LangGraph starter", how: "Unzip and follow README.md to run the credential-free fixture, then implement the supplied design.", action: { kind: "zip", label: "Download Python starter", prefix: "langgraph/", filename: `${slug}-langgraph.zip` } });
   }
 
   // MCP for Claude Code users building it themselves (plugins and Hermes carry their own).
@@ -112,33 +165,45 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers):
   if (has(r, "airflow")) {
     const path = `airflow/dags/${slug.replace(/-/g, "_")}.py`;
     files.push({ path, lang: "python", purpose: "An Airflow DAG with the dependency waits built in.", content: airflowDag(bp, task, slug, core !== "airflow") });
+    files.push({
+      path: "airflow/ENGINEERING.md", lang: "markdown",
+      purpose: "Source-backed Airflow implementation guidance and acceptance checks for the workflow builder.",
+      content: engineeringGuide("Apache Airflow", [airflowData, airflowRecovery, airflowOperations]),
+    });
     tools.push({ id: "airflow", name: "Airflow DAG", how: "Save into your Airflow dags folder, then point the two sensors at your real upstream jobs.", action: { kind: "download", label: "Download DAG", path } });
   }
   if (r.approach.id === "automation")
     files.push({ path: "rules/decision-table.csv", lang: "csv", purpose: "The rules, one row each. The first matching row wins.", content: decisionTable() });
-  files.push({ path: "evals/examples.csv", lang: "csv", purpose: "Your test set: real past cases and what good looked like.", content: examplesCsv(r) });
+  if (ai) {
+    files.push({ path: "evals/ENGINEERING.md", lang: "markdown", purpose: "Repeatable evaluation and release checks with Promptfoo.", content: engineeringGuide("AI evaluations", [aiEvaluations]) });
+    files.push({ path: "observability/ENGINEERING.md", lang: "markdown", purpose: "Privacy-aware tracing, quality and cost checks with Langfuse.", content: engineeringGuide("AI observability", [aiTracing]) });
+  }
+  files.push({ path: "evals/examples.csv", lang: "csv", purpose: "Your test set: real past cases and what good looked like.", content: examplesCsv(r, text) });
 
   files.unshift({
     path: "BUILD.md",
     lang: "markdown",
     purpose: "Paste into Claude Code, Codex or any AI assistant. Contains every other file.",
-    content: buildBrief(r, bp, a, task, files),
+    content: buildBrief(r, bp, a, task, files, text),
   });
   return { files, tools };
 }
 
 // ------------------------------------------------------------------ BUILD.md
 
-function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, files: KitFile[]): string {
+function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, files: KitFile[], text: KitText): string {
+  const written = Object.keys(text).length > 0;
   const L: string[] = [];
   const add = (...x: string[]) => L.push(...x);
   const level = r.autonomy.level;
   const models = [...new Map(bp.nodes.filter(modelOf).map((n) => [modelOf(n)!.model, modelOf(n)!])).values()];
+  // Steps already on the strongest model have nothing to step down to.
+  const stepDown = models.some((m) => m.model !== "opus" && m.model !== "openLarge");
 
   add(
     `# Build brief: ${task}`,
     "",
-    `> Generated by Agent Architecture Guide from fixed, published rules. Paste this whole file into Claude Code, Codex or another AI coding assistant, or save it as \`CLAUDE.md\` (Claude Code) or \`AGENTS.md\` (Codex) in an empty project folder. Product and model names were current as of ${LAST_REVIEWED}; confirm them before you build.`,
+    `> Generated by Agent Architecture Guide ${written ? "from fixed, published rules (the steps, models and safeguards), with task-specific text written by AI and checked against them" : "from fixed, published rules"}. Paste this whole file into Claude Code, Codex or another AI coding assistant, or save it as \`CLAUDE.md\` (Claude Code) or \`AGENTS.md\` (Codex) in an empty project folder. Product and model names were current as of ${LAST_REVIEWED}; confirm them before you build.`,
     "",
     "## Your role",
     "",
@@ -154,11 +219,16 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     "",
     `**${task}.** ${r.approach.summary}`,
     "",
+    ...(text.overview ? [text.overview, ""] : []),
     `- Approach: ${r.approach.title}`,
     `- Agents: ${r.approach.agents}`,
     `- Main tool: ${TOOLS[coreOf(r)].name}`,
     `- Runs on: ${r.hosting.title}`,
     `- Autonomy: level ${level} of 4, ${AUTONOMY[level].name.toLowerCase()}. ${AUTONOMY[level].plain}`,
+    "",
+    "What it should cost (the guide's estimate; tell the owner before anything adds cost beyond this):",
+    "",
+    ...costLines(estimateCost(r, bp, a)),
     "",
     "Why this design (from the owner's answers):",
     "",
@@ -187,7 +257,7 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     add(
       "## Models",
       "",
-      `Build the first version with the most capable model on every AI step (${models.some((m) => m.model.startsWith("open")) ? "a large open-weight model" : `\`${MODEL_API_ID.opus}\``}), record results on the test set, then switch each step to the model below and keep the switch only if quality still meets the baseline. Judge on quality, cost per run and speed.`,
+      `Build the first version with the most capable model on every AI step (${models.some((m) => m.model.startsWith("open")) ? "a large open-weight model" : `\`${MODEL_API_ID.opus}\``}) and record results on the test set. ${stepDown ? "Then switch each step whose model below is smaller, and keep the switch only if quality still meets the baseline. Steps listed with the most capable model stay on it." : "Every step below stays on that model."} Judge on quality, cost per run and speed.`,
       "",
       "| Model | API id | Used for steps | Why |",
       "| --- | --- | --- | --- |",
@@ -225,20 +295,23 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     `2. Ask the owner for 10 to 20 real past examples and fill in \`evals/examples.csv\`. This is the test set.`,
     ...stepsForCore(r, a).map((s, i) => `${i + 3}. ${s}`),
     `${stepsForCore(r, a).length + 3}. Run every example through the system and record the results as the baseline.`,
-    `${stepsForCore(r, a).length + 4}. ${r.models.needed ? "Step each AI step down to the model listed above, re-run the test set, and keep only changes that hold quality." : "Run it alongside the current process for two weeks before switching over."}`,
+    `${stepsForCore(r, a).length + 4}. ${!r.models.needed ? "Run it alongside the current process for two weeks before switching over." : stepDown ? "Move each AI step whose listed model is smaller onto that model, re-run the test set, and keep only changes that hold quality." : "Re-run the test set after every change, and keep only changes that hold quality."}`,
     `${stepsForCore(r, a).length + 5}. Pilot at autonomy level ${level} (${AUTONOMY[level].name.toLowerCase()}) with the checkpoints above. Agree with the owner what track record earns the next level.`,
     "",
+    ...(text.buildNotes?.length ? ["Notes for this task:", "", ...text.buildNotes.map((x) => `- ${x}`), ""] : []),
     "The owner's own first steps this week:",
     "",
     ...r.firstSteps.map((s) => `- ${s}`),
     "",
     "## Watch out for",
     "",
+    ...(text.watchOut ?? []).map((w) => `- **${w.title}.** ${w.body} (knowledge base: ${w.kb.join(", ")})`),
     ...r.gotchas.slice(0, 6).map((g) => `- **${g.title}.** ${g.body}`),
     "",
     "## Ask the owner for",
     "",
     ...askFor(r, a),
+    ...(text.ownerAsks ?? []).map((x) => `- ${x}`),
     "",
     "## Done when",
     "",
@@ -268,11 +341,14 @@ function stepsForCore(r: Recommendation, a: Answers): string[] {
   } else if (core === "airflow") {
     out.push("Set up Airflow (a managed service or Docker), add the DAG file, and point the sensors at the real upstream jobs.");
   } else if (core === "cowork" || core === "claude") {
-    out.push("Package the `claude-plugin/` folder as a `.plugin` zip (or use the one downloaded from the guide) and install it in Claude Cowork; for Claude Code, copy its `skills` folder into `.claude/skills`.");
+    out.push("Package the `claude-plugin/` folder as a `.plugin` zip (or use the one downloaded from the guide) and install it in Claude by dragging it into a chat; for Claude Code, copy its `skills` folder into `.claude/skills`.");
     out.push("Fill in the House rules section of the Skill with the owner.");
     if (has(r, "mcp")) out.push("Replace the MCP server address in the plugin's `.mcp.json` with the owner's connector, read-only first.");
-    if (a.trigger === "schedule") out.push("Set up the schedule in Cowork by asking it to run the skill at the agreed time.");
+    if (a.trigger === "schedule") out.push("Set up the schedule in Claude by asking it to run the skill at the agreed time.");
     if (has(r, "project")) out.push("Create a Claude Project for this task and add the reference documents to it.");
+  } else if (core === "langgraph") {
+    out.push("Read `langgraph/README.md` and run the credential-free fixture in a dedicated Python environment. Implement the full architecture in `langgraph/design.json` with validated adapters.");
+    out.push("Add persistent checkpoints and an authenticated review interface, then test restart recovery and action deduplication before connecting real services.");
   } else if (core === "hermes") {
     out.push("Install Hermes Agent, then run `hermes/setup.sh` and merge `hermes/config.yaml` into `~/.hermes/config.yaml`.");
     out.push("Fill in the House rules section of the Skill and the [Fill in] parts of `SOUL.md` with the owner.");
@@ -294,7 +370,7 @@ function askFor(r: Recommendation, a: Answers): string[] {
 
 // ------------------------------------------------------------------ system prompt and skill
 
-function systemPrompt(r: Recommendation, bp: Blueprint, a: Answers, task: string): string {
+function systemPrompt(r: Recommendation, bp: Blueprint, a: Answers, task: string, text: KitText): string {
   const visible = a.risks?.includes("visible");
   const personal = a.risks?.includes("personal");
   const rules = [
@@ -309,18 +385,21 @@ function systemPrompt(r: Recommendation, bp: Blueprint, a: Answers, task: string
   const base = [
     `# System prompt: ${task}`,
     "",
-    `You work for a business on one task: ${task.toLowerCase()}. [Fill in: one sentence about the business and who its customers are.]`,
+    `You work for a business on one task: ${task.toLowerCase()}. ${text.context ?? "[Fill in: one sentence about the business and who its customers are.]"}`,
     "",
+    // Task-specific rules add to the fixed ones below; they never replace them.
+    ...(text.rules?.length ? ["## For this task", "", ...text.rules.map((x) => `- ${x}`), ""] : []),
     "## Always",
     "",
     ...rules.map((x) => `- ${x}`),
     "",
     "## Output",
     "",
-    "[Fill in: the exact format the result should take, with one short example of a good result.]",
+    text.output ?? "[Fill in: the exact format the result should take, with one short example of a good result.]",
   ];
   if (r.approach.id !== "multi") return base.join("\n");
-  const agents = bp.nodes.filter((n) => n.id === "coord" || n.id.startsWith("spec"));
+  const agents = briefedAgents(bp);
+  const lead = leadCoordinator(bp);
   return [
     ...base,
     "",
@@ -332,9 +411,10 @@ function systemPrompt(r: Recommendation, bp: Blueprint, a: Answers, task: string
       `### ${n.name}${n.engine?.kind === "model" ? ` (\`${MODEL_API_ID[n.engine.model]}\`)` : ""}`,
       "",
       n.what,
-      n.id === "coord"
-        ? "Decide which specialist handles each piece, give each a precise brief, and combine what comes back. Stop after a set number of rounds and hand unresolved cases to a person."
-        : "[Fill in: this specialist's area and what it must hand back to the coordinator.]",
+      text.briefs?.[n.id] ??
+        (n === lead
+          ? "Decide which specialist handles each piece, give each a precise brief, and combine what comes back. Stop after a set number of rounds and hand unresolved cases to a person."
+          : "[Fill in: this specialist's area and what it must hand back to the coordinator.]"),
       "",
     ]),
   ].join("\n");
@@ -369,15 +449,16 @@ function skillBody(r: Recommendation, bp: Blueprint, a: Answers, task: string): 
   ];
 }
 
-function skillFile(r: Recommendation, bp: Blueprint, a: Answers, task: string, slug: string, flavor: "claude" | "hermes"): string {
+function skillFile(r: Recommendation, bp: Blueprint, a: Answers, task: string, slug: string, flavor: "claude" | "hermes", text: KitText): string {
   const front =
     flavor === "claude"
       ? [
           "---",
           `name: ${slug}`,
           "description: >",
-          `  This skill should be used when the user asks to "${task.toLowerCase()}", or hands over work of that kind.`,
-          "  It follows the business's playbook and stops to ask a person when unsure.",
+          ...(text.skillDescription
+            ? [`  ${text.skillDescription}`]
+            : [`  This skill should be used when the user asks to "${task.toLowerCase()}", or hands over work of that kind.`, "  It follows the business's playbook and stops to ask a person when unsure."]),
           "metadata:",
           '  version: "0.1.0"',
           "---",
@@ -385,7 +466,7 @@ function skillFile(r: Recommendation, bp: Blueprint, a: Answers, task: string, s
       : [
           "---",
           `name: ${slug}`,
-          `description: Use when asked to ${task.toLowerCase()}. Follows the business's playbook and stops to ask a person when unsure.`,
+          `description: ${text.skillDescription ?? `Use when asked to ${task.toLowerCase()}. Follows the business's playbook and stops to ask a person when unsure.`}`,
           "version: 1.0.0",
           "metadata:",
           "  hermes:",
@@ -421,7 +502,7 @@ function mcpConfig(a: Answers): string {
 
 const CLAUDE_ALIAS: Partial<Record<ModelId, string>> = { opus: "opus", sonnet: "sonnet", haiku: "haiku" };
 
-function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string, slug: string, prompt: string): KitFile[] {
+function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string, slug: string, prompt: string, text: KitText): KitFile[] {
   const root = "claude-plugin/";
   const out: KitFile[] = [
     {
@@ -438,17 +519,17 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
       path: `${root}skills/${slug}/SKILL.md`,
       lang: "markdown",
       purpose: "The Skill: your playbook, loaded whenever this task comes up.",
-      content: skillFile(r, bp, a, task, slug, "claude"),
+      content: skillFile(r, bp, a, task, slug, "claude", text),
     },
   ];
 
   // Several agents: one subagent file each, set to its model.
   if (r.approach.id === "multi") {
     const colors = ["blue", "green", "magenta", "cyan"];
-    bp.nodes
-      .filter((n) => n.id === "coord" || n.id.startsWith("spec"))
+    const lead = leadCoordinator(bp);
+    briefedAgents(bp)
       .forEach((n, i) => {
-        const name = slugify(`${slug.split("-").slice(0, 3).join("-")}-${n.id === "coord" ? "coordinator" : n.name}`);
+        const name = slugify(`${slug.split("-").slice(0, 3).join("-")}-${n === lead ? "coordinator" : n.name}`);
         const model = n.engine?.kind === "model" ? CLAUDE_ALIAS[n.engine.model] ?? "inherit" : "inherit";
         out.push({
           path: `${root}agents/${name}.md`,
@@ -470,9 +551,10 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
             "",
             n.what,
             "",
-            n.id === "coord"
-              ? "Break each case into pieces, give each specialist a precise brief, and combine what comes back. Stop after a set number of rounds and hand unresolved cases to a person."
-              : "[Fill in: this specialist's area, and exactly what it must hand back to the coordinator.]",
+            text.briefs?.[n.id] ??
+              (n === lead
+                ? "Break each case into pieces, give each specialist a precise brief, and combine what comes back. Stop after a set number of rounds and hand unresolved cases to a person."
+                : "[Fill in: this specialist's area, and exactly what it must hand back to the coordinator.]"),
             "",
             "Follow these standing rules:",
             "",
@@ -504,14 +586,14 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
       "",
       "## Install",
       "",
-      `- **Claude Cowork:** drag \`${slug}.plugin\` into a chat and press Install.`,
+      `- **Claude:** drag \`${slug}.plugin\` into a chat and press Install.`,
       "- **Claude Code:** copy the `skills` folder into your project's `.claude/skills` folder" + (has(r, "mcp") ? ", and `.mcp.json` into the project root." : "."),
       "",
       "## Before first use",
       "",
       "- Open `skills/" + slug + "/SKILL.md` and fill in the House rules section.",
       ...(has(r, "mcp") ? ["- Replace the MCP server address in `.mcp.json` with your system's connector, read-only first."] : []),
-      ...(a.trigger === "schedule" ? [`- To run it on a schedule, ask Cowork: "Every weekday at 7am, use the ${slug} skill."`] : []),
+      ...(a.trigger === "schedule" ? [`- To run it on a schedule, ask Claude: "Every weekday at 7am, use the ${slug} skill."`] : []),
       ...(has(r, "project")
         ? ["", "## Claude Project instructions", "", "Create a Claude Project for this task, add your reference documents, and paste this into its instructions:", "", "> " + prompt.split("\n").filter((l) => l.startsWith("- ")).join(" ").slice(0, 900)]
         : []),
@@ -522,12 +604,12 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
 
 // ------------------------------------------------------------------ Hermes Agent
 
-function hermesSetup(r: Recommendation, bp: Blueprint, a: Answers, task: string, slug: string, prompt: string): KitFile[] {
+function hermesSetup(r: Recommendation, bp: Blueprint, a: Answers, task: string, slug: string, prompt: string, text: KitText): KitFile[] {
   const root = "hermes/";
-  const lead = bp.nodes.find((n) => n.id === "coord" || n.id === "agent") ?? bp.nodes.find((n) => n.engine?.kind === "model");
+  const lead = bp.nodes.find((n) => roleOf(n) === "coordinator" || roleOf(n) === "agent") ?? bp.nodes.find((n) => n.engine?.kind === "model");
   const model = lead?.engine?.kind === "model" ? lead.engine.model : "sonnet";
   const modelLine = model.startsWith("open")
-    ? `model: REPLACE-provider/qwen3-235b   # a provider available where you operate, for example a local Ollama or a regional host`
+    ? `model: REPLACE-provider/kimi-k2.6   # Kimi K2.6, a leading open-weight model (October 2026), from a provider available where you operate or your own servers`
     : `model: anthropic/${MODEL_API_ID[model]}`;
   const schedule = a.trigger === "schedule" ? `hermes cron create "0 7 * * 1-5" ${JSON.stringify(task)} --skill ${slug}` : "";
   return [
@@ -555,7 +637,7 @@ function hermesSetup(r: Recommendation, bp: Blueprint, a: Answers, task: string,
       path: `${root}skills/business/${slug}/SKILL.md`,
       lang: "markdown",
       purpose: "The Skill, in Hermes's format.",
-      content: skillFile(r, bp, a, task, slug, "hermes"),
+      content: skillFile(r, bp, a, task, slug, "hermes", text),
     },
     {
       path: `${root}setup.sh`,
@@ -589,6 +671,7 @@ function n8nHandoff(task: string, slug: string, a: Answers) {
       : { parameters: { rule: { interval: [{ field: "days", triggerAtHour: 6 }] } }, name: "1. Data jobs finish", type: "n8n-nodes-base.scheduleTrigger", typeVersion: 1.2 };
   return {
     name: `${task} (hand-off to Hermes Agent)`,
+    active: false,
     nodes: [
       { ...trigger, id: "aag-0001", position: [260, 300] },
       {
@@ -616,7 +699,13 @@ function decisionTable(): string {
   ].join("\n");
 }
 
-function examplesCsv(r: Recommendation): string {
+function examplesCsv(r: Recommendation, text: KitText): string {
+  if (text.examples?.length) {
+    return [
+      "id,input,good_result,notes",
+      ...text.examples.map((x, i) => [i + 1, csvCell(x.input), csvCell(x.good), csvCell(`Illustrative: replace with a real past case.${x.notes ? ` ${x.notes}` : ""}`)].join(",")),
+    ].join("\n");
+  }
   return [
     "id,input,good_result,notes",
     `1,REPLACE with a real past case,REPLACE with what a good result looked like,${r.models.needed ? "Used to compare models" : "Used to check the rules"}`,
@@ -657,7 +746,7 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
     260 + n.stage * 300 + dx,
     300 + ((n.tracks[0] + n.tracks[1]) / 2 - (bp.tracks - 1) / 2) * 220 + dy,
   ];
-  const isAgentNode = (n: BNode) => n.id === "agent" || n.id === "coord" || n.id === "combine" || n.id.startsWith("spec");
+  const isAgentNode = (n: BNode) => roleOf(n) === "agent" || roleOf(n) === "coordinator" || roleOf(n) === "specialist";
   const parallelStages = new Set(Object.entries(bp.captions).filter(([, t]) => /same time/i.test(t)).map(([s]) => Number(s)));
 
   const modelNode = (n: BNode, host: string) => {
@@ -671,7 +760,7 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
       type: open ? "@n8n/n8n-nodes-langchain.lmChatOllama" : "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       typeVersion: open ? 1 : 1.3,
       position: pos(n, 0, 200),
-      notes: `${m.why} Prototype first on the most capable model, then switch to this one if it holds quality.`,
+      notes: `${m.why} ${m.prototype}`,
     });
     connect(name, host, "ai_languageModel");
   };
@@ -763,9 +852,9 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
           conditions: {
             string: [
               {
-                value1: "={{ String($json.text ?? $json.route ?? '').toLowerCase() }}",
-                operation: "contains",
-                value2: branchLabel(edge.label, node).toLowerCase(),
+                value1: "={{ String($json.text ?? $json.route ?? '').trim().toLowerCase() }}",
+                operation: "equal",
+                value2: branchLabel(edge.label, node).trim().toLowerCase(),
               },
             ],
           },
@@ -803,7 +892,7 @@ export function n8nWorkflow(r: Recommendation, bp: Blueprint, a: Answers, task: 
     position: [-220, 120],
   });
 
-  return { name: `${task} (Agent Architecture Guide)`, nodes, connections, settings: { executionOrder: "v1" }, pinData: {} };
+  return { name: `${task} (Agent Architecture Guide)`, active: false, nodes, connections, settings: { executionOrder: "v1" }, pinData: {} };
 }
 
 function branchLabel(label: string | undefined, node: BNode): string {

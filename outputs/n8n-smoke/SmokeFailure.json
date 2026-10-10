@@ -1,0 +1,64 @@
+{
+  "id": "SmokeFailure",
+  "name": "SmokeFailure",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Incoming event",
+      "id": "Incomingevent",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smoke-failure",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "smoke-failure"
+    },
+    {
+      "name": "Fail after retries",
+      "id": "Failafterretries",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:59996/fail",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 3000
+        }
+      },
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 100
+    }
+  ],
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "SmokeErrors"
+  },
+  "connections": {
+    "Incoming event": {
+      "main": [
+        [
+          {
+            "node": "Fail after retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

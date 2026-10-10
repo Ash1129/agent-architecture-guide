@@ -9,7 +9,7 @@ import {
 import { RULES, recommend } from "../src/lib/rules";
 import { SOURCES } from "../src/lib/sources";
 import { TOOLS, TOPOLOGIES } from "../src/lib/catalog";
-import { ALGORITHMS, MODELS, MODEL_RULES } from "../src/lib/models";
+import { ALGORITHMS, MODELS, MODEL_RULES, pickModel } from "../src/lib/models";
 import { decodeAnswers, encodeAnswers, resultAsText, resultCode } from "../src/lib/share";
 import { allPaths, sampledPaths } from "./paths";
 
@@ -73,9 +73,9 @@ const marketResearch: Answers = {
 };
 
 describe("question flow", () => {
-  it("asks only eight questions for rules-based work", () => {
+  it("asks eight core questions and an optional requirements question for rules-based work", () => {
     expect(activeQuestions({ shape: "rules" }).map((q) => q.id)).toEqual([
-      "task", "shape", "systems", "trigger", "volume", "risks", "location", "team",
+      "task", "shape", "systems", "trigger", "volume", "risks", "location", "team", "requirements",
     ]);
   });
 
@@ -86,8 +86,8 @@ describe("question flow", () => {
     expect(j).not.toContain("roles");
     expect(v).toContain("roles");
     expect(v).not.toContain("split");
-    expect(j).toHaveLength(12);
-    expect(v).toHaveLength(12);
+    expect(j).toHaveLength(13);
+    expect(v).toHaveLength(13);
   });
 
   it("ignores stale answers when an earlier answer changes", () => {
@@ -166,17 +166,70 @@ describe("decision paths", () => {
     expect(r.simpler.title).toBe("One agent first");
   });
 
-  it("scheduled agent without restrictions uses Claude Cowork", () => {
+  it("restricted region at high volume keeps to available models and adds own hardware for the bulk", () => {
+    // For example, a company in China, where OpenAI isn't available, running AI hundreds of times a day.
+    const a: Answers = { ...marketResearch, volume: "high" };
+    const r = recommend(a);
+    expect(r.fired).toEqual(expect.arrayContaining(["H1", "H6"]));
+    expect(r.fired).not.toContain("H4");
+    expect(r.hosting.title).toMatch(/available where you operate/);
+    expect(r.hosting.body).toMatch(/your own hardware/);
+    expect(r.hosting.why.ruleId).toBe("H1");
+    expect(r.hosting.also?.map((w) => w.ruleId)).toEqual(["H6"]);
+    expect(r.gotchas.map((g) => g.id)).toContain("G20");
+  });
+
+  it("restricted region at lower volume, or without a large organisation, stays with H1 alone", () => {
+    for (const a of [marketResearch, { ...marketResearch, volume: "high", team: "mid" } as Answers]) {
+      const r = recommend(a);
+      expect(r.fired).toContain("H1");
+      expect(r.fired).not.toContain("H6");
+      expect(r.hosting.also).toBeUndefined();
+      expect(r.gotchas.map((g) => g.id)).not.toContain("G20");
+    }
+  });
+
+  it("scheduled agent without restrictions uses Claude as an agent", () => {
     const a: Answers = { ...marketResearch, location: "open", knowledge: ["none"], roles: "one" };
     expect(coreTool(a)).toBe("cowork");
     expect(recommend(a).gotchas.map((g) => g.id)).toContain("G7");
   });
 
-  it("memory need in Cowork adds a Project and a forgetting warning", () => {
+  it("memory need in Claude as an agent adds a Project and a warning not to rely on general memory", () => {
     const a: Answers = { ...marketResearch, location: "open", roles: "one", team: "small" };
     expect(coreTool(a)).toBe("cowork");
     expect(tools(a)).toContain("project");
     expect(recommend(a).gotchas.map((g) => g.id)).toContain("G13");
+  });
+
+  it("n8n designs carry the licence warning", () => {
+    expect(coreTool(invoiceReminders)).toBe("n8n");
+    expect(recommend(invoiceReminders).gotchas.map((g) => g.id)).toContain("G21");
+  });
+
+  it("in-region data without an IT team points Claude users to a cloud provider's regional service", () => {
+    const a: Answers = { ...customerSupport, location: "residency", team: "small" };
+    expect(recommend(a).hosting.body).toMatch(/Bedrock/);
+    const m = pickModel("agent", a);
+    expect(m.kind === "model" && m.why).toMatch(/only in the US or worldwide/);
+  });
+
+  it("model picks name Fable 5.1 as the step up and never default to Haiku 4.5", () => {
+    const router = pickModel("router", customerSupport);
+    expect(router.kind === "model" && router.prototype).toMatch(/Fable 5\.1/);
+    for (const role of ["router", "worker", "attempt", "checker", "agent", "coordinator", "specialist"] as const) {
+      for (const volume of ["occasional", "daily", "high"] as const) {
+        const e = pickModel(role, { ...customerSupport, volume });
+        expect(e.kind === "model" && e.model).not.toBe("haiku");
+      }
+    }
+    for (const [role, a] of [["coordinator", customerSupport], ["coordinator", marketResearch], ["checker", customerSupport]] as const) {
+      const e = pickModel(role, a);
+      expect(e.kind === "model" && e.prototype).not.toMatch(/Switch to/);
+      expect(e.kind === "model" && e.prototype).toMatch(/keep it there/);
+    }
+    const open = pickModel("router", marketResearch);
+    expect(open.kind === "model" && open.prototype).not.toMatch(/Fable/);
   });
 
   it("a fixed workflow in n8n doesn't need tool use from the model; the workflow tool does it", () => {

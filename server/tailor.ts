@@ -4,27 +4,24 @@
 // model to tailor the generated workflow, and checks the result before
 // returning it. It cannot be used as a general-purpose chat proxy.
 
-import OpenAI from "openai";
-import { type Blueprint, buildBlueprint, outgoing } from "../src/lib/blueprint";
+import { APIConnectionTimeoutError } from "openai";
+import { type Blueprint, OK_EVERY_ACTION, buildBlueprint, outgoing } from "../src/lib/blueprint";
+import { detailLines } from "../src/lib/interview";
 import { type Answers, QUESTIONS, isComplete, said } from "../src/lib/questions";
 import { recommend } from "../src/lib/rules";
-import { decodeAnswers, encodeAnswers } from "../src/lib/share";
+import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { MODEL_API_ID, buildStarterKit } from "../src/lib/starter";
+import { fingerprint } from "../src/lib/tailored";
+import { CALL_TIMEOUT_MS, type Complete, extractJson, openAIComplete } from "./ai";
+import { type Cache, singleFlight } from "./cache";
+import { cachedDesign } from "./design";
+import { cachedKitText } from "./kit";
 
-export type TailorEnv = { apiKey?: string; model?: string };
+export { type Complete, extractJson, openAIComplete } from "./ai";
+
+export type TailorEnv = { apiKey?: string; model?: string; cache?: Cache };
 export type TailorResult = { status: number; body: Record<string, unknown> };
-/** Sends instructions and input to a model and returns its text. Swappable for tests. */
-export type Complete = (instructions: string, input: string) => Promise<string>;
-
 const MAX_BODY_CHARS = 20_000;
-
-export function openAIComplete(env: Required<TailorEnv>): Complete {
-  const client = new OpenAI({ apiKey: env.apiKey, timeout: 180_000, maxRetries: 1 });
-  return async (instructions, input) => {
-    const response = await client.responses.create({ model: env.model, instructions, input, max_output_tokens: 32_000 });
-    return response.output_text;
-  };
-}
 
 // ------------------------------------------------------------------ prompt
 
@@ -41,6 +38,7 @@ You are given the owner's task, their answers, the architecture as numbered step
 7. Use only built-in node types (n8n-nodes-base.* or @n8n/n8n-nodes-langchain.*). Where the owner's real app is unknown, keep a clearly named placeholder and put "REPLACE" in its notes.
 8. Never put secrets, API keys or real personal data in the workflow.
 9. Put a short, useful note on every node explaining what it does.
+10. Enforce every safeguard with nodes, never only with a note. Where a step says "${OK_EVERY_ACTION}", the agent must not hold any tool that can reach the owner's systems (no MCP client, HTTP request or app tool attached to it). Instead the agent returns a proposed action; a Wait node (or a send-and-wait approval) pauses for a named person; an IF continues only on an explicit approval; a separate node then performs exactly the approved action and its result goes back to the agent step. Name these nodes with that step's number.
 
 Return only the workflow as a single JSON object with the keys "name", "nodes", "connections" and "settings". No prose, no code fences.`;
 
@@ -63,6 +61,7 @@ export function buildInput(a: Answers, bp: Blueprint, template: string): string 
     "",
     "OWNER'S ANSWERS:",
     ...answered,
+    ...(a.details?.length ? ["", "TASK-SPECIFIC DETAILS (use them to make step names, prompts and placeholders concrete):", ...detailLines(a)] : []),
     "",
     "ARCHITECTURE (numbered steps):",
     JSON.stringify(brief(bp), null, 2),
@@ -77,12 +76,11 @@ export function buildInput(a: Answers, bp: Blueprint, template: string): string 
 type N8nNode = { name?: unknown; type?: unknown; typeVersion?: unknown; position?: unknown; parameters?: unknown };
 type Workflow = { name?: unknown; nodes?: unknown; connections?: unknown };
 
-/** Pull the JSON object out of a reply, tolerating stray fences or prose. */
-export function extractJson(text: string): unknown {
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("The reply did not contain a JSON object.");
-  return JSON.parse(text.slice(start, end + 1));
+/** Tool sub-nodes that can reach outside systems when an agent calls them. */
+const SYSTEM_TOOL = /(mcpClientTool|toolHttpRequest|httpRequestTool|toolWorkflow)$|^n8n-nodes-base\.\w+Tool$/;
+
+function isApprovalPause(n: N8nNode): boolean {
+  return n.type === "n8n-nodes-base.wait" || (n.parameters as { operation?: unknown } | null)?.operation === "sendAndWait";
 }
 
 /** Everything the returned workflow must satisfy before anyone sees it. */
@@ -132,6 +130,16 @@ export function checkWorkflow(wf: unknown, bp: Blueprint): string[] {
     if (![...names].some((x) => x.startsWith(`${step.step}. `))) p.push(`Step ${step.step} (${step.name}) is missing.`);
   }
   if (!nodes.some((n) => typeof n?.type === "string" && /trigger|webhook/i.test(n.type))) p.push("The workflow has no trigger node.");
+  // A person approving every action has to be part of the workflow, not a note on it.
+  for (const step of bp.nodes.filter((s) => s.gates.some((g) => g.text === OK_EVERY_ACTION))) {
+    const own = nodes.filter((n) => typeof n?.name === "string" && n.name.startsWith(`${step.step}. `));
+    if (!own.some(isApprovalPause)) p.push(`Step ${step.step} (${step.name}) says "${OK_EVERY_ACTION}" but has no Wait or send-and-wait approval node.`);
+    for (const n of nodes) {
+      if (typeof n?.type === "string" && SYSTEM_TOOL.test(n.type) && [...(conns[n.name as string] ?? {}).ai_tool ?? []].flat().length > 0) {
+        p.push(`Tool "${n.name}" is attached straight to an agent, so it can act without the approval step ${step.step} requires.`);
+      }
+    }
+  }
   const raw = JSON.stringify(wf);
   if (/sk-[A-Za-z0-9_-]{16,}/.test(raw)) p.push("The workflow contains something that looks like an API key.");
   return p;
@@ -151,38 +159,54 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
   if (!answers || !isComplete(answers)) return { status: 400, body: { error: "Send a complete set of answers from the guide." } };
 
   const r = recommend(answers);
-  const bp = buildBlueprint(r, answers);
-  const template = buildStarterKit(r, bp, answers).files.find((f) => f.path === "n8n/workflow.json");
+  // Tailor the design the owner is looking at: the AI design when one was made, the rules' otherwise.
+  const bp = cachedDesign(answers, env) ?? buildBlueprint(r, answers);
+  const template = buildStarterKit(r, bp, answers, cachedKitText(answers, env)).files.find((f) => f.path === "n8n/workflow.json");
   if (!template) return { status: 422, body: { error: "This design doesn't use n8n, so there is no workflow to tailor." } };
 
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model });
+  // The same design, starting workflow, instructions and model always give an
+  // equivalent workflow, so a repeat is served from the shared cache.
+  const key = [fingerprint(INSTRUCTIONS), env.model, fingerprint(template.content), resultCode(answers)].join(":");
+  const hit = env.cache?.get<unknown>("tailor", key);
+  if (hit) return { status: 200, body: { workflow: hit.value, model: env.model, cached: true } };
+
+  const model = env.model;
+  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model });
   const input = buildInput(answers, bp, template.content);
-  try {
-    let text = await run(INSTRUCTIONS, input);
-    for (let attempt = 0; attempt < 2; attempt++) {
-      let problems: string[];
-      let wf: unknown = null;
-      try {
-        wf = extractJson(text);
-        problems = checkWorkflow(wf, bp);
-      } catch (e) {
-        problems = [(e as Error).message];
+  return singleFlight(`tailor:${key}`, async (): Promise<TailorResult> => {
+    try {
+      let text = await run(INSTRUCTIONS, input);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        let problems: string[];
+        let wf: unknown = null;
+        try {
+          wf = extractJson(text);
+          problems = checkWorkflow(wf, bp);
+        } catch (e) {
+          problems = [(e as Error).message];
+        }
+        if (!problems.length) {
+          env.cache?.put("tailor", { key, label: answers.task, value: wf });
+          return { status: 200, body: { workflow: wf, model } };
+        }
+        if (attempt === 1) {
+          return { status: 502, body: { error: "The AI's workflow didn't pass the checks. Try again.", problems: problems.slice(0, 8) } };
+        }
+        // One repair round: show the model exactly what failed.
+        text = await run(
+          INSTRUCTIONS,
+          `${input}\n\nYOUR PREVIOUS ANSWER FAILED THESE CHECKS. Fix every one and return the complete corrected workflow JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS ANSWER:\n${text.slice(0, 60_000)}`,
+        );
       }
-      if (!problems.length) return { status: 200, body: { workflow: wf, model: env.model } };
-      if (attempt === 1) {
-        return { status: 502, body: { error: "The AI's workflow didn't pass the checks, so the generated version was kept.", problems: problems.slice(0, 8) } };
+      return { status: 500, body: { error: "Unexpected tailoring state." } };
+    } catch (e) {
+      const err = e as { status?: number; message?: string };
+      // Never echo request details that could include the key; the SDK's messages don't.
+      if (e instanceof APIConnectionTimeoutError) {
+        return { status: 504, body: { error: `The AI took longer than ${CALL_TIMEOUT_MS / 60_000} minutes. Try again.` } };
       }
-      // One repair round: show the model exactly what failed.
-      text = await run(
-        INSTRUCTIONS,
-        `${input}\n\nYOUR PREVIOUS ANSWER FAILED THESE CHECKS. Fix every one and return the complete corrected workflow JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS ANSWER:\n${text.slice(0, 60_000)}`,
-      );
+      const message = err.status === 401 ? "OpenAI rejected the API key. Check OPENAI_API_KEY in .env." : err.status === 404 ? `OpenAI doesn't recognise the model "${model}". Check OPENAI_MODEL in .env.` : err.message ?? "The AI request failed.";
+      return { status: 502, body: { error: message } };
     }
-    return { status: 500, body: { error: "Unexpected tailoring state." } };
-  } catch (e) {
-    const err = e as { status?: number; message?: string };
-    // Never echo request details that could include the key; the SDK's messages don't.
-    const message = err.status === 401 ? "OpenAI rejected the API key. Check OPENAI_API_KEY in .env." : err.status === 404 ? `OpenAI doesn't recognise the model "${env.model}". Check OPENAI_MODEL in .env.` : err.message ?? "The AI request failed.";
-    return { status: 502, body: { error: message } };
-  }
+  });
 }

@@ -1,0 +1,2461 @@
+/*
+  The result workspace ("blueprint, your solution studio"). Ported from the
+  Lovable design: a sidebar with the three views, a strip of key facts, and
+  editorial pages set in Instrument Serif and Work Sans. Everything is scoped
+  under .studio and uses the app's own colour tokens, so dark mode and the
+  rest of the app are unaffected. The smallest caption sizes are a little
+  larger than the original for legibility.
+*/
+
+.studio {
+  --studio-hairline: color-mix(in oklab, var(--ink) 9%, transparent);
+  --studio-caption: color-mix(in oklab, var(--ink) 55%, var(--bg));
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-studio: "Work Sans Variable", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-studio);
+  display: flex;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.studio h1,
+.studio h2 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.studio h1 {
+  font-size: 54px;
+  line-height: 1.06;
+  margin: 0 0 22px;
+}
+.studio h2 {
+  font-size: 34px;
+  line-height: 1.2;
+  margin: 0 0 9px;
+}
+.studio .title-period {
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- sidebar */
+
+.studio-sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--studio-hairline);
+  padding: 34px 22px 22px;
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+}
+.studio-rail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.studio-logo {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 54px;
+}
+.studio-logo-mark {
+  height: 34px;
+  width: auto;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+/* "lueprint" and the caption span exactly the B's height: the top of the "l"
+   meets the top of the B, the foot of the caption meets its foot. */
+.studio-logo-word {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 34px; /* the B's height (.studio-logo-mark) */
+}
+.studio-logo-word > span {
+  line-height: 1;
+  /* Instrument Serif's "l" starts 0.10 em below the top of its line; pulling up a little less (about 1.5px)
+     sets its thin, pointed top just under the B's heavy flat one, which reads as level. */
+  margin-top: -0.04em;
+}
+.studio-logo small {
+  display: block;
+  font-family: var(--font-studio);
+  font-size: 8.5px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--studio-caption);
+  margin-bottom: -0.15em; /* Work Sans capitals sit 0.15 em above the bottom of their line */
+}
+.studio-caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--studio-caption);
+}
+.studio-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 16px;
+}
+.studio-nav button,
+.studio-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--muted);
+  text-align: left;
+  transition: background-color 150ms, color 150ms;
+}
+.studio-nav button > svg,
+.studio-nav a > svg {
+  flex-shrink: 0;
+}
+.studio-nav button:hover,
+.studio-nav a:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.studio-nav button[aria-current="page"],
+.studio-nav a[aria-current] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 500;
+}
+.studio-nav .nav-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: auto;
+}
+.studio-note {
+  margin-top: auto;
+  padding: 28px 12px 30px;
+}
+.studio-note p {
+  font-family: var(--font-serif);
+  font-size: 23px;
+  line-height: 1.3;
+  margin: 12px 0 18px;
+  color: var(--muted);
+}
+.studio-rule {
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+}
+.studio-profile {
+  border-top: 1px solid var(--studio-hairline);
+  padding-top: 18px;
+  display: grid;
+  gap: 2px;
+}
+.studio-profile a,
+.studio-profile button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--ink);
+  text-align: left;
+}
+.studio-profile a:hover,
+.studio-profile button:hover {
+  background: var(--accent-soft);
+}
+.studio-profile .avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.studio-profile small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--studio-caption);
+  margin-top: 1px;
+}
+
+/* With a mouse or trackpad on a wide screen, the sidebar rests as a rail of
+   icons and opens over the page while the pointer is over it or focus is
+   inside it (see useMenuBar). The rail keeps its place in the layout; the
+   panel inside it widens, so the page never reflows. */
+@media (hover: hover) and (pointer: fine) and (min-width: 761px) {
+  .studio .studio-sidebar {
+    width: 76px;
+    padding: 0;
+    border-right: 0;
+    z-index: 30;
+  }
+  .studio .studio-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 248px;
+    padding: 34px 14px 22px;
+    overflow: hidden;
+    background: var(--bg);
+    border-right: 1px solid var(--studio-hairline);
+    box-shadow: 0 18px 50px -24px color-mix(in oklab, var(--ink) 35%, transparent);
+    transition:
+      width 320ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 320ms;
+  }
+  .studio .studio-sidebar[data-collapsed] .studio-rail {
+    width: 76px;
+    box-shadow: none;
+  }
+  .studio .studio-logo {
+    padding-left: 9px;
+  }
+  .studio .studio-logo,
+  .studio .studio-nav a,
+  .studio .studio-nav button,
+  .studio .studio-profile a,
+  .studio .studio-profile button {
+    white-space: nowrap;
+  }
+  .studio .studio-note {
+    width: 220px; /* no reflow while the panel widens */
+  }
+  .studio .rail-label {
+    transition: opacity 220ms 80ms;
+  }
+  .studio .studio-sidebar[data-collapsed] .rail-label {
+    opacity: 0;
+    transition-delay: 0ms;
+  }
+}
+
+/* ---------------------------------------------------------------- main column */
+
+.studio-main {
+  min-width: 0;
+  flex: 1;
+}
+/* The Solution view's byline: the key facts in one quiet, wrapping line under the title. */
+/* Every fact has a separator in front. The list starts one separator to the left
+   and the wrapper clips at the page edge, so the dot that begins each line,
+   however it wraps, is hidden. */
+.studio-byline {
+  --sep: 26px;
+  overflow: hidden;
+  margin: -6px 0 26px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.studio-byline dl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 6px;
+  margin: 0 0 0 calc(-1 * var(--sep));
+}
+.studio-byline dl > div {
+  display: inline-flex;
+  align-items: center;
+}
+.studio-byline dl > div::before {
+  content: "·";
+  width: var(--sep);
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--studio-caption);
+}
+.studio-byline dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.studio-byline dd svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.studio-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 64px 64px 48px;
+}
+.section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+.status-dot {
+  height: 6px;
+  width: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.kicker-line {
+  background: var(--studio-hairline);
+  width: 40px;
+  height: 1px;
+  margin-left: 6px;
+}
+.studio-intro {
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 0 0 34px;
+}
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+}
+.section-heading p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Buttons: the filled pill and the quiet text button from the design. */
+.studio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: opacity 150ms;
+}
+.studio-btn:hover {
+  opacity: 0.92;
+}
+.studio-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 150ms;
+}
+.studio-quiet:hover {
+  background: var(--accent-soft);
+}
+.studio-quiet:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- solution */
+
+.architecture-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+.studio figure {
+  margin: 0;
+  min-width: 0;
+}
+.architecture-art {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--studio-hairline);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.studio figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--studio-caption);
+}
+.studio figcaption span:last-child {
+  font-style: italic;
+  letter-spacing: 0;
+}
+.priorities h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--studio-caption);
+  margin: 0 0 18px;
+}
+.priorities ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.priorities li {
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 11px;
+  align-items: baseline;
+}
+.priorities li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  transform: translateY(-2px);
+}
+.approval-note {
+  display: flex;
+  gap: 10px;
+  border-top: 1px solid var(--studio-hairline);
+  padding-top: 22px;
+  margin: 22px 0 18px;
+  color: var(--accent);
+}
+.approval-note p {
+  margin: 0;
+  font-size: 15px;
+}
+.approval-note span {
+  display: block;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 6px;
+  color: var(--muted);
+}
+.studio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 40px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--studio-hairline);
+}
+.studio-section {
+  border-top: 1px solid var(--studio-hairline);
+  padding-top: 40px;
+  margin-top: 56px;
+}
+
+/* A short timeline of the phases of the work. */
+.summary-timeline {
+  padding: 4px 0 6px;
+  max-width: 620px;
+  list-style: none;
+  margin: 0;
+}
+.summary-timeline li {
+  border-left: 1px solid var(--line);
+  position: relative;
+  padding: 0 0 28px 30px;
+  margin-left: 10px;
+}
+.summary-timeline li:last-child {
+  border-left-color: transparent;
+}
+.timeline-marker {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  left: -11px;
+  top: 0;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.timeline-marker::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.summary-timeline h3 {
+  margin: 0 0 7px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.summary-timeline p {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------- build */
+
+.build-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.build-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  border: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  padding: 22px 24px;
+  border-radius: 10px;
+}
+.step-number {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: var(--studio-caption);
+  flex-shrink: 0;
+}
+.build-item-text {
+  flex: 1;
+  min-width: 0;
+}
+.build-item h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 5px 0 5px;
+}
+.build-item p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+}
+.build-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-top: 6px;
+}
+.build-detail {
+  margin-top: 48px;
+  padding-top: 38px;
+  border-top: 1px solid var(--studio-hairline);
+}
+.build-detail > p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--muted);
+  max-width: 62ch;
+  margin: 0;
+}
+.build-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin: 24px 0 0;
+}
+.studio-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  transition: border-color 150ms;
+}
+.studio-outline:hover {
+  border-color: var(--line-strong);
+}
+
+/* ---------------------------------------------------------------- workflow */
+
+.workflow-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 48px;
+  margin-top: 8px;
+}
+.full-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.workflow-step {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-align: left;
+  color: var(--ink);
+  transition: background-color 150ms;
+}
+.workflow-step:hover {
+  background: var(--accent-soft);
+}
+.workflow-step[aria-pressed="true"] {
+  background: var(--accent-soft);
+}
+.workflow-step[aria-pressed="true"] .step-number {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.workflow-step strong {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 500;
+}
+.workflow-step small {
+  font-size: 12.5px;
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+.workflow-step .step-arrow {
+  margin-left: auto;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.workflow-explanation {
+  padding-top: 12px;
+  position: sticky;
+  top: 32px;
+  align-self: start;
+}
+.workflow-explanation > p {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.step-type {
+  display: inline-block;
+  margin: 6px 0 16px;
+  font-size: 12.5px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 6px 10px;
+  border-radius: 5px;
+}
+.step-detail dt {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-top: 16px;
+}
+.step-detail dd {
+  margin: 4px 0 0;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.walkthrough-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+.workflow-model-note {
+  border-top: 1px solid var(--line);
+  margin-top: 32px;
+  padding-top: 20px;
+}
+.workflow-model-note h3 {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+.workflow-model-note p {
+  font-size: 15.5px;
+  line-height: 1.85;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.view-switch {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 3px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.view-switch button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.view-switch button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.workflow-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 20px;
+}
+/* The draw.io export sits at the far end of the workflow's toolbar. */
+.workflow-tools .workflow-export {
+  margin: 0 0 0 auto;
+  padding: 8px 12px;
+}
+
+.studio-footer {
+  border-top: 1px solid var(--studio-hairline);
+  margin-top: 56px;
+  padding-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--studio-caption);
+}
+
+/* ---------------------------------------------------------------- smaller screens */
+
+@media (max-width: 1100px) {
+  .studio-sidebar {
+    width: 214px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .studio-page {
+    padding: 50px 38px 32px;
+  }
+  .studio h1 {
+    font-size: 48px;
+  }
+  .architecture-grid {
+    gap: 26px;
+  }
+}
+
+@media (max-width: 860px) {
+  .workflow-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .workflow-explanation {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .studio {
+    display: block;
+  }
+  .studio-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    padding: 18px 20px;
+    border-right: 0;
+    border-bottom: 1px solid var(--studio-hairline);
+  }
+  .studio-logo {
+    margin-bottom: 18px;
+  }
+  .studio-rail > .studio-caption,
+  .studio-note,
+  .studio-profile {
+    display: none;
+  }
+  .studio-nav {
+    flex-direction: row;
+    margin-top: 0;
+  }
+  .studio-nav button,
+  .studio-nav a {
+    flex: 1;
+    justify-content: center;
+    height: 40px;
+    padding: 0 10px;
+  }
+  .studio-nav .nav-dot {
+    display: none;
+  }
+  .studio-page {
+    padding: 34px 20px 28px;
+  }
+  .studio h1 {
+    font-size: 42px;
+  }
+  .architecture-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .section-heading {
+    flex-direction: column;
+    gap: 18px;
+  }
+  .build-item {
+    flex-wrap: wrap;
+    padding: 18px 16px;
+  }
+  .build-item-actions {
+    align-items: flex-start;
+    width: 100%;
+    padding-left: 52px;
+  }
+}
+
+@media print {
+  .studio-sidebar {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- the public starting point */
+
+.studio.start-page {
+  flex-direction: column;
+  min-height: 100dvh;
+  background:
+    radial-gradient(1100px 480px at 50% -12%, color-mix(in oklab, var(--accent-soft) 70%, transparent), transparent 72%),
+    radial-gradient(800px 380px at 88% 18%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
+    radial-gradient(700px 360px at 8% 42%, color-mix(in oklab, var(--accent-soft) 50%, transparent), transparent 68%),
+    var(--bg);
+}
+.start-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 44px;
+}
+.start-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+}
+.start-main {
+  flex: 1;
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 110px 24px 100px;
+  text-align: center;
+}
+.studio .start-main h1 {
+  font-size: 104px;
+  line-height: 1.02;
+  margin: 0 0 26px;
+}
+.start-subtitle {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.8;
+  margin: 0 0 40px;
+}
+.problem-form {
+  max-width: 560px;
+  margin: 0 auto;
+}
+.problem-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(22px) saturate(170%);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid color-mix(in oklab, var(--surface) 75%, transparent);
+  border-radius: 18px;
+  padding: 14px 18px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 50%, transparent),
+    0 10px 32px -14px color-mix(in oklab, var(--ink) 22%, transparent),
+    0 2px 8px -4px color-mix(in oklab, var(--ink) 10%, transparent);
+  transition: border-color 180ms, box-shadow 180ms, background-color 180ms;
+}
+.problem-field:focus-within {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  background: color-mix(in oklab, var(--surface) 75%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 60%, transparent),
+    0 14px 40px -14px color-mix(in oklab, var(--accent) 30%, transparent),
+    0 2px 10px -4px color-mix(in oklab, var(--ink) 10%, transparent);
+}
+.problem-field > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.problem-field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 30px;
+  max-height: 180px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.problem-field textarea::placeholder {
+  color: var(--muted);
+}
+.start-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+}
+.start-build {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 132px;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 15px;
+  font-weight: 500;
+  transition: opacity 150ms;
+}
+.start-build:hover {
+  opacity: 0.92;
+}
+.start-build:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.survey-hint {
+  margin: 30px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.9;
+}
+.survey-hint .studio-quiet {
+  margin: 0;
+  padding: 2px 6px;
+  vertical-align: baseline;
+}
+.start-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 44px;
+  border-top: 1px solid var(--studio-hairline);
+  color: var(--studio-caption);
+  font-size: 12px;
+}
+.start-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.6;
+}
+.start-footer-note img {
+  object-fit: cover;
+  border-radius: 5px;
+}
+.start-footer-note strong {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .studio.start-page {
+    display: flex;
+  }
+  .start-header {
+    padding: 20px 22px;
+  }
+  .start-main {
+    padding: 72px 22px 80px;
+  }
+  .studio .start-main h1 {
+    font-size: 74px;
+  }
+  .start-subtitle {
+    font-size: 15.5px;
+  }
+  .start-footer {
+    padding: 18px 22px;
+  }
+  .start-footer > span {
+    max-width: 140px;
+    text-align: right;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 400px) {
+  .studio .start-main h1 {
+    font-size: 62px;
+  }
+  .start-header .studio-quiet {
+    font-size: 13px;
+  }
+}
+
+/* ---------------------------------------------------------------- the survey */
+
+.survey-main {
+  flex: 1;
+  width: min(100%, 680px);
+  margin: 0 auto;
+  padding: 48px 24px 110px;
+  outline: none;
+}
+.survey-bar {
+  display: flex;
+  gap: 4px;
+}
+.survey-bar > * {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--studio-hairline);
+  transition: background-color 500ms;
+}
+.survey-bar > .is-done {
+  background: var(--accent);
+}
+.studio h1.survey-title {
+  font-size: 46px;
+  line-height: 1.08;
+  margin: 0;
+}
+.survey-help {
+  max-width: 60ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 16.5px;
+  line-height: 1.75;
+}
+
+/* Answer cards: frosted like the start page's field, accent when picked. */
+.survey-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 17px 20px;
+  cursor: pointer;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 6px 22px -16px color-mix(in oklab, var(--ink) 25%, transparent);
+  transition: border-color 180ms, background-color 180ms, box-shadow 180ms, transform 180ms;
+}
+.survey-option:hover {
+  border-color: var(--line-strong);
+  background: color-mix(in oklab, var(--surface) 80%, transparent);
+}
+.survey-option:active {
+  transform: scale(0.996);
+}
+.survey-option:has(:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.survey-option[data-checked] {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  background: color-mix(in oklab, var(--accent-soft) 75%, transparent);
+  box-shadow: 0 10px 30px -16px color-mix(in oklab, var(--accent) 40%, transparent);
+}
+.survey-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  transition: background-color 150ms, border-color 150ms;
+}
+.survey-option[data-checked] .survey-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.survey-suggested {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+.survey-key {
+  display: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid var(--studio-hairline);
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--studio-caption);
+}
+@media (min-width: 640px) {
+  .survey-key {
+    display: grid;
+  }
+}
+
+.survey-why {
+  margin-top: 32px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 45%, transparent);
+}
+.survey-why[open] {
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+}
+
+/* The optional details step. */
+.survey-card {
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.survey-input {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+  outline: 0;
+  transition: border-color 180ms, box-shadow 180ms;
+}
+.survey-input::placeholder {
+  color: var(--muted);
+}
+.survey-input:focus {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  box-shadow: 0 8px 26px -14px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+.survey-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 55%, transparent);
+  color: var(--ink);
+  font-size: 14px;
+  transition: border-color 150ms, background-color 150ms;
+}
+.survey-chip:hover {
+  border-color: var(--line-strong);
+}
+.survey-chip[aria-pressed="true"] {
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+}
+
+/* The first question's field reuses the start page's frosted box. */
+.survey-field {
+  align-items: center;
+}
+.survey-field > svg {
+  margin-top: 0;
+}
+.survey-field input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.survey-field input::placeholder {
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  .survey-main {
+    padding: 28px 22px 80px;
+  }
+  .studio h1.survey-title {
+    font-size: 36px;
+  }
+}
+
+/* ---------------------------------------------------------------- the workflow diagram (ArchitectureMap) */
+
+/* The workflow has its own page, so it takes the full width of the main column. */
+.studio-page.is-wide {
+  max-width: none;
+}
+
+/* The canvas: a frosted sheet with a faint blueprint dot grid. */
+.workflow-canvas {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--studio-hairline, var(--line));
+  background-color: color-mix(in oklab, var(--surface) 72%, transparent);
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 11%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  box-shadow: 0 18px 50px -34px color-mix(in oklab, var(--ink) 40%, transparent);
+}
+
+/* A step. --tone runs from yellow (first step) to red (last), set per step by stepTone(). */
+.flow-node {
+  gap: 10px;
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in oklab, var(--tone) 55%, transparent);
+  background: color-mix(in oklab, var(--tone) 13%, var(--surface));
+  box-shadow: 0 10px 26px -18px color-mix(in oklab, var(--tone) 85%, transparent);
+  transition:
+    transform 200ms,
+    box-shadow 200ms,
+    background-color 200ms;
+}
+.flow-node:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px -18px color-mix(in oklab, var(--tone) 95%, transparent);
+}
+.flow-node[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--tone) 22%, var(--surface));
+  box-shadow:
+    0 0 0 2px var(--tone),
+    0 16px 34px -16px color-mix(in oklab, var(--tone) 95%, transparent);
+}
+.flow-node:focus-visible {
+  outline: 2px solid var(--tone);
+  outline-offset: 3px;
+}
+/* A person's step keeps its dashed edge. */
+.flow-node[data-kind="human"] {
+  border-style: dashed;
+  border-width: 1.5px;
+  border-color: color-mix(in oklab, var(--tone) 75%, var(--ink));
+}
+/* The start and the finish are quieter: an outline in the step's colour. */
+.flow-node[data-kind="start"],
+.flow-node[data-kind="end"] {
+  background: var(--surface);
+}
+.flow-num {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--tone);
+  color: #1f1609;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.flow-kind {
+  color: color-mix(in oklab, var(--tone) 60%, var(--ink));
+}
+.flow-name {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.flow-node.is-compact {
+  gap: 6px;
+  padding: 10px 11px 11px;
+}
+.flow-node.is-compact .flow-name {
+  font-size: 15.5px;
+}
+/* Small round marks on a step: what does the work, and in the key. */
+.flow-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--studio-hairline, var(--line));
+  background: var(--surface);
+  color: var(--studio-caption, var(--muted));
+}
+.flow-chip.is-dashed {
+  border: 1.5px dashed var(--studio-caption, var(--muted));
+}
+/* Stage captions ("at the same time") and connection labels. */
+.flow-caption,
+.flow-edge-label {
+  fill: var(--studio-caption, var(--muted));
+  stroke: color-mix(in oklab, var(--surface) 92%, transparent);
+  paint-order: stroke;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.flow-edge-label {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.flow-edge-label.is-on {
+  fill: var(--ink);
+}
+
+/* The key, under the diagram. */
+.flow-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 14px 24px 18px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.flow-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.flow-legend-ramp {
+  width: 44px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, oklch(0.86 0.15 92), oklch(0.73 0.175 60), oklch(0.6 0.2 27));
+}
+
+/* The step details under the diagram. */
+.flow-panel {
+  border-top: 1px solid var(--studio-hairline, var(--line));
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+}
+.flow-panel.is-open {
+  background: var(--surface);
+}
+.flow-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+}
+.studio h3.flow-panel-title,
+.flow-panel-title {
+  margin-top: 8px;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.flow-panel-engine {
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline, var(--line));
+  background: color-mix(in oklab, var(--bg) 55%, var(--surface));
+}
+.flow-panel h4.studio-caption {
+  margin: 0;
+}
+.studio-outline.is-small {
+  height: 36px;
+  padding: 0 14px;
+  gap: 6px;
+  font-size: 13.5px;
+}
+.studio-outline:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- the invitation to build (BuildInvite) */
+
+.build-invite {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  overflow: hidden;
+  color: var(--ink);
+  text-decoration: none;
+  background-color: var(--surface);
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 10%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  background-position: 11px 11px;
+  box-shadow: 0 18px 46px -34px color-mix(in oklab, var(--ink) 45%, transparent);
+  transition:
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 260ms,
+    border-color 260ms;
+}
+.build-invite:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  box-shadow: 0 26px 56px -30px color-mix(in oklab, var(--accent) 45%, transparent);
+}
+.build-invite:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* The project window. */
+.build-invite-window {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 22px 24px 0;
+  border-radius: 12px 12px 0 0;
+  border: 1px solid var(--studio-hairline);
+  border-bottom: 0;
+  background: color-mix(in oklab, var(--bg) 70%, var(--surface));
+  overflow: hidden;
+}
+.build-invite-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--studio-hairline);
+  font-size: 12px;
+  color: var(--studio-caption);
+}
+.build-invite-lights {
+  display: flex;
+  gap: 6px;
+}
+.build-invite-lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--ink) 14%, transparent);
+}
+.build-invite-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+.build-invite-title svg {
+  color: var(--accent);
+}
+/* The scenes take turns in the stage, cross-fading. */
+.build-invite-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.build-invite-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.build-invite-progress {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.build-invite-progress > span {
+  position: relative;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--ink) 12%, transparent);
+}
+.build-invite-progress > span.is-done {
+  background: color-mix(in oklab, var(--accent) 55%, transparent);
+}
+.build-invite-progress i {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left;
+  animation: build-invite-fill linear forwards;
+}
+@keyframes build-invite-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.build-invite-files {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 10px;
+  overflow: hidden;
+}
+.build-invite-file {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+}
+.build-invite-file > svg:first-child {
+  color: var(--studio-caption);
+  flex-shrink: 0;
+}
+.build-invite-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.build-invite-file.is-brief {
+  background: var(--accent-soft);
+}
+.build-invite-file.is-brief > svg:first-child {
+  color: var(--accent);
+}
+.build-invite-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  font-family: var(--font-studio);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.build-invite-tick {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.build-invite-more {
+  padding: 2px 10px 0 33px;
+  font-size: 12px;
+  color: var(--studio-caption);
+}
+
+/* The prompt types itself out once the files are in, then the caret blinks. */
+.build-invite-prompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.build-invite-chevron {
+  color: var(--accent);
+  font-weight: 600;
+}
+.build-invite-typed {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  max-width: max-content;
+  animation: build-invite-type var(--type-time, 1.4s) steps(var(--type-chars)) var(--type-delay, 0s) forwards;
+}
+.build-invite-caret {
+  width: 7px;
+  height: 15px;
+  margin-left: -6px;
+  background: var(--accent);
+  animation: build-invite-blink 1s steps(1) infinite;
+}
+@keyframes build-invite-type {
+  to {
+    width: calc(var(--type-chars) * 1ch);
+  }
+}
+@keyframes build-invite-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.build-invite.is-still .build-invite-typed {
+  width: auto;
+  animation: none;
+}
+.build-invite.is-still .build-invite-caret {
+  animation: none;
+}
+
+/* n8n: the canvas, a paste toast, nodes joined by wires, then green ticks as it runs. */
+.build-invite-canvas {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px 22px 18px;
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 13%, transparent) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+}
+.build-invite-toast {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-size: 11.5px;
+  color: var(--muted);
+  box-shadow: 0 8px 20px -14px color-mix(in oklab, var(--ink) 50%, transparent);
+}
+.build-invite-toast kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink);
+}
+.build-invite-flow,
+.build-invite-dag {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+}
+.build-invite-flow-step {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  max-width: 150px;
+}
+.build-invite-flow-step:first-child {
+  flex: 0 0 auto;
+}
+.build-invite-wire {
+  flex: 1;
+  min-width: 14px;
+  height: 2px;
+  margin-top: 26px;
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--ink) 30%, transparent);
+  transform-origin: left;
+}
+.build-invite-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 82px;
+  flex-shrink: 0;
+}
+.build-invite-node-box {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  border: 1.5px solid color-mix(in oklab, var(--ink) 22%, transparent);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 8px 18px -14px color-mix(in oklab, var(--ink) 60%, transparent);
+}
+.build-invite-node-ok {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #1f7a5c;
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.build-invite-node-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--muted);
+}
+.build-invite-node-more {
+  align-self: flex-start;
+  margin: 18px 0 0 10px;
+  font-size: 12px;
+  color: var(--studio-caption);
+}
+
+/* Claude plugin: the file drops into a chat, Install is pressed, then what it added. */
+.build-invite-chat {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 18px 26px;
+}
+.build-invite-attachment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  box-shadow: 0 10px 26px -18px color-mix(in oklab, var(--ink) 55%, transparent);
+}
+.build-invite-attachment small {
+  display: block;
+  font-family: var(--font-studio);
+  font-size: 11.5px;
+  color: var(--studio-caption);
+}
+.build-invite-attachment-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: color-mix(in oklab, #d97757 16%, var(--surface));
+  color: #c4623f;
+}
+.build-invite-install {
+  position: relative;
+  display: grid;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.build-invite-install > span {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-studio);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.build-invite-install > span.is-done {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.build-invite-press {
+  position: absolute;
+  right: 52px;
+  top: calc(50% - 30px);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+}
+.build-invite-chat-rows {
+  display: grid;
+  gap: 6px;
+  padding: 0 4px;
+}
+.build-invite-chat-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.build-invite-chat-row .build-invite-tick {
+  margin-left: 0;
+}
+.build-invite-chat-kind {
+  width: 74px;
+  flex-shrink: 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--studio-caption);
+}
+.build-invite-chat-row .build-invite-path {
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+/* Hermes: a terminal running setup.sh. Dark in both themes, like a real terminal. */
+.build-invite-scene.is-hermes {
+  background: #141a17;
+}
+.build-invite-term {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 20px 22px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #e3ebe6;
+}
+.build-invite-term-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.build-invite-term-line.is-out {
+  padding-left: 2px;
+}
+.build-invite-term .build-invite-chevron {
+  color: #79cbab;
+}
+.build-invite-term .build-invite-tick {
+  margin-left: 0;
+  color: #79cbab;
+}
+.build-invite-term .build-invite-caret {
+  background: #79cbab;
+}
+.build-invite-path.is-dim {
+  color: #8a968f;
+}
+
+/* Airflow: the sensors wait, then each task goes queued → running → success. */
+.build-invite-dag {
+  flex: 1;
+  align-items: center;
+  padding: 18px 20px;
+}
+.build-invite-dag .build-invite-flow-step {
+  align-items: center;
+  max-width: none;
+}
+.build-invite-dag .build-invite-wire {
+  margin-top: 0;
+}
+.build-invite-dag-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.build-invite-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 176px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.build-invite-task-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+.build-invite-dag .build-invite-node-more {
+  align-self: center;
+  margin-top: 0;
+}
+
+/* The call to action along the bottom. */
+.build-invite-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 24px 16px;
+  border-top: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.build-invite-cta strong {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--ink);
+}
+.build-invite-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.build-invite-go svg {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.build-invite:hover .build-invite-go svg {
+  transform: translateX(3px);
+}
+@media (max-width: 760px) {
+  .build-invite {
+    aspect-ratio: auto;
+  }
+  .build-invite-window {
+    margin: 16px 16px 0;
+  }
+  /* Without the card's fixed proportions, the scenes (stacked on top of each other) need a set height. */
+  .build-invite-stage {
+    min-height: 270px;
+  }
+  .build-invite-cta {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px 16px;
+  }
+}
+
+/* ---------------------------------------------------------------- reading a described problem, and the review */
+
+.survey-quote {
+  margin: 18px 0 0;
+  padding: 2px 0 2px 16px;
+  border-left: 2px solid color-mix(in oklab, var(--accent) 45%, transparent);
+  font-family: var(--font-serif);
+  font-size: 21px;
+  line-height: 1.4;
+  color: var(--ink);
+  max-width: 56ch;
+  overflow-wrap: anywhere;
+}
+.review-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 30px;
+}
+.review-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.review-row .studio-quiet {
+  margin: 0 -8px 0 0;
+}
+.review-question {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.review-answer {
+  margin-top: 4px;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.review-source {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--accent);
+}
+.review-source svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+/* ---------------------------------------------------------------- after the survey: the build head start (BuildOverlay) */
+
+.studio.build-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 24px;
+  background:
+    radial-gradient(1100px 480px at 50% -12%, color-mix(in oklab, var(--accent-soft) 70%, transparent), transparent 72%),
+    radial-gradient(700px 360px at 8% 60%, color-mix(in oklab, var(--accent-soft) 50%, transparent), transparent 68%),
+    var(--bg);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.studio.build-overlay.is-leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+.build-overlay-mark {
+  position: absolute;
+  top: 28px;
+  left: 44px;
+  height: 26px;
+  width: auto;
+}
+.build-overlay-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 1500px);
+}
+.build-overlay-line {
+  margin: 0;
+  min-height: 1.2em;
+  font-family: var(--font-serif);
+  /* The longest line is about 22 em wide: sized to fit the screen in one line, up to 64px; only a phone wraps it. */
+  font-size: clamp(28px, calc((100vw - 48px) / 22.5), 64px);
+  line-height: 1.2;
+  text-align: center;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.build-overlay-skip {
+  position: absolute;
+  bottom: 34px;
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .build-overlay-mark {
+    left: 22px;
+    top: 20px;
+  }
+}
+
+/* The Build view while the tools are being built: locked in the sidebar, and a note in its place. */
+.studio-nav button:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+.studio-nav .nav-building {
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--studio-caption);
+}
+.build-pending {
+  max-width: 560px;
+  padding: 40px 0;
+}
+.build-ready-toast {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px 12px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: var(--surface);
+  box-shadow: 0 22px 50px -24px color-mix(in oklab, var(--ink) 45%, transparent);
+  font-size: 14px;
+  color: var(--ink);
+}
+.build-ready-toast .studio-btn {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}
+.build-invite.is-building {
+  cursor: progress;
+}
+.build-invite.is-building .build-invite-go {
+  background: color-mix(in oklab, var(--accent) 14%, var(--surface));
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- a process: several jobs designed together */
+
+/* The sidebar's system section: the map, then each job by number. */
+.studio-nav-system {
+  margin-bottom: 18px;
+}
+.studio-nav .nav-num {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.studio-nav .nav-job {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .studio-nav-system {
+    margin-bottom: 8px;
+  }
+  .studio-nav-system .nav-job {
+    display: none;
+  }
+}
+
+/* A long description, while it's read: the start of it, faded out. */
+.survey-quote {
+  max-height: 11.5em;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent);
+}
+
+/* The split: the jobs a description holds, for the owner to confirm. */
+.split-list {
+  display: grid;
+  gap: 0;
+  margin-top: 30px;
+  list-style: none;
+  padding: 0;
+}
+.split-job {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 60%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.split-number {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  line-height: 1.3;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.split-title {
+  width: 100%;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1px dashed transparent;
+  background: transparent;
+  font-family: var(--font-serif);
+  font-size: 21px;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.split-title:hover {
+  border-bottom-color: var(--studio-hairline);
+}
+.split-title:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+.split-details {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+.split-details summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  list-style: none;
+}
+.split-details summary::-webkit-details-marker {
+  display: none;
+}
+.split-details[open] summary svg {
+  transform: rotate(180deg);
+}
+.split-details p {
+  margin-top: 8px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+.split-handoff {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 0 30px;
+  padding: 12px 0 12px 18px;
+  border-left: 1px dashed color-mix(in oklab, var(--accent) 55%, transparent);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.split-handoff svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent);
+}
+.split-handoff strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.split-list > li + li {
+  margin-top: 10px;
+}
+.split-list > li:has(.split-handoff) + li {
+  margin-top: 0;
+}
+
+/* The system map: each job as a card, the handoffs between them. */
+.process-map {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  max-width: 760px;
+}
+.process-job {
+  padding: 24px 26px 22px;
+  border-radius: 16px;
+  border: 1px solid var(--studio-hairline);
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+}
+.process-job header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.process-job h2 {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.process-approach {
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.process-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.process-facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+.process-facts svg {
+  color: var(--accent);
+}
+.process-path {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.process-open {
+  margin-top: 14px !important;
+}
+.process-drafting {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--accent);
+}
+.process-handoff {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  margin-left: 34px;
+}
+.process-handoff-line {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 2px;
+  min-height: 78px;
+  padding-bottom: 2px;
+  background: repeating-linear-gradient(to bottom, var(--accent) 0 5px, transparent 5px 10px);
+  color: var(--accent);
+}
+.process-handoff-line svg {
+  flex-shrink: 0;
+  margin-bottom: -6px;
+  background: var(--bg);
+}
+.process-handoff p {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 14px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.process-handoff strong {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.process-map > li:has(.process-handoff) + li {
+  margin-top: 0;
+}
+.process-map > li + li {
+  margin-top: 14px;
+}
+.process-others {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.process-others strong {
+  color: var(--ink);
+}
+.process-people {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.process-people li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--studio-hairline);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.process-people .studio-caption {
+  padding-top: 2px;
+}
+.process-person {
+  font-weight: 600;
+  color: var(--ink);
+}
+@media (max-width: 760px) {
+  .process-job {
+    padding: 20px;
+  }
+  .process-job h2 {
+    font-size: 22px;
+  }
+  .process-handoff {
+    margin-left: 20px;
+  }
+}

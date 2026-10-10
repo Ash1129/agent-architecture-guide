@@ -265,12 +265,14 @@ describe("models and methods on every step", () => {
     expect(failures).toEqual([]);
   }, 120_000);
 
-  it("uses a small model to sort, the most capable to coordinate, and steps down at volume", () => {
+  it("uses Sonnet to sort, the most capable to coordinate, and never defaults to Haiku 4.5", () => {
     const routed = bp(cases.routing);
-    expect(routed.nodes.find((n) => n.id === "router")!.engine!.short).toBe("Haiku 4.5");
+    expect(routed.nodes.find((n) => n.id === "router")!.engine!.short).toBe("Sonnet 5.5");
     expect(bp(cases.routedMulti).nodes.find((n) => n.id === "coord")!.engine!.short).toBe("Opus 5.5");
     const busy = bp({ ...cases.chain, volume: "high" });
-    expect(busy.nodes.find((n) => n.id === "step1")!.engine!.short).toBe("Haiku 4.5");
+    expect(busy.nodes.find((n) => n.id === "step1")!.engine!.short).toBe("Sonnet 5.5");
+    const step1 = busy.nodes.find((n) => n.id === "step1")!.engine!;
+    expect(step1.kind === "model" && step1.why).toMatch(/Haiku 4\.5 is cheaper/);
     expect(bp(cases.chain).nodes.find((n) => n.id === "step1")!.engine!.short).toBe("Sonnet 5.5");
     expect(bp(cases.multi).nodes.find((n) => n.id === "coord")!.engine!.short).toBe("Open-weight, large");
   });

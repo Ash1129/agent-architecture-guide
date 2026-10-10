@@ -1,6 +1,7 @@
 // The decision rules. No AI model generates a recommendation: each rule below
-// has a plain-English condition, a plain-English effect, and a basis (a source
-// from AI Assignment 4, or a design choice made for this guide). Rules run in
+// has a plain-English condition, a plain-English effect, a basis (a source
+// from AI Assignment 4, or a design choice made for this guide) and the
+// knowledge-base chunks that back it (see src/lib/knowledge.ts). Rules run in
 // order, so later rules can refine what earlier ones decided.
 
 import {
@@ -19,6 +20,7 @@ import {
   type ToolId,
   type TopologyId,
 } from "./catalog";
+import type { ChunkId } from "./knowledge";
 import type { SourceId } from "./sources";
 
 export type Basis = { kind: "source"; sources: SourceId[] } | { kind: "design" };
@@ -35,7 +37,8 @@ export type Recommendation = {
   topology: { primary: TopologyId; addOns: TopologyId[]; why: Why[] };
   tools: ToolPick[];
   hybrid: { text: string; why: Why }[];
-  hosting: { title: string; body: string; why: Why };
+  /** `also`: reasons from rules that build on the hosting choice rather than make it (H6). */
+  hosting: { title: string; body: string; why: Why; also?: Why[] };
   models: { needed: boolean; capabilities: Capability[]; process: string[]; examples: string };
   autonomy: { level: AutonomyLevel; why: Why[]; checkpoints: string[]; guardrails: string[] };
   simpler: { title: string; body: string; why: Why };
@@ -69,6 +72,8 @@ export type Rule = {
   if: string;
   then: string;
   basis: Basis;
+  /** Knowledge-base chunks (knowledge/INDEX.md) whose claims support this rule. */
+  kb: ChunkId[];
   when: (a: Answers, d: Draft) => boolean;
   apply: (d: Draft, a: Answers, why: (text: string) => Why) => void;
 };
@@ -118,6 +123,7 @@ export const RULES: Rule[] = [
     if: "The work follows the same steps and rules every time",
     then: "Recommend plain automation with no AI. The output is a fixed function of the input.",
     basis: src("notes", "anthropic"),
+    kb: ["F03", "F01"],
     when: (a) => a.shape === "rules",
     apply: (d, a, why) => {
       d.approach = {
@@ -136,6 +142,7 @@ export const RULES: Rule[] = [
     if: "The steps are fixed but some need reading or judgement",
     then: "Recommend an automated workflow with AI steps. The path is decided in advance; AI handles only the steps that need judgement.",
     basis: src("anthropic", "notes"),
+    kb: ["F03", "F01", "F02"],
     when: (a) => a.shape === "judgement",
     apply: (d, a, why) => {
       d.approach = {
@@ -154,6 +161,7 @@ export const RULES: Rule[] = [
     if: "Each case is different, and one capable person could handle it",
     then: "Recommend a single AI agent: a model that loops through actions until the goal is reached.",
     basis: src("anthropic", "databricks", "notes"),
+    kb: ["F03", "F01", "F06"],
     when: (a) => agentic(a) && a.roles === "one",
     apply: (d, a, why) => {
       d.approach = {
@@ -175,6 +183,7 @@ export const RULES: Rule[] = [
     if: "Each case is different, and it needs several specialists or more material than one person could track",
     then: "Recommend a small team of agents: a coordinator plus specialists, each with its own brief and area of responsibility.",
     basis: src("notes", "openai"),
+    kb: ["P03", "P05", "P04"],
     when: (a) => multi(a),
     apply: (d, a, why) => {
       const reason =
@@ -207,6 +216,7 @@ export const RULES: Rule[] = [
     if: "Plain automation, not waiting on other data jobs",
     then: "Use a fixed pipeline: set steps with simple if-then branches.",
     basis: src("anthropic", "notes"),
+    kb: ["P01", "F03"],
     when: (a) => a.shape === "rules" && a.trigger !== "data",
     apply: (d, a, why) => {
       d.topology.primary = "pipeline";
@@ -219,6 +229,7 @@ export const RULES: Rule[] = [
     if: "Plain automation that depends on other data jobs finishing",
     then: "Use a dependency graph, so each job starts only when its inputs are ready.",
     basis: src("selfhosting"),
+    kb: ["L02"],
     when: (a) => a.shape === "rules" && a.trigger === "data",
     apply: (d, a, why) => {
       d.topology.primary = "dag";
@@ -231,6 +242,7 @@ export const RULES: Rule[] = [
     if: "AI workflow, and the work arrives in distinct types",
     then: "Start with routing: sort each item by type, then send it down its own path.",
     basis: src("anthropic"),
+    kb: ["P01"],
     when: (a) => a.shape === "judgement" && a.kinds === "yes",
     apply: (d, a, why) => {
       d.topology.primary = "routing";
@@ -243,6 +255,7 @@ export const RULES: Rule[] = [
     if: "AI workflow, one kind of work, independent parts",
     then: "Use parallel sections: handle the parts side by side, then combine.",
     basis: src("anthropic"),
+    kb: ["P01"],
     when: (a) => a.shape === "judgement" && a.kinds === "no" && a.split === "sections",
     apply: (d, a, why) => {
       d.topology.primary = "parallel-sections";
@@ -255,6 +268,7 @@ export const RULES: Rule[] = [
     if: "AI workflow, one kind of work, several opinions would help",
     then: "Use parallel voting: attempt the task several times independently and compare.",
     basis: src("anthropic"),
+    kb: ["P01", "P02"],
     when: (a) => a.shape === "judgement" && a.kinds === "no" && a.split === "voting",
     apply: (d, a, why) => {
       d.topology.primary = "parallel-voting";
@@ -267,6 +281,7 @@ export const RULES: Rule[] = [
     if: "AI workflow, one kind of work, each step builds on the last",
     then: "Use a prompt chain: steps in order, with a check between each.",
     basis: src("anthropic"),
+    kb: ["P01"],
     when: (a) => a.shape === "judgement" && a.kinds === "no" && a.split === "sequential",
     apply: (d, a, why) => {
       d.topology.primary = "chain";
@@ -279,6 +294,7 @@ export const RULES: Rule[] = [
     if: "AI workflow that is routed by type, and its parts are independent or benefit from several opinions",
     then: "Add parallel handling inside each route, once testing shows it helps.",
     basis: src("anthropic", "notes"),
+    kb: ["P01", "F05"],
     when: (a) => a.shape === "judgement" && a.kinds === "yes" && (a.split === "sections" || a.split === "voting"),
     apply: (d, a, why) => {
       const t: TopologyId = a.split === "sections" ? "parallel-sections" : "parallel-voting";
@@ -292,6 +308,7 @@ export const RULES: Rule[] = [
     if: "Single agent",
     then: "Use a single agent loop with tools, a step limit and a stopping rule.",
     basis: src("anthropic", "databricks"),
+    kb: ["F06", "P01"],
     when: (a) => agentic(a) && a.roles === "one",
     apply: (d, _a, why) => {
       d.topology.primary = "agent-loop";
@@ -304,6 +321,7 @@ export const RULES: Rule[] = [
     if: "Several agents",
     then: "Use an orchestrator and workers. A free-for-all where agents hand work to each other is harder to follow and debug, so it is not the starting point.",
     basis: src("anthropic", "openai"),
+    kb: ["P04", "P03"],
     when: (a) => multi(a),
     apply: (d, _a, why) => {
       d.topology.primary = "orchestrator";
@@ -316,6 +334,7 @@ export const RULES: Rule[] = [
     if: "An agent is needed and the work arrives in distinct types",
     then: "Put routing in front: send predictable types down simple fixed paths and only the open-ended cases to the agent.",
     basis: design,
+    kb: ["F02", "P01", "G03"],
     when: (a) => agentic(a) && a.kinds === "yes",
     apply: (d, a, why) => {
       d.topology.addOns.push("routing");
@@ -328,6 +347,7 @@ export const RULES: Rule[] = [
     if: "AI is used and a good result can be described as a clear checklist",
     then: "Add a generator and checker step: a second pass checks the work against your checklist and sends it back if it fails.",
     basis: src("anthropic"),
+    kb: ["P01", "P02"],
     when: (a) => ai(a) && a.quality === "clear",
     apply: (d, a, why) => {
       d.topology.addOns.push("evaluator");
@@ -337,11 +357,20 @@ export const RULES: Rule[] = [
 
   // ------------------------------------------------------------ Tools: the core
   {
+    id: "TL20", group: "Tools",
+    if: "An agent must be embedded in a service or execute generated code, and developers are available",
+    then: "Use LangGraph for explicit state and execution boundaries, even for one agent.",
+    basis: design, kb: ["J01", "J02", "J03"],
+    when: (a) => agentic(a) && a.team === "large" && !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
+    apply: (d, _a, why) => addTool(d, "langgraph", "Developers implement the agent as a service with explicit state, recovery and controlled tool execution.", why("Your execution requirements need a custom service boundary. One agent can need this architecture without adding specialist agents. LangGraph does not supply a secure code sandbox by itself."), true),
+  },
+  {
     id: "TL1",
     group: "Tools",
     if: "No agent needed, it depends on other data jobs, and you have developers",
     then: "Run it on Apache Airflow.",
     basis: src("selfhosting", "notes"),
+    kb: ["L02"],
     when: (a) => !agentic(a) && a.trigger === "data" && a.team === "large",
     apply: (d, a, why) => {
       addTool(
@@ -361,6 +390,7 @@ export const RULES: Rule[] = [
     if: "No agent needed, and it runs on a schedule, on an event, by hand, or after data jobs without a development team",
     then: "Run it in n8n.",
     basis: src("notes", "selfhosting"),
+    kb: ["L01", "L02"],
     when: (a) =>
       !agentic(a) &&
       !(a.trigger === "data" && a.team === "large") &&
@@ -387,6 +417,7 @@ export const RULES: Rule[] = [
     if: "A judgement task you start yourself, with no limits on AI providers",
     then: "Use Claude in the chat or desktop app, guided by a Skill.",
     basis: src("enmgt", "notes"),
+    kb: ["T05", "F03"],
     when: (a) => a.shape === "judgement" && a.trigger === "manual" && !vendorFree(a),
     apply: (d, a, why) => {
       addTool(
@@ -399,12 +430,25 @@ export const RULES: Rule[] = [
     },
   },
   {
+    id: "TL18",
+    group: "Tools",
+    if: "Several agent roles need coordination, developers are available, and persistent personal memory is not requested",
+    then: "Build a custom agent workflow in LangGraph, with explicit state and handoffs.",
+    basis: design,
+    kb: ["J01", "J02", "J03"],
+    when: (a, d) => !core(d) && multi(a) && a.team === "large" && !knows(a, "memory"),
+    apply: (d, _a, why) => addTool(d, "langgraph",
+      "Your developers implement the coordinator, specialist handoffs, state and review points in code.",
+      why("You have developers and several agent roles to coordinate. Explicit state and transitions make their handoffs testable. Start with one agent and add specialists only where evaluation supports them."), true),
+  },
+  {
     id: "TL4",
     group: "Tools",
     if: "AI is needed and you need to avoid a single AI company, or major providers aren't available where you operate",
     then: "Use Hermes Agent, which isn't tied to one company's models.",
     basis: src("pabani", "nous", "notes"),
-    when: (a) => ai(a) && vendorFree(a) && !(a.shape === "judgement" && a.trigger !== "manual"),
+    kb: ["L03", "M03", "D01"],
+    when: (a, d) => !core(d) && ai(a) && vendorFree(a) && !(a.shape === "judgement" && a.trigger !== "manual"),
     apply: (d, a, why) => {
       addTool(
         d,
@@ -412,7 +456,7 @@ export const RULES: Rule[] = [
         agentic(a)
           ? "Runs the agent. You can point it at whichever model provider is available and approved for you."
           : "Where you do the task, with any model provider you're allowed to use.",
-        why(`You said ${said(a, "location")}. Hermes works much like Claude Cowork but isn't restricted to Anthropic's models, which avoids the ecosystem trap.`),
+        why(`You said ${said(a, "location")}. Hermes works much like Claude running a task as an agent, but isn't restricted to Anthropic's models, which avoids the ecosystem trap.`),
         true,
       );
     },
@@ -423,6 +467,7 @@ export const RULES: Rule[] = [
     if: "An agent is needed, it should remember past work, and you have at least some technical help",
     then: "Use Hermes Agent for its persistent memory.",
     basis: src("nous", "kumar", "notes"),
+    kb: ["L03"],
     when: (a, d) => agentic(a) && !core(d) && knows(a, "memory") && a.team !== "small",
     apply: (d, _a, why) => {
       addTool(
@@ -440,6 +485,7 @@ export const RULES: Rule[] = [
     if: "An agent is needed and it should start automatically on an event or after data jobs",
     then: "Use an n8n workflow with an AI agent step (a hybrid).",
     basis: src("notes"),
+    kb: ["L01", "F02", "L06"],
     when: (a, d) => agentic(a) && !core(d) && (a.trigger === "event" || a.trigger === "data"),
     apply: (d, a, why) => {
       addTool(
@@ -455,8 +501,9 @@ export const RULES: Rule[] = [
     id: "TL7",
     group: "Tools",
     if: "An agent is needed, started by you or on a schedule",
-    then: "Use Claude Cowork.",
-    basis: src("enmgt", "notes"),
+    then: "Use Claude, running the task as an agent.",
+    basis: src("enmgt", "notes", "anthropicDocs"),
+    kb: ["L04"],
     when: (a, d) => agentic(a) && !core(d),
     apply: (d, a, why) => {
       addTool(
@@ -467,8 +514,8 @@ export const RULES: Rule[] = [
           : "Runs the agent: you hand it the goal and it works through the steps on its own.",
         why(
           a.trigger === "schedule"
-            ? `You said ${said(a, "trigger")}. Cowork can do scheduled work without you at the computer, which the regular chat can't.`
-            : "Cowork can act repeatedly and reason between steps, which makes it an agent, with no setup beyond the desktop app.",
+            ? `You said ${said(a, "trigger")}. Claude's scheduled tasks run in Anthropic's cloud, so they keep going while your computer is off.`
+            : "Claude can act repeatedly and reason between steps, which makes it an agent, with no setup beyond a paid Claude plan. Chat and agent work are one app now, in the desktop app, on the web and on mobile.",
         ),
         true,
       );
@@ -480,6 +527,7 @@ export const RULES: Rule[] = [
     if: "An agent is needed and it depends on data jobs at an organisation with developers",
     then: "Keep the upstream data jobs in Apache Airflow, and have the last job hand off to the agent.",
     basis: src("selfhosting"),
+    kb: ["L02", "L06"],
     when: (a) => agentic(a) && a.trigger === "data" && a.team === "large",
     apply: (d, a, why) => {
       addTool(
@@ -496,6 +544,7 @@ export const RULES: Rule[] = [
     if: "Hermes runs the agent and work should start on an event or after data jobs",
     then: "Add n8n in front to watch for the event and hand each case to Hermes.",
     basis: design,
+    kb: ["L01", "L03", "L06"],
     when: (a, d) => core(d) === "hermes" && agentic(a) && (a.trigger === "event" || a.trigger === "data"),
     apply: (d, a, why) => {
       addTool(d, "n8n", "Watches for the event and passes each new case to the agent.", why(`You said ${said(a, "trigger")}. A workflow tool is the dependable way to catch events.`));
@@ -506,9 +555,10 @@ export const RULES: Rule[] = [
   {
     id: "TL10",
     group: "Tools",
-    if: "AI is used in Claude, Cowork or Hermes, and there's a playbook to follow or software to use",
+    if: "AI is used in Claude or Hermes, and there's a playbook to follow or software to use",
     then: "Write a Skill.",
     basis: src("enmgt", "notes"),
+    kb: ["T05"],
     when: (a, d) => ai(a) && ["claude", "cowork", "hermes"].includes(core(d) ?? "") && (knows(a, "playbook") || a.systems !== "none"),
     apply: (d, a, why) => {
       const playbook = knows(a, "playbook");
@@ -529,9 +579,10 @@ export const RULES: Rule[] = [
   {
     id: "TL11",
     group: "Tools",
-    if: "The AI itself decides which tool to use (an agent, or Claude, Cowork or Hermes) and it needs your software",
+    if: "The AI itself decides which tool to use (an agent, or Claude or Hermes) and it needs your software",
     then: "Connect your software through MCP connectors.",
     basis: src("enmgt", "notes"),
+    kb: ["T03", "T04"],
     when: (a, d) => ai(a) && a.systems !== "none" && (agentic(a) || ["claude", "hermes"].includes(core(d) ?? "")),
     apply: (d, a, why) => {
       addTool(
@@ -550,6 +601,7 @@ export const RULES: Rule[] = [
     if: "The workflow's steps are fixed and it needs your software",
     then: "Use the workflow tool's built-in app connections. MCP isn't needed because the AI isn't choosing tools.",
     basis: design,
+    kb: ["T03", "L01"],
     when: (a) => !agentic(a) && a.systems !== "none" && !(a.shape === "judgement" && a.trigger === "manual"),
     apply: (d, a, why) => {
       addTool(d, "integrations", "Fetches and updates data in your other software as fixed steps.", why(`You said ${said(a, "systems")}. With a fixed path, those steps don't need AI to decide anything.`));
@@ -561,6 +613,7 @@ export const RULES: Rule[] = [
     if: "AI is used",
     then: "Write a system prompt: the standing brief that applies to every task. With several agents, each gets its own.",
     basis: src("notes", "enmgt"),
+    kb: ["T06", "P04"],
     when: (a) => ai(a),
     apply: (d, a, why) => {
       const inWorkflowTool = ["n8n", "n8n-agent", "airflow"].includes(core(d) ?? "");
@@ -578,6 +631,7 @@ export const RULES: Rule[] = [
     if: "It should draw on reference material",
     then: "Build a reference library the AI reads from.",
     basis: src("notes"),
+    kb: ["F07", "T06"],
     when: (a) => ai(a) && knows(a, "reference"),
     apply: (d, _a, why) => {
       addTool(d, "resources", "The documents and data it relies on instead of guessing.", why(`You said ${saidOption("knowledge", "reference")}. Giving the AI the source material is the best defence against made-up details.`));
@@ -586,12 +640,13 @@ export const RULES: Rule[] = [
   {
     id: "TL15",
     group: "Tools",
-    if: "It should remember past work, and runs in Claude or Cowork",
+    if: "It should remember past work, and runs in Claude",
     then: "Keep shared context in a Claude Project.",
-    basis: src("notes", "pabani"),
+    basis: src("notes", "anthropicDocs"),
+    kb: ["L04"],
     when: (a, d) => knows(a, "memory") && ["claude", "cowork"].includes(core(d) ?? ""),
     apply: (d, _a, why) => {
-      addTool(d, "project", "Keeps files and past work in one place so each task starts with context.", why(`You said ${saidOption("knowledge", "memory")}. Claude doesn't remember between conversations on its own; a Project or Skill is how you carry context forward.`));
+      addTool(d, "project", "Keeps files and past work in one place so each task starts with context.", why(`You said ${saidOption("knowledge", "memory")}. A Project keeps this task's files, instructions and memory together, so each run starts with the right context.`));
     },
   },
   {
@@ -600,6 +655,7 @@ export const RULES: Rule[] = [
     if: "An n8n workflow hands part of the work to an agent",
     then: "Call it a hybrid: automation for the predictable part, an agent for the open-ended part.",
     basis: src("notes"),
+    kb: ["F02", "L06"],
     when: (_a, d) => hasTool(d, "n8n-agent") || (hasTool(d, "hermes") && hasTool(d, "n8n")),
     apply: (d, _a, why) => {
       d.hybrid.push({ text: "Workflow plus agent: n8n handles triggers and routine steps, and hands the open-ended part to an agent.", why: why("Each part does what it is good at, which keeps the agent's job small.") });
@@ -611,9 +667,24 @@ export const RULES: Rule[] = [
     if: "A Skill and MCP connectors are both recommended",
     then: "Call it a hybrid: the Skill tells the AI which tools to use, MCP lets it use them.",
     basis: src("notes", "enmgt"),
+    kb: ["T05", "T03", "L06"],
     when: (_a, d) => hasTool(d, "skill") && hasTool(d, "mcp"),
     apply: (d, _a, why) => {
       d.hybrid.push({ text: "Skill plus MCP: the Skill points the AI to the right tools, and MCP connectors carry out the actual calls.", why: why("A Skill can't call a tool itself, and a connector alone doesn't say when to use it. Together they cover both.") });
+    },
+  },
+
+  {
+    id: "TL19",
+    group: "Tools",
+    if: "AI is used and developers are available",
+    then: "Add repeatable evaluations with Promptfoo and privacy-aware tracing with Langfuse.",
+    basis: design,
+    kb: ["O01", "O02"],
+    when: (a) => ai(a) && a.team === "large",
+    apply: (d, _a, why) => {
+      addTool(d, "promptfoo", "Tests examples and failure cases before changing the AI system.", why("A development team can turn acceptance criteria into repeatable regression checks."));
+      addTool(d, "langfuse", "Traces AI runs, with sensitive content filtered before export.", why("Trace evidence helps the team diagnose failures and compare quality, latency and cost."));
     },
   },
 
@@ -624,6 +695,7 @@ export const RULES: Rule[] = [
     if: "Major AI providers aren't available where you operate",
     then: "Use models that are available where the system runs: open-weight models on your own hardware, or regional providers.",
     basis: src("notes", "pabani"),
+    kb: ["D01", "M03"],
     when: (a) => a.location === "restricted",
     apply: (d, a, why) => {
       d.hosting = {
@@ -640,12 +712,13 @@ export const RULES: Rule[] = [
     group: "Hosting",
     if: "Data must stay in your region or on your servers, and you have an IT team",
     then: "Host it yourself: self-host the workflow tool and run open-weight models for sensitive steps.",
-    basis: src("mindstudio"),
+    basis: src("mindstudio", "costResearch"),
+    kb: ["M03", "D03", "D01"],
     when: (a, d) => !d.hosting && a.location === "residency" && a.team === "large",
     apply: (d, a, why) => {
       d.hosting = {
         title: "Local or self-hosted",
-        body: "Keep data on servers you control. Self-hosting costs more to set up, but it is more secure and cheaper per task once it is running.",
+        body: "Keep data on servers you control. Self-hosting costs more to set up and needs people to run it. It becomes cheaper per task only when the hardware is kept busy, so send it the steady, sensitive work and keep occasional or overflow work in the cloud.",
         why: why(`You said ${said(a, "location")} and ${said(a, "team")}, so you can carry the setup cost.`),
       };
     },
@@ -654,13 +727,14 @@ export const RULES: Rule[] = [
     id: "H3",
     group: "Hosting",
     if: "Data must stay in your region, without an IT team",
-    then: "Use cloud services that guarantee in-region processing, and self-host only what must stay in-house.",
-    basis: src("mindstudio"),
+    then: "Use cloud services that guarantee in-region processing, and self-host only what must stay in-house. For Claude, that means a cloud provider's regional service, not Anthropic's own API.",
+    basis: src("mindstudio", "anthropicDocs", "costResearch"),
+    kb: ["D01", "D03"],
     when: (a, d) => !d.hosting && a.location === "residency",
     apply: (d, a, why) => {
       d.hosting = {
         title: "In-region cloud",
-        body: "Pick cloud providers that guarantee processing in your region. Buying and running your own hardware rarely pays off at your size, because fixed costs dominate.",
+        body: "Pick cloud providers that guarantee processing in your region. Anthropic's own API processes data only in the US or worldwide, so use Claude through a cloud provider's regional service, such as Amazon Bedrock or Google Cloud. Your own hardware pays off only when it is kept busy, and it needs someone to look after it, which you don't have in-house.",
         why: why(`You said ${said(a, "location")} and ${said(a, "team")}.`),
       };
     },
@@ -670,12 +744,13 @@ export const RULES: Rule[] = [
     group: "Hosting",
     if: "A large organisation running AI hundreds of times a day",
     then: "Use cloud for now, and plan local hardware for the steady bulk of the work.",
-    basis: src("mindstudio"),
+    basis: src("mindstudio", "costResearch"),
+    kb: ["D03"],
     when: (a, d) => !d.hosting && a.team === "large" && a.volume === "high" && ai(a),
     apply: (d, a, why) => {
       d.hosting = {
         title: "Cloud now, local for the steady bulk",
-        body: "At your volume, per-use charges become the dominant cost. Once the setup is proven in the cloud, moving the steady, predictable steps onto your own hardware can cap that cost.",
+        body: "At your volume, per-use charges become the dominant cost. Once the setup is proven in the cloud, moving the steady, predictable steps onto your own hardware can cut that cost, because steady work keeps the hardware busy. Keep bursts and occasional work in the cloud.",
         why: why(`You said ${said(a, "volume")} and ${said(a, "team")}.`),
       };
     },
@@ -685,7 +760,8 @@ export const RULES: Rule[] = [
     group: "Hosting",
     if: "Any other case",
     then: "Use the cloud and pay as you go.",
-    basis: src("mindstudio"),
+    basis: src("mindstudio", "costResearch"),
+    kb: ["D03"],
     when: (_a, d) => !d.hosting,
     apply: (d, a, why) => {
       d.hosting = {
@@ -700,6 +776,26 @@ export const RULES: Rule[] = [
     },
   },
 
+  {
+    // H1 is a limit on which models may be used and wins over H4, which is about
+    // cost at scale. H4's advice still holds inside that limit, so it's added here
+    // instead of being lost.
+    id: "H6",
+    group: "Hosting",
+    if: "Only some AI providers are available where you operate, and a large organisation runs AI hundreds of times a day",
+    then: "Keep to the models available there, and plan your own hardware with open-weight models for the steady bulk of the work.",
+    basis: src("notes", "pabani", "mindstudio", "costResearch"),
+    kb: ["D01", "M03", "D03"],
+    when: (a, d) => d.fired.includes("H1") && ai(a) && a.team === "large" && a.volume === "high",
+    apply: (d, a, why) => {
+      d.hosting = {
+        ...d.hosting!,
+        title: "Models available where you operate, your own hardware for the bulk",
+        body: "Use open-weight models, or providers that operate in your region. At your volume, per-use charges become the dominant cost: once the setup is proven with a regional provider, run open-weight models on your own hardware for the steady, predictable steps, because steady work keeps the hardware busy. Keep bursts and occasional work with the regional provider, and choose tools that let you switch models, so a change in access doesn't stop the business.",
+        also: [why(`You also said ${said(a, "volume")} and ${said(a, "team")}, so your own hardware pays off for the steady work.`)],
+      };
+    },
+  },
   // ------------------------------------------------------------ Models
   {
     id: "M1",
@@ -707,6 +803,7 @@ export const RULES: Rule[] = [
     if: "Plain automation",
     then: "No AI model is needed.",
     basis: src("anthropic"),
+    kb: ["F03"],
     when: (a) => !ai(a),
     apply: () => {},
   },
@@ -716,6 +813,7 @@ export const RULES: Rule[] = [
     if: "AI is used",
     then: "Look for dependable instruction-following: it does what the brief says, in the format you asked for.",
     basis: src("openai"),
+    kb: ["F04", "T06", "M01"],
     when: (a) => ai(a),
     apply: (d, _a, why) => {
       d.models.capabilities.push({ title: "Follows instructions closely", body: "Sticks to your brief and output format, run after run.", why: why("Every AI step depends on this.") });
@@ -727,6 +825,7 @@ export const RULES: Rule[] = [
     if: "An agent is used, or the AI itself works inside your software (rather than a workflow tool doing it)",
     then: "Look for reliable tool use.",
     basis: src("openai", "anthropic"),
+    kb: ["T01", "T02", "M01"],
     when: (a, d) => agentic(a) || (ai(a) && a.systems !== "none" && ["claude", "hermes"].includes(core(d) ?? "")),
     apply: (d, a, why) => {
       d.models.capabilities.push({
@@ -742,6 +841,7 @@ export const RULES: Rule[] = [
     if: "An agent is used",
     then: "Look for strong multi-step reasoning and planning.",
     basis: src("databricks", "anthropic"),
+    kb: ["F06", "M01"],
     when: (a) => agentic(a),
     apply: (d, a, why) => {
       d.models.capabilities.push({ title: "Multi-step reasoning", body: "Plans ahead, notices when an approach isn't working, and changes course.", why: why(`You said ${said(a, "shape")}. The model has to work out the next step itself.`) });
@@ -753,6 +853,7 @@ export const RULES: Rule[] = [
     if: "It involves a lot of material or reference documents",
     then: "Look for a large context window.",
     basis: src("notes"),
+    kb: ["F07", "T06", "M01"],
     when: (a) => ai(a) && (a.roles === "material" || a.roles === "both" || knows(a, "reference")),
     apply: (d, a, why) => {
       d.models.capabilities.push({
@@ -768,6 +869,7 @@ export const RULES: Rule[] = [
     if: "It runs hundreds of times a day",
     then: "Look for a fast, low-cost model for routine steps.",
     basis: src("notes", "openai"),
+    kb: ["M02", "M01"],
     when: (a) => ai(a) && a.volume === "high",
     apply: (d, a, why) => {
       d.models.capabilities.push({ title: "Low cost and fast responses", body: "For routine steps, a smaller model is often good enough and far cheaper at volume.", why: why(`You said ${said(a, "volume")}. Cost and speed per run add up quickly.`) });
@@ -779,9 +881,10 @@ export const RULES: Rule[] = [
     if: "The work is sorted by type first",
     then: "Use a small, fast model for the sorting step.",
     basis: src("openai"),
+    kb: ["P01", "M02"],
     when: (a) => ai(a) && a.kinds === "yes",
     apply: (d, a, why) => {
-      d.models.capabilities.push({ title: "A small model for sorting", body: "Classifying a request is a simple task. It rarely needs the most capable model.", why: why(`You said ${said(a, "kinds")}.`) });
+      d.models.capabilities.push({ title: "A small model for sorting", body: "Classifying a request is a simple task. It rarely needs the most capable model. The guide starts with Sonnet 5.5 here; test a smaller model once your examples show it's enough.", why: why(`You said ${said(a, "kinds")}.`) });
     },
   },
   {
@@ -790,6 +893,7 @@ export const RULES: Rule[] = [
     if: "Providers are limited, data must stay in-region, or you want to avoid one AI company",
     then: "Look for open-weight models you can host or buy from several providers.",
     basis: src("mindstudio", "pabani"),
+    kb: ["M03", "D01"],
     when: (a) => ai(a) && (vendorFree(a) || a.location === "residency"),
     apply: (d, a, why) => {
       d.models.capabilities.push({ title: "Open-weight availability", body: "A model you can run yourself or buy from more than one provider keeps you in control of where data goes.", why: why(`You said ${said(a, "location")}.`) });
@@ -800,10 +904,11 @@ export const RULES: Rule[] = [
     group: "Models",
     if: "It handles personal or confidential information",
     then: "Look for strong data controls: no training on your data, clear retention settings.",
-    basis: design,
+    basis: src("anthropicDocs"),
+    kb: ["D02"],
     when: (a) => ai(a) && risk(a, "personal"),
     apply: (d, _a, why) => {
-      d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept.", why: why(`You said ${saidOption("risks", "personal")}.`) });
+      d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the Claude app, and which rules out Claude Fable 5.1.", why: why(`You said ${saidOption("risks", "personal")}.`) });
     },
   },
   {
@@ -811,19 +916,21 @@ export const RULES: Rule[] = [
     group: "Models",
     if: "AI is used",
     then: "Choose models by testing: start with the most capable, set a quality baseline, then try smaller models step by step, weighing quality, cost and speed.",
-    basis: src("openai", "notes"),
+    basis: src("openai", "notes", "anthropicDocs", "epoch"),
+    kb: ["M01", "G04"],
     when: (a) => ai(a),
     apply: (d, a) => {
       d.models.needed = true;
       d.models.process = [
         "Build the first version with the most capable model for every step.",
         "Run it on your real examples and record how good the results are. That is your baseline.",
+        "Before switching to a smaller model, try a lower effort setting on the same model if it offers one; that is often the better lever.",
         "Swap in smaller, cheaper models one step at a time, keeping each swap only if quality still meets the baseline.",
         "Judge each choice on three things: quality against your examples, cost per run, and speed.",
       ];
-      d.models.examples = `Examples as of ${LAST_REVIEWED}; check before choosing. Demanding steps: Claude Opus 5.5 or Claude Sonnet 5.5. Fast routine steps: Claude Haiku 4.5. OpenAI, Google and others offer similar tiers.${
+      d.models.examples = `Examples as of ${LAST_REVIEWED}; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced and the default for routine steps: Claude Sonnet 5.5. Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default. OpenAI, Google and others offer similar tiers.${
         vendorFree(a) || a.location === "residency"
-          ? " Open-weight families such as Qwen, Llama, DeepSeek and Nous Research's Hermes models can run on your own hardware or through regional providers."
+          ? " Leading open-weight models include Kimi, GLM, DeepSeek and MiniMax, about four months behind the best closed models. They can run on your own hardware or through regional providers."
           : ""
       }`;
     },
@@ -836,6 +943,7 @@ export const RULES: Rule[] = [
     if: "Starting point",
     then: "Plain automation starts at level 4, an AI workflow at level 3, and any agent at level 2. Autonomy is earned as the system proves itself.",
     basis: design,
+    kb: ["A04", "A01"],
     when: () => true,
     apply: (d, a, why) => {
       const start: AutonomyLevel = a.shape === "rules" ? 4 : a.shape === "judgement" ? 3 : 2;
@@ -857,6 +965,7 @@ export const RULES: Rule[] = [
     if: "AI workflow or agent, a clear checklist exists, nothing risky is involved, and it doesn't take actions",
     then: "Move up one level: the automatic checker acts as a guardrail.",
     basis: src("openai", "notes"),
+    kb: ["P02", "A04"],
     when: (a) => ai(a) && a.quality === "clear" && noRisks(a) && a.systems !== "act",
     apply: (d, a, why) => {
       d.autonomy.level = Math.min(4, (d.autonomy.level ?? 2) + 1) as AutonomyLevel;
@@ -869,6 +978,7 @@ export const RULES: Rule[] = [
     if: "AI is used and a good result is hard to describe",
     then: "Cap at level 2: a person approves every output.",
     basis: design,
+    kb: ["A02", "G04"],
     when: (a) => ai(a) && a.quality === "no",
     apply: (d, a, why) => cap(d, 2, why(`You said ${said(a, "quality")}. Without a checklist, only a person can judge each result.`)),
   },
@@ -878,6 +988,7 @@ export const RULES: Rule[] = [
     if: "AI output reaches customers and quality isn't fully checkable",
     then: "Cap at level 2 until quality is proven.",
     basis: src("openai", "notes"),
+    kb: ["A02", "A04"],
     when: (a) => ai(a) && risk(a, "visible") && a.quality !== "clear",
     apply: (d, a, why) => cap(d, 2, why(`You said ${saidOption("risks", "visible")}, and ${said(a, "quality")}. Reputational risk calls for a person in the loop.`)),
   },
@@ -887,6 +998,7 @@ export const RULES: Rule[] = [
     if: "AI output reaches customers but a clear checklist exists",
     then: "Cap at level 3.",
     basis: src("openai", "notes"),
+    kb: ["A02", "P02"],
     when: (a) => ai(a) && risk(a, "visible") && a.quality === "clear",
     apply: (d, _a, why) => cap(d, 3, why(`You said ${saidOption("risks", "visible")}. Automatic checks help, but customer-facing work keeps a human checkpoint.`)),
   },
@@ -896,6 +1008,7 @@ export const RULES: Rule[] = [
     if: "A mistake could cost money or be hard to undo, at low or moderate volume",
     then: "Cap at level 2 for AI (a person approves every output) or level 3 for plain automation.",
     basis: src("openai"),
+    kb: ["A02", "A03"],
     when: (a) => risk(a, "irreversible") && a.volume !== "high",
     apply: (d, a, why) => cap(d, ai(a) ? 2 : 3, why(`You said ${saidOption("risks", "irreversible")}. High-stakes, irreversible actions should have human oversight until the system has a track record.`)),
   },
@@ -905,6 +1018,7 @@ export const RULES: Rule[] = [
     if: "A mistake could cost money or be hard to undo, at hundreds of runs a day",
     then: "Cap at level 3: approving every item isn't realistic, so define which actions count as high-risk and send only those to a person.",
     basis: src("openai"),
+    kb: ["A02", "A03"],
     when: (a) => risk(a, "irreversible") && a.volume === "high",
     apply: (d, a, why) => cap(d, 3, why(`You said ${saidOption("risks", "irreversible")} and ${said(a, "volume")}. Set thresholds (an amount, a type of action) above which a person signs off.`)),
   },
@@ -914,6 +1028,7 @@ export const RULES: Rule[] = [
     if: "An agent takes actions in your systems",
     then: "Cap at level 3.",
     basis: src("openai", "anthropic"),
+    kb: ["A02", "G01", "T04"],
     when: (a) => agentic(a) && a.systems === "act",
     apply: (d, a, why) => cap(d, 3, why(`You said ${said(a, "systems")}. An agent's actions should pause for approval when they are sensitive.`)),
   },
@@ -923,6 +1038,7 @@ export const RULES: Rule[] = [
     if: "Always",
     then: "List when a person must step in: after repeated failures, and before any high-risk action.",
     basis: src("openai"),
+    kb: ["A02", "F06"],
     when: () => true,
     apply: (d, a) => {
       const c = d.autonomy.checkpoints;
@@ -944,6 +1060,7 @@ export const RULES: Rule[] = [
     if: "AI is used",
     then: "Layer simple, specialised guardrails rather than relying on one: rule-based checks always, plus checks for personal data, unsafe inputs and brand tone where they apply.",
     basis: src("openai", "notes"),
+    kb: ["G01", "G02"],
     when: (a) => ai(a),
     apply: (d, a) => {
       const g = d.autonomy.guardrails;
@@ -963,6 +1080,7 @@ export const RULES: Rule[] = [
     if: "Several agents recommended",
     then: "Start with one agent that plays every role in turn, and split only when it demonstrably loses track.",
     basis: src("openai", "notes"),
+    kb: ["P03"],
     when: (a) => multi(a),
     apply: (d, _a, why) => {
       d.simpler = { title: "One agent first", body: "Give a single agent all the roles, in sequence, with one clear brief. Split into specialists only when you can point to where it gets overwhelmed.", why: why("One employee is simpler and cheaper than a team; hire the second only when the first is clearly overloaded.") };
@@ -974,6 +1092,7 @@ export const RULES: Rule[] = [
     if: "One agent recommended",
     then: "Start with a fixed workflow for the most common case, and send everything else to a person.",
     basis: src("anthropic"),
+    kb: ["F05", "F02"],
     when: (a) => agentic(a) && a.roles === "one",
     apply: (d, _a, why) => {
       d.simpler = { title: "Automate the common case only", body: "Map the path your most frequent case follows and build that as a fixed workflow. Unusual cases go to a person. Add the agent once you know which cases really need it.", why: why("The simplest system that works is usually the right first step; add complexity only when it is needed.") };
@@ -985,6 +1104,7 @@ export const RULES: Rule[] = [
     if: "AI workflow that would run automatically",
     then: "Run the steps by hand in Claude with your playbook before automating anything.",
     basis: design,
+    kb: ["F05", "A04"],
     when: (a) => a.shape === "judgement" && a.trigger !== "manual",
     apply: (d, _a, why) => {
       d.simpler = { title: "Do it by hand with AI first", body: "Paste real examples into Claude (or another assistant) with your written playbook, one at a time. When results are consistently good, wire the same steps into n8n.", why: why("You learn what the instructions need to say before paying to automate them.") };
@@ -996,6 +1116,7 @@ export const RULES: Rule[] = [
     if: "AI workflow you start yourself",
     then: "Start with one well-written prompt and no extra tools.",
     basis: design,
+    kb: ["F05"],
     when: (a) => a.shape === "judgement" && a.trigger === "manual",
     apply: (d, _a, why) => {
       d.simpler = { title: "One good prompt", body: "Before splitting the task into steps, try a single well-written prompt with your examples attached. Break it up only where that prompt keeps failing.", why: why("A single prompt is often enough, and its failures show you exactly which step needs its own treatment.") };
@@ -1007,6 +1128,7 @@ export const RULES: Rule[] = [
     if: "Plain automation",
     then: "Write the rules as a checklist and run it by hand until the rules stop changing.",
     basis: design,
+    kb: ["F03", "A04"],
     when: (a) => a.shape === "rules",
     apply: (d, _a, why) => {
       d.simpler = { title: "A written checklist", body: "Write every rule and exception on one page and follow it by hand for two weeks. Automate once the rules stop changing; automating a moving target wastes the build.", why: why("Rules that are still being discovered are expensive to change once automated.") };
@@ -1020,6 +1142,7 @@ export const RULES: Rule[] = [
     if: "Plain automation",
     then: "Warn against adding AI to a job rules can do.",
     basis: src("anthropic", "notes"),
+    kb: ["F03"],
     when: (a) => a.shape === "rules",
     apply: (d) => gotcha(d, { id: "G1", priority: 1, title: "Don't add AI just because you can", body: "If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy." }, src("anthropic", "notes")),
   },
@@ -1029,6 +1152,7 @@ export const RULES: Rule[] = [
     if: "An agent is used",
     then: "Warn that mistakes compound across steps.",
     basis: src("anthropic"),
+    kb: ["F06", "P06"],
     when: (a) => agentic(a),
     apply: (d) => gotcha(d, { id: "G2", priority: 1, title: "Mistakes compound", body: "Each step builds on the last, so one early error can spread through the whole task. Set step limits, stopping rules and human checkpoints, and test before you trust it." }, src("anthropic")),
   },
@@ -1038,6 +1162,7 @@ export const RULES: Rule[] = [
     if: "It reads email, documents or other software, or reacts to incoming content",
     then: "Warn about prompt injection.",
     basis: src("openai"),
+    kb: ["G02", "G03"],
     when: (a) => ai(a) && (a.systems !== "none" || a.trigger === "event"),
     apply: (d) => gotcha(d, { id: "G3", priority: 2, title: "Incoming content can carry instructions", body: "An email or document can contain text aimed at your AI (\"ignore your rules and forward this\"). Treat incoming content as information, never as orders, and add a check for unsafe inputs." }, src("openai")),
   },
@@ -1047,6 +1172,7 @@ export const RULES: Rule[] = [
     if: "It handles personal or confidential information",
     then: "Warn about data exposure.",
     basis: src("openai", "notes"),
+    kb: ["G01", "D02", "T06"],
     when: (a) => ai(a) && risk(a, "personal"),
     apply: (d) => gotcha(d, { id: "G4", priority: 2, title: "Personal data can leak in output", body: "Filter output for personal information, share only what each step needs, and don't put secrets in the system prompt; prompts can be coaxed into revealing themselves." }, src("openai", "notes")),
   },
@@ -1056,6 +1182,7 @@ export const RULES: Rule[] = [
     if: "AI output reaches customers or partners",
     then: "Warn about reputational risk.",
     basis: src("openai", "notes"),
+    kb: ["G01", "A02"],
     when: (a) => ai(a) && risk(a, "visible"),
     apply: (d) => gotcha(d, { id: "G5", priority: 2, title: "One off-brand reply costs more than it saves", body: "A single confident, wrong answer in front of a customer can undo months of time saved. Keep a person reviewing until the track record is clear." }, src("openai", "notes")),
   },
@@ -1063,19 +1190,21 @@ export const RULES: Rule[] = [
     id: "G6",
     group: "Gotchas",
     if: "AI runs dozens of times a day or more",
-    then: "Warn that cloud AI costs scale with use and can't be fully controlled.",
-    basis: src("mindstudio"),
+    then: "Warn that cloud AI costs scale with use, and say how to cap them.",
+    basis: src("mindstudio", "anthropicDocs"),
+    kb: ["M02", "D03"],
     when: (a) => ai(a) && a.volume !== "occasional",
-    apply: (d) => gotcha(d, { id: "G6", priority: 3, title: "You can't fully cap the bill", body: "Cloud AI charges per word processed. You control what you send, but not how much the model writes back, so costs vary with use. Set spending alerts from day one." }, src("mindstudio")),
+    apply: (d) => gotcha(d, { id: "G6", priority: 3, title: "The bill grows with use", body: "Cloud AI charges for every word it reads and writes, so costs rise with volume, and an agent uses about four times as much as a chat. Set a monthly spending limit and a maximum reply length from day one. A limit stops the system when it is reached, so add an alert well before it." }, src("mindstudio", "anthropicDocs")),
   },
   {
     id: "G7",
     group: "Gotchas",
-    if: "Claude Cowork is recommended",
-    then: "Warn not to confuse Cowork with the regular chat.",
-    basis: src("notes", "enmgt"),
+    if: "Claude is recommended to run the task as an agent",
+    then: "Warn that it only works on its own once the task is set up to run.",
+    basis: src("notes", "enmgt", "anthropicDocs"),
+    kb: ["L04"],
     when: (_a, d) => core(d) === "cowork",
-    apply: (d) => gotcha(d, { id: "G7", priority: 3, title: "Cowork isn't the regular chat", body: "In the standard Claude chat, nothing happens until you type a request. Scheduled and unattended work happens in Cowork. Set it up there, or nothing will run while you're away." }, src("notes", "enmgt")),
+    apply: (d) => gotcha(d, { id: "G7", priority: 3, title: "It only runs on its own once it's set up to", body: "Chat and agent work are one Claude app now, and nothing happens until something starts it. For unattended work, ask Claude to schedule the task: scheduled tasks run in the cloud even when your computer is off. Tasks that need files or apps on your computer still need the desktop app open." }, src("notes", "enmgt", "anthropicDocs")),
   },
   {
     id: "G8",
@@ -1083,6 +1212,7 @@ export const RULES: Rule[] = [
     if: "You'll run the task in the Claude app yourself",
     then: "Warn that Claude decides whether to act as an agent.",
     basis: src("notes"),
+    kb: ["T01", "L04"],
     when: (_a, d) => core(d) === "claude",
     apply: (d) => gotcha(d, { id: "G8", priority: 4, title: "Check what it actually did", body: "In the chat app, Claude decides for itself whether to use tools or just answer. Look for the \"ran a command\" or tool steps in its reply before assuming it checked your files." }, src("notes")),
   },
@@ -1090,10 +1220,11 @@ export const RULES: Rule[] = [
     id: "G9",
     group: "Gotchas",
     if: "A Skill and MCP are both recommended",
-    then: "Warn that a Skill can't call tools on its own.",
-    basis: src("notes", "enmgt"),
+    then: "Warn that a Skill can't reach your systems without a connector.",
+    basis: src("notes", "enmgt", "anthropicDocs"),
+    kb: ["T05"],
     when: (_a, d) => hasTool(d, "skill") && hasTool(d, "mcp"),
-    apply: (d) => gotcha(d, { id: "G9", priority: 4, title: "A Skill can't use tools by itself", body: "A Skill only tells the AI which tools to reach for. Each tool still needs its own connector set up and permitted, or the Skill will point at something that isn't there." }, src("notes", "enmgt")),
+    apply: (d) => gotcha(d, { id: "G9", priority: 4, title: "A Skill can't reach your systems by itself", body: "A Skill says what to do and which tools to use. It can include small scripts, but it still needs a connector or access set up for each of your systems, or it will point at something that isn't there." }, src("notes", "enmgt", "anthropicDocs")),
   },
   {
     id: "G10",
@@ -1101,6 +1232,7 @@ export const RULES: Rule[] = [
     if: "Plain automation that touches your software",
     then: "Point out that MCP isn't needed.",
     basis: design,
+    kb: ["T03", "L01"],
     when: (a) => a.shape === "rules" && a.systems !== "none",
     apply: (d) => gotcha(d, { id: "G10", priority: 4, title: "You don't need MCP here", body: "MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit." }, design),
   },
@@ -1108,37 +1240,41 @@ export const RULES: Rule[] = [
     id: "G11",
     group: "Gotchas",
     if: "n8n runs work that depends on other data jobs",
-    then: "Warn about fragile workarounds while waiting for data.",
-    basis: src("selfhosting"),
+    then: "Warn that n8n can't wait for upstream data jobs to finish.",
+    basis: src("selfhosting", "n8nDocs", "airflowDocs"),
+    kb: ["L01", "L02"],
     when: (a, d) => a.trigger === "data" && hasTool(d, "n8n") && !hasTool(d, "airflow"),
-    apply: (d) => gotcha(d, { id: "G11", priority: 2, title: "n8n doesn't wait for data", body: "n8n passes data forward in one direction. Workarounds that loop while waiting for an upstream job become fragile. If dependencies multiply, that is the moment to move to Airflow." }, src("selfhosting")),
+    apply: (d) => gotcha(d, { id: "G11", priority: 2, title: "n8n doesn't wait for data", body: "An n8n workflow can pause for a set time or until something calls it back, but it can't start only once the data jobs it depends on have finished. A timer just guesses when the data is ready. If dependencies multiply, that is the moment to move to Airflow, which waits for the data itself." }, src("selfhosting", "n8nDocs", "airflowDocs")),
   },
   {
     id: "G12",
     group: "Gotchas",
     if: "Apache Airflow is recommended",
     then: "Warn about Airflow's setup cost.",
-    basis: src("selfhosting"),
+    basis: src("selfhosting", "airflowDocs"),
+    kb: ["L02", "L01"],
     when: (_a, d) => hasTool(d, "airflow"),
-    apply: (d) => gotcha(d, { id: "G12", priority: 3, title: "Airflow is a developer tool", body: "It needs more memory, more setup and Python skills, compared with n8n's visual builder. Budget for someone to own it." }, src("selfhosting")),
+    apply: (d) => gotcha(d, { id: "G12", priority: 3, title: "Airflow is a developer tool", body: "Every workflow is written in Python, compared with n8n's visual builder, and a production setup needs ongoing monitoring and tuning. Budget for someone to own it, or use a managed Airflow service." }, src("selfhosting", "airflowDocs")),
   },
   {
     id: "G13",
     group: "Gotchas",
-    if: "It should remember past work but runs in Claude or Cowork",
-    then: "Warn that Claude doesn't remember between conversations by default.",
-    basis: src("notes"),
+    if: "It should remember past work but runs in Claude",
+    then: "Warn not to rely on Claude's general memory for this task's context.",
+    basis: src("notes", "anthropicDocs"),
+    kb: ["L04", "T05"],
     when: (a, d) => knows(a, "memory") && ["claude", "cowork"].includes(core(d) ?? ""),
-    apply: (d) => gotcha(d, { id: "G13", priority: 3, title: "Claude forgets between conversations", body: "Unless work happens inside a shared Project or lessons are written into a Skill, each conversation starts fresh. Make updating the Skill part of the routine." }, src("notes")),
+    apply: (d) => gotcha(d, { id: "G13", priority: 3, title: "Don't rely on general memory", body: "Claude's memory carries general context between conversations, but it isn't organised around this task. Keep the task's files and instructions in a Project, write lessons into the Skill, and make updating the Skill part of the routine." }, src("notes", "anthropicDocs")),
   },
   {
     id: "G14",
     group: "Gotchas",
     if: "Hermes Agent is recommended",
-    then: "Warn about running open-source software yourself.",
-    basis: design,
+    then: "Warn about running open-source software yourself, and turn on approval for the skills it writes.",
+    basis: src("hermesDocs"),
+    kb: ["L03"],
     when: (_a, d) => hasTool(d, "hermes"),
-    apply: (d) => gotcha(d, { id: "G14", priority: 3, title: "Self-improving means self-maintained", body: "Hermes is open-source: you look after hosting, updates and security. It also writes its own skills as it learns, so review those changes the way you would review a new hire's process notes." }, design),
+    apply: (d) => gotcha(d, { id: "G14", priority: 3, title: "Self-improving means self-maintained", body: "Hermes is open-source: you look after hosting, updates and security. It writes its own skills as it learns, and by default saves them without asking, so turn on skill-write approval and review changes like a new hire's process notes. Keep command approvals on; never switch them off." }, src("hermesDocs")),
   },
   {
     id: "G15",
@@ -1146,6 +1282,7 @@ export const RULES: Rule[] = [
     if: "Providers are limited or you want to avoid one AI company",
     then: "Warn that availability depends on where the system operates.",
     basis: src("notes", "pabani"),
+    kb: ["D01", "M03"],
     when: (a) => vendorFree(a),
     apply: (d) => gotcha(d, { id: "G15", priority: 3, title: "Check availability where it will run", body: "Model access varies by country and can change. Confirm availability where the system will operate, and keep instructions portable so you can switch models without starting over." }, src("notes", "pabani")),
   },
@@ -1155,6 +1292,7 @@ export const RULES: Rule[] = [
     if: "Several agents recommended",
     then: "Warn about coordination cost.",
     basis: src("notes", "openai"),
+    kb: ["P03", "P05", "P06"],
     when: (a) => multi(a),
     apply: (d) => gotcha(d, { id: "G16", priority: 2, title: "More agents, more handoffs", body: "Each agent adds cost, and agents wait on each other. Every handoff is a place for information to get lost, so give each one a precise brief of what it receives and returns." }, src("notes", "openai")),
   },
@@ -1164,6 +1302,7 @@ export const RULES: Rule[] = [
     if: "More than one pattern is combined",
     then: "Warn to combine patterns only when testing shows they help.",
     basis: src("anthropic", "notes"),
+    kb: ["F05", "P01"],
     when: (_a, d) => d.topology.addOns.length > 0,
     apply: (d) => gotcha(d, { id: "G17", priority: 4, title: "Every extra step must earn its place", body: "Each added stage costs money and time. Keep one only if your test examples show the result improves enough to justify it." }, src("anthropic", "notes")),
   },
@@ -1173,6 +1312,7 @@ export const RULES: Rule[] = [
     if: "AI is used and a good result is hard to describe",
     then: "Warn that what can't be described can't be measured.",
     basis: src("openai", "notes"),
+    kb: ["G04", "P02"],
     when: (a) => ai(a) && a.quality === "no",
     apply: (d) => gotcha(d, { id: "G18", priority: 1, title: "If you can't describe good, you can't measure it", body: "Without a definition of good, there's no way to tell whether a change helped. Collect ten good and ten bad past examples and write down what separates them." }, src("openai", "notes")),
   },
@@ -1182,17 +1322,41 @@ export const RULES: Rule[] = [
     if: "AI is used",
     then: "Warn that the smartest model isn't automatically the best.",
     basis: src("notes", "openai"),
+    kb: ["M01", "M02"],
     when: (a) => ai(a),
     apply: (d) => gotcha(d, { id: "G19", priority: 5, title: "The smartest model isn't always the best fit", body: "Top models are slower and cost more, and for simple steps they don't do better. Let your test examples decide, not the leaderboard." }, src("notes", "openai")),
   },
   {
     id: "G20",
     group: "Gotchas",
-    if: "Local or self-hosted infrastructure is recommended",
+    if: "Your own hardware is recommended (self-hosting, or local hardware for the steady bulk)",
     then: "Warn about upfront cost.",
-    basis: src("mindstudio"),
-    when: (_a, d) => d.hosting?.title === "Local or self-hosted" || d.hosting?.title === "Cloud now, local for the steady bulk",
-    apply: (d) => gotcha(d, { id: "G20", priority: 4, title: "Local is cheaper only once it's busy", body: "Your own hardware has a large upfront cost and needs looking after. It pays back through high, steady volume, not occasional use." }, src("mindstudio")),
+    basis: src("mindstudio", "costResearch"),
+    kb: ["D03"],
+    when: (_a, d) => ["H2", "H4", "H6"].some((id) => d.fired.includes(id)),
+    apply: (d) => gotcha(d, { id: "G20", priority: 4, title: "Local is cheaper only once it's busy", body: "Your own hardware has a large upfront cost and needs looking after. It pays back through high, steady volume, not occasional use: idle hardware can cost more per task than the cloud." }, src("mindstudio", "costResearch")),
+  },
+  {
+    id: "G21",
+    group: "Gotchas",
+    if: "n8n is recommended",
+    then: "Point out that n8n's licence allows internal use but restricts selling it on.",
+    basis: src("n8nDocs"),
+    kb: ["L01"],
+    when: (_a, d) => hasTool(d, "n8n") || hasTool(d, "n8n-agent"),
+    apply: (d) => gotcha(d, { id: "G21", priority: 4, title: "n8n isn't open source", body: "n8n's licence lets you use and change it for your own internal business purposes. If you plan to host it for clients or build it into something you sell, check the licence or buy a commercial one first." }, src("n8nDocs")),
+  },
+
+
+  {
+    id: "G22",
+    group: "Gotchas",
+    if: "LangGraph is recommended",
+    then: "Budget for a developer-owned service, persistent checkpoints and explicit action authorization.",
+    basis: design,
+    kb: ["J02", "J03"],
+    when: (_a, d) => hasTool(d, "langgraph"),
+    apply: (d) => gotcha(d, { id: "G22", priority: 2, title: "The graph needs an operating owner", body: "Your team owns the model adapters, hosting, checkpoint database and authenticated review interface. A paused graph is not an authorization system, and replay must not duplicate external actions." }, design),
   },
 
   // ------------------------------------------------------------ First steps
@@ -1202,6 +1366,7 @@ export const RULES: Rule[] = [
     if: "Always",
     then: "Gather real examples first: they define what good looks like and become your test set.",
     basis: src("openai", "notes"),
+    kb: ["G04", "A04"],
     when: () => true,
     apply: (d, a) => {
       d.firstSteps.push(
@@ -1217,10 +1382,11 @@ export const RULES: Rule[] = [
     if: "Always, depending on the approach",
     then: "Build the smallest working version: the checklist in n8n, the playbook in Claude, or a read-only agent pilot.",
     basis: design,
+    kb: ["F05", "A04"],
     when: () => true,
     apply: (d, a) => {
       const home = d.tools.find((t) => t.core)?.tool;
-      const where = home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" ? "Claude Cowork" : home === "claude" ? "Claude" : "n8n";
+      const where = home === "langgraph" ? "LangGraph" : home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" || home === "claude" ? "Claude" : "n8n";
       const step =
         a.shape === "rules"
           ? `Build it in ${where} with a manual start button, and run it alongside the current process for two weeks before switching over.`
@@ -1238,6 +1404,7 @@ export const RULES: Rule[] = [
     if: "Always",
     then: "Name an owner and decide who reviews results, and what earns more autonomy.",
     basis: design,
+    kb: ["A04", "A03"],
     when: () => true,
     apply: (d, a) => {
       d.firstSteps.push(
@@ -1246,6 +1413,27 @@ export const RULES: Rule[] = [
           : `Name one owner who reviews results at the starting level (${AUTONOMY[d.autonomy.level ?? 2].name.toLowerCase()}) and decide what track record would earn the next level.`,
       );
     },
+  },
+  {
+    id: "AU11", group: "Autonomy", if: "Every result explicitly requires approval",
+    then: "Cap autonomy at level 2 regardless of volume or checkability.",
+    basis: design, kb: ["A02"],
+    when: (a) => !!a.requirements?.includes("approval"),
+    apply: (d, _a, why) => { cap(d, 2, why("You explicitly require approval before release or action. High volume does not waive that requirement.")); d.autonomy.checkpoints.push("A named person approves every result before release or action; reject, timeout and missing approval stop the run."); },
+  },
+  {
+    id: "G31", group: "Gotchas", if: "Advanced data-asset operations are required",
+    then: "Disclose the catalog boundary and require an operational comparison.",
+    basis: design, kb: ["R01", "R02", "R03"],
+    when: (a) => !!a.requirements?.includes("assets"),
+    apply: (d) => { gotcha(d, { id: "G31", priority: 1, title: "Compare data operations before choosing the platform", body: "This catalog does not evaluate Dagster or dbt. Treat the suggested platform as provisional. Compare partition mappings, backfills, data quality gates, lineage, team permissions and existing infrastructure. Test replay and failure recovery with representative data before selecting an orchestrator." }, design); d.firstSteps[2] = "Compare the proposed orchestrator with an asset-oriented alternative such as Dagster, and assess whether dbt is needed for transformations. Record backfill, quality-gate and migration results."; },
+  },
+  {
+    id: "G32", group: "Gotchas", if: "An embedded AI service or isolated generated-code execution is required",
+    then: "Make execution requirements and implementation ownership explicit.",
+    basis: design, kb: ["G01", "G04"],
+    when: (a) => !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
+    apply: (d, a) => { gotcha(d, { id: "G32", priority: 1, title: "Design the execution boundary", body: "A framework alone does not provide a secure sandbox. Define authentication, per-request isolation, persistent recovery state, schema and value validation, timeouts and retry limits. For generated code, restrict filesystem and network access, keep credentials outside the sandbox and limit compute. The starter does not implement these production controls." + (a.team !== "large" ? " Arrange developer ownership before using this as an embedded service; the suggested assistant is only a prototype." : "") }, design); },
   },
 ];
 

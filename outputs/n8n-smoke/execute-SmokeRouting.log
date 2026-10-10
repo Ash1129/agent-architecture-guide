@@ -1,0 +1,248 @@
+Error tracking disabled because this release is older than 6 weeks.
+
+There are deprecations related to your environment variables. Please take the recommended actions to update your configuration:
+ - DB_SQLITE_POOL_SIZE -> Running SQLite without a pool of read connections is deprecated. Please set `DB_SQLITE_POOL_SIZE` to a value higher than zero. See: https://docs.n8n.io/hosting/configuration/environment-variables/database/#sqlite
+ - N8N_RUNNERS_ENABLED -> Running n8n without task runners is deprecated. Task runners will be turned on by default in a future version. Please set `N8N_RUNNERS_ENABLED=true` to enable task runners now and avoid potential issues in the future. Learn more: https://docs.n8n.io/hosting/configuration/task-runners/
+
+{
+  "data": {
+    "startData": {},
+    "resultData": {
+      "runData": {
+        "1. You start it": [
+          {
+            "startTime": 1791609812896,
+            "executionIndex": 0,
+            "source": [],
+            "hints": [],
+            "executionTime": 0,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {},
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "2. Check the rules": [
+          {
+            "startTime": 1791609812897,
+            "executionIndex": 1,
+            "source": [
+              {
+                "previousNode": "1. You start it"
+              }
+            ],
+            "hints": [
+              {
+                "message": "To make sure expressions after this node work, return the input items that produced each output item. <a target=\"_blank\" href=\"https://docs.n8n.io/data/data-mapping/data-item-linking/item-linking-code-node/\">More info</a>",
+                "location": "outputPane"
+              }
+            ],
+            "executionTime": 27,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {
+                      "id": "A",
+                      "route": "match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  },
+                  {
+                    "json": {
+                      "id": "B",
+                      "route": "no match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "2. Is it \"match\"?": [
+          {
+            "startTime": 1791609812924,
+            "executionIndex": 2,
+            "source": [
+              {
+                "previousNode": "2. Check the rules"
+              }
+            ],
+            "hints": [],
+            "executionTime": 17,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {
+                      "id": "A",
+                      "route": "match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ],
+                [
+                  {
+                    "json": {
+                      "id": "B",
+                      "route": "no match"
+                    },
+                    "pairedItem": {
+                      "item": 1
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "3. Matching action": [
+          {
+            "startTime": 1791609812941,
+            "executionIndex": 3,
+            "source": [
+              {
+                "previousNode": "2. Is it \"match\"?"
+              }
+            ],
+            "hints": [],
+            "executionTime": 3,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {
+                      "id": "A",
+                      "route": "match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "5. Action is taken": [
+          {
+            "startTime": 1791609812944,
+            "executionIndex": 4,
+            "source": [
+              {
+                "previousNode": "3. Matching action"
+              }
+            ],
+            "hints": [],
+            "executionTime": 0,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {
+                      "id": "A",
+                      "route": "match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ]
+              ]
+            }
+          },
+          {
+            "startTime": 1791609812946,
+            "executionIndex": 6,
+            "source": [
+              {
+                "previousNode": "4. Default action"
+              }
+            ],
+            "hints": [],
+            "executionTime": 0,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {
+                      "id": "B",
+                      "route": "no match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ],
+        "4. Default action": [
+          {
+            "startTime": 1791609812944,
+            "executionIndex": 5,
+            "source": [
+              {
+                "previousNode": "2. Is it \"match\"?",
+                "previousNodeOutput": 1
+              }
+            ],
+            "hints": [],
+            "executionTime": 2,
+            "executionStatus": "success",
+            "data": {
+              "main": [
+                [
+                  {
+                    "json": {
+                      "id": "B",
+                      "route": "no match"
+                    },
+                    "pairedItem": {
+                      "item": 0
+                    }
+                  }
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "lastNodeExecuted": "5. Action is taken"
+    },
+    "executionData": {
+      "contextData": {},
+      "nodeExecutionStack": [],
+      "metadata": {},
+      "waitingExecution": {},
+      "waitingExecutionSource": {}
+    }
+  },
+  "mode": "cli",
+  "startedAt": "2026-10-10T05:23:32.894Z",
+  "stoppedAt": "2026-10-10T05:23:32.947Z",
+  "status": "running",
+  "finished": true
+}
