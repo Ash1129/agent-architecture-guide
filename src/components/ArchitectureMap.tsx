@@ -445,7 +445,7 @@ export function ArchitectureMap({
                 justifySelf: vertical && span > 1 ? "center" : "stretch",
                 width: vertical && span > 1 ? "min(100%, 250px)" : undefined,
               }}
-              className={`flow-node group relative z-10 flex min-w-0 flex-col items-start text-left${compact ? " is-compact" : ""}`}
+              className={`flow-node group relative z-10 flex min-w-0 flex-col items-start text-left ${compact ? "is-compact" : ""}`}
             >
               <span className="flex w-full flex-wrap items-center gap-1.5">
                 <span className="flow-num">{n.step}</span>

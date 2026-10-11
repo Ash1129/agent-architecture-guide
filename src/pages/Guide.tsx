@@ -51,7 +51,7 @@ export function Guide({ qid, answers, editing, direction, plan, reading, describ
   return (
     <main id="main" className="survey-main">
       {/* While a description is being read nothing is being asked yet, so there's no count to show. */}
-      <div className={`mb-10${adapting && reading ? " hidden" : ""}`}>
+      <div className={adapting && reading ? "mb-10 hidden" : "mb-10"}>
         <div className="mb-3 flex items-center justify-between gap-4">
           <p className="section-kicker studio-caption !mb-0" aria-live="polite">
             <span className="status-dot" aria-hidden />
