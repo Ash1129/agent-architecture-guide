@@ -36,7 +36,7 @@ describe("starter kit for named designs", () => {
   it("customer support: a paste-ready n8n workflow with the brief built in", () => {
     const { files, tools } = kit(support);
     // MCP lives inside the workflow as a tool node; the playbook lives in the agent's instructions.
-    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "system-prompt.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "evals/ENGINEERING.md", "observability/ENGINEERING.md", "evals/examples.csv"]);
+    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "system-prompt.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "evals/ENGINEERING.md", "observability/ENGINEERING.md", "evals/examples.csv", "DELIVERY.md"]);
     expect(tools.map((t) => [t.id, t.action.label])).toEqual([["n8n", "Copy for n8n"]]);
     const agent = JSON.parse(file(files, "n8n/workflow.json")!.content).nodes.find((n: { type: string }) => n.type === "@n8n/n8n-nodes-langchain.agent");
     expect(agent.parameters.options.systemMessage).toBe(file(files, "system-prompt.md")!.content);
@@ -63,7 +63,7 @@ describe("starter kit for named designs", () => {
     expect(agents).toHaveLength(4);
     expect(agents[0].content).toMatch(/\nmodel: opus\n/);
     expect(agents[1].content).toMatch(/\nmodel: sonnet\n/);
-    expect(file(files, "claude-plugin/README.md")!.content).toMatch(/Every weekday at 7am/);
+    expect(file(files, "claude-plugin/README.md")!.content).toMatch(/tested scheduler/);
   });
 
   it("a Hermes design gets settings, persona, skill and a working setup script", () => {
@@ -83,7 +83,7 @@ describe("starter kit for named designs", () => {
 
   it("rules-only automation: no model, decision table, n8n with IF branches", () => {
     const { files } = kit(reminders);
-    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "rules/decision-table.csv", "evals/examples.csv"]);
+    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "rules/decision-table.csv", "evals/examples.csv", "DELIVERY.md"]);
     const wf = JSON.parse(file(files, "n8n/workflow.json")!.content);
     expect(wf.nodes.filter((n: { type: string }) => n.type === "n8n-nodes-base.if")).toHaveLength(1);
     expect(wf.active).toBe(false);
@@ -153,4 +153,51 @@ describe("starter kit on every kind of path", () => {
     }
     expect(failures).toEqual([]);
   }, 180_000);
+});
+
+describe("usable-product delivery regression", () => {
+  const resume: Answers = { ...base, task: 'Tailor resumes: "candidate evidence"', shape: "varies", kinds: "yes", roles: "specialists", quality: "clear", knowledge: ["playbook", "reference", "memory"], systems: "act", trigger: "schedule", risks: ["personal", "visible"], team: "small" };
+
+  it("requires a repeatable user-facing product in BUILD.md and the separate plugin", () => {
+    const {files,tools}=kit(resume);
+    const brief=file(files,"BUILD.md")!.content;
+    expect(brief).toContain("Deliver a small working browser app by default");
+    expect(brief).toContain("START-HERE.md");
+    expect(brief).toContain("DELIVERY-REPORT.md");
+    expect(brief).toContain("A conversational promise to run later is not a scheduler");
+    expect(brief).not.toContain("Create every file in the Files section below, exactly as written");
+    expect(brief).not.toContain("Set up the schedule in Claude by asking");
+    for(const tool of tools)if(tool.action.kind==="zip"){
+      expect(file(files,`${tool.action.prefix}DELIVERY.md`)!.content).toBe(file(files,"DELIVERY.md")!.content);
+    }
+    expect(brief).toContain("DEMO ONLY");
+    expect(brief).toContain("Never report READY for a scaffold");
+  });
+
+  it("keeps workflow delivery for automation and preserves no-AI designs",()=>{
+    const {files}=kit(reminders);
+    expect(file(files,"DELIVERY.md")!.content).toContain("Deliver a working, importable workflow");
+    expect(file(files,"BUILD.md")!.content).toContain("No AI model. Every step follows fixed rules");
+  });
+
+  it("catches a missing completion contract and malformed agent header",()=>{
+    const {r,bp,files,tools}=kit(resume);
+    const broken={files:files.filter(f=>!f.path.endsWith("DELIVERY.md")),tools};
+    expect(kitProblems(r,bp,resume,broken)).toContain("usable product delivery contract missing or changed");
+    const agent=files.find(f=>f.path.startsWith("claude-plugin/agents/"))!;
+    const header=agent.content.split("\n---\n")[0];
+    expect(header).not.toContain("<example>");
+    expect(JSON.parse(header.split("\ndescription: ")[1].split("\n")[0])).toContain(resume.task!.toLowerCase());
+    agent.content=agent.content.replace("\nmodel:","\n<example>\nmodel:");
+    expect(kitProblems(r,bp,resume,{files,tools})).toContain(`${agent.path} frontmatter malformed`);
+  });
+
+  it("does not truncate long project instructions or let optional AI text remove delivery requirements",()=>{
+    const r=recommend(resume),bp=buildBlueprint(r,resume);
+    const rules=Array.from({length:8},(_,i)=>`Rule ${i}: ${"Keep candidate evidence accurate and traceable. ".repeat(4)}END-${i}.`);
+    const result=buildStarterKit(r,bp,resume,{rules,overview:"Prepare tailored drafts for review."});
+    expect(file(result.files,"claude-plugin/README.md")!.content).toContain("END-7.");
+    expect(file(result.files,"BUILD.md")!.content).toContain("Required finished product");
+    expect(kitProblems(r,bp,resume,result)).toEqual([]);
+  });
 });

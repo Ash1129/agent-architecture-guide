@@ -190,11 +190,11 @@ export function SitePage({
 
       {/* Build steps */}
       {[
-        { n: "01", title: "Build it with an AI coding assistant", body: "Paste BUILD.md into Claude Code, Codex or any AI assistant. It explains each step and asks before it acts.", top: 120 },
+        { n: "01", title: "Build it with an AI coding assistant", body: "Give BUILD.md to a coding assistant. It builds and tests a tool you can open and use.", top: 120 },
         hermes
           ? { n: "02", title: "Hermes Agent setup", body: "Unzip, read setup.sh, then run it. It installs the skill and persona into ~/.hermes.", top: 200 }
           : plugin
-            ? { n: "02", title: "Claude plugin", body: "Drag the .plugin into a Claude chat and press Install. In Claude Code, copy its skills folder.", top: 200 }
+            ? { n: "02", title: "Claude component", body: "Optional building block. Use the full kit to build the app; installing a plugin is not the finished result.", top: 200 }
             : { n: "02", title: "n8n workflow", body: "Open a new workflow in n8n and press Cmd+V. Then add your credentials to the highlighted nodes.", top: 200 },
       ].map((item) => (
         <div key={item.n} className="absolute left-[180px] h-[70px] w-[620px] rounded-[8px] bg-white" style={{ top: item.top, border: `1px solid ${HAIR}` }}>

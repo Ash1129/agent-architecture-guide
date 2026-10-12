@@ -241,9 +241,9 @@ export function BuildGuide({
       ),
     },
     {
-      title: "Build it together",
+      title: "Open and try your tool",
       screen: <BuildScreen file={files[1]?.path ?? "the first file"} />,
-      body: <>Claude explains each step before doing it and asks before creating files, spending money or sending anything. Read, then approve.</>,
+      body: <>The assistant builds and tests the app or workflow, then gives you a launch link or launcher. Try a fresh task yourself: add inputs, review the result and save it. A plugin or one completed example is not the finish line. Missing connections must be labeled demo only.</>,
     },
   ];
 

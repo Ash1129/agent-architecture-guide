@@ -4,6 +4,7 @@
 // what the guide shows. BUILD.md embeds every other file, so pasting that one
 // file is enough.
 
+import { deliveryContract } from "./delivery";
 import { AUTONOMY, LAST_REVIEWED, TOOLS, TOPOLOGIES } from "./catalog";
 import { costLines, estimateCost } from "./cost";
 import { type BNode, type Blueprint, KIND_LABEL, incoming, outgoing } from "./blueprint";
@@ -126,8 +127,8 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
     for (const f of claudePlugin(r, bp, a, task, slug, prompt, text)) files.push(f);
     tools.push({
       id: "claude-plugin",
-      name: "Claude plugin",
-      how: `Drag ${slug}.plugin into a Claude chat and press Install. In Claude Code, copy its skills folder into .claude/skills.`,
+      name: "Claude component",
+      how: "Optional implementation component. Use the full build kit to create the app; installing this plugin alone does not finish the build.",
       action: { kind: "zip", label: "Download .plugin", prefix: "claude-plugin/", filename: `${slug}.plugin` },
     });
   }
@@ -180,6 +181,13 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
   }
   files.push({ path: "evals/examples.csv", lang: "csv", purpose: "Your test set: real past cases and what good looked like.", content: examplesCsv(r, text) });
 
+  const delivery = deliveryContract(r, a);
+  files.push({ path: "DELIVERY.md", lang: "markdown", purpose: "Required usable product and evidence for a finished build.", content: delivery });
+  // Carry the contract into independently downloaded component archives too.
+  for (const tool of tools) if (tool.action.kind === "zip") {
+    files.push({ path: `${tool.action.prefix}DELIVERY.md`, lang: "markdown", purpose: "This component must be built into the usable product described here.", content: delivery });
+  }
+
   files.unshift({
     path: "BUILD.md",
     lang: "markdown",
@@ -210,10 +218,13 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     "You are helping a business owner build the system described below. They are experienced in business but new to AI, so:",
     "",
     "- Work one step at a time and explain each step in plain English before you do it.",
-    "- Create the files listed at the end of this brief exactly as given, then adapt them with the owner.",
-    "- Ask before anything that costs money, sends a message, changes real records, or touches personal data.",
+    "- Build and test a usable product, not just the files listed below. Adapt these scaffolds and add all application, interface and launch files required by DELIVERY.md.",
+    "- Complete authorized local implementation and testing without asking the owner to approve each file. Do not stop at installing a plugin or completing one example task.",
+    "- Ask before unapproved charges, sending messages, changing live records, or transmitting personal data to a new service. Use synthetic data for initial testing.",
     "- Never ask for passwords or API keys in chat. Use environment variables or the tool's own credential manager.",
     "- Do not add agents, models or steps beyond this design unless testing shows they are needed.",
+    "",
+    deliveryContract(r, a),
     "",
     "## The task",
     "",
@@ -291,8 +302,8 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
   add(
     "## Build plan",
     "",
-    "1. Create every file in the Files section below, exactly as written.",
-    `2. Ask the owner for 10 to 20 real past examples and fill in \`evals/examples.csv\`. This is the test set.`,
+    "1. Build the usable input-to-output product described in DELIVERY.md. Inspect existing files, adapt the supplied components, and add the missing application and launch code.",
+    `2. Start with labeled synthetic cases to build the usable path without waiting. Then collect 10 to 20 real past examples and fill in \`evals/examples.csv\`. This is the test set.`,
     ...stepsForCore(r, a).map((s, i) => `${i + 3}. ${s}`),
     `${stepsForCore(r, a).length + 3}. Run every example through the system and record the results as the baseline.`,
     `${stepsForCore(r, a).length + 4}. ${!r.models.needed ? "Run it alongside the current process for two weeks before switching over." : stepDown ? "Move each AI step whose listed model is smaller onto that model, re-run the test set, and keep only changes that hold quality." : "Re-run the test set after every change, and keep only changes that hold quality."}`,
@@ -315,11 +326,13 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     "",
     "## Done when",
     "",
+    "- DELIVERY.md is satisfied: the owner can open the tool, run a fresh case, review it as required and obtain usable output without the coding chat.",
+    "- START-HERE.md and DELIVERY-REPORT.md give the tested launch path, evidence and honest READY, DEMO ONLY or BLOCKED status.",
     "- Every step in the table above exists and hands on to the right next step.",
     "- The test set runs end to end and the results are recorded.",
     ...(r.models.needed ? ["- Each AI step uses the smallest model that still meets the baseline."] : []),
     "- Every safeguard above is in place and has been tested with a failing example.",
-    "- The owner can explain, in their own words, what each step does.",
+    "- The owner can repeat the business task independently; they need not understand the internal architecture or edit files to use it.",
     "",
     "## Files",
     "",
@@ -341,11 +354,11 @@ function stepsForCore(r: Recommendation, a: Answers): string[] {
   } else if (core === "airflow") {
     out.push("Set up Airflow (a managed service or Docker), add the DAG file, and point the sensors at the real upstream jobs.");
   } else if (core === "cowork" || core === "claude") {
-    out.push("Package the `claude-plugin/` folder as a `.plugin` zip (or use the one downloaded from the guide) and install it in Claude by dragging it into a chat; for Claude Code, copy its `skills` folder into `.claude/skills`.");
+    out.push("Build a browser interface around the task. Reuse `claude-plugin/` instructions as implementation resources where supported, but implement the processing behind the interface using a supported runtime or API. Installing the plugin is not completion.");
     out.push("Fill in the House rules section of the Skill with the owner.");
     if (has(r, "mcp")) out.push("Replace the MCP server address in the plugin's `.mcp.json` with the owner's connector, read-only first.");
-    if (a.trigger === "schedule") out.push("Set up the schedule in Claude by asking it to run the skill at the agreed time.");
-    if (has(r, "project")) out.push("Create a Claude Project for this task and add the reference documents to it.");
+    if (a.trigger === "schedule") out.push("Implement a real scheduler with next-run status, run history and a pause control. Test it independently of the coding chat; do not rely on asking a conversation to run later.");
+    if (has(r, "project")) out.push("Provide a simple way to add reference documents through the finished tool. A Claude Project may help development but must not be required for everyday use.");
   } else if (core === "langgraph") {
     out.push("Read `langgraph/README.md` and run the credential-free fixture in a dedicated Python environment. Implement the full architecture in `langgraph/design.json` with validated adapters.");
     out.push("Add persistent checkpoints and an authenticated review interface, then test restart recovery and action deduplication before connecting real services.");
@@ -538,16 +551,15 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
           content: [
             "---",
             `name: ${name}`,
-            `description: Use this agent for the "${n.name}" part of ${task.toLowerCase()}.`,
-            "",
-            "<example>",
-            `user: "${task}"`,
-            `assistant: "I'll use the ${name} agent for this part."`,
-            "</example>",
-            "",
+            `description: ${JSON.stringify(`Use this agent for the "${n.name}" part of ${task.toLowerCase()}.`)}`,
             `model: ${model}`,
             `color: ${colors[i % colors.length]}`,
             "---",
+            "",
+            "<example>",
+            `user: ${JSON.stringify(task)}`,
+            `assistant: "I'll use the ${name} agent for this part."`,
+            "</example>",
             "",
             n.what,
             "",
@@ -560,8 +572,7 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
             "",
             ...prompt
               .split("\n")
-              .filter((l) => l.startsWith("- "))
-              .slice(0, 8),
+              .filter((l) => l.startsWith("- ")),
           ].join("\n"),
         });
       });
@@ -584,6 +595,8 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
       "",
       `Generated by Agent Architecture Guide (${LAST_REVIEWED}). ${r.approach.summary}`,
       "",
+      "Read DELIVERY.md first. This plugin is a component, not the finished tool. Use the full build kit to create and test the owner-facing application.",
+      "",
       "## Install",
       "",
       `- **Claude:** drag \`${slug}.plugin\` into a chat and press Install.`,
@@ -593,9 +606,9 @@ function claudePlugin(r: Recommendation, bp: Blueprint, a: Answers, task: string
       "",
       "- Open `skills/" + slug + "/SKILL.md` and fill in the House rules section.",
       ...(has(r, "mcp") ? ["- Replace the MCP server address in `.mcp.json` with your system's connector, read-only first."] : []),
-      ...(a.trigger === "schedule" ? [`- To run it on a schedule, ask Claude: "Every weekday at 7am, use the ${slug} skill."`] : []),
+      ...(a.trigger === "schedule" ? ["- The finished application needs a tested scheduler, status and pause control; asking the coding chat to run later does not set this up."] : []),
       ...(has(r, "project")
-        ? ["", "## Claude Project instructions", "", "Create a Claude Project for this task, add your reference documents, and paste this into its instructions:", "", "> " + prompt.split("\n").filter((l) => l.startsWith("- ")).join(" ").slice(0, 900)]
+        ? ["", "## Claude Project instructions", "", "Create a Claude Project for this task, add your reference documents, and paste this into its instructions:", "", "> " + prompt.split("\n").filter((l) => l.startsWith("- ")).join("\n> ")]
         : []),
     ].join("\n"),
   });

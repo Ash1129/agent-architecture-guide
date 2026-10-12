@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "provenance": "Assistant-authored synthetic fixtures, inspired by the previously researched order-fulfilment case. Not user examples or a reproduction of that company's system.",
+  "answers": {"task":"Process approved orders in a scheduled batch", "shape":"rules", "systems":"act", "trigger":"schedule", "volume":"daily", "risks":["visible"], "location":"open", "team":"large", "requirements":["approval"]},
+  "settings": {"model":null,"temperature":null,"maxAttempts":3,"retryDelayMs":100,"requestTimeoutMs":3000},
+  "cases": [
+    {"id":"approved-order","orders":[{"id":"A","amount":25,"approved":true}],"fault":"none","expectedRecords":[{"id":"A","amount":25}],"expectedCompletion":true},
+    {"id":"duplicate-order","orders":[{"id":"A","amount":25,"approved":true},{"id":"A","amount":25,"approved":true}],"fault":"none","expectedRecords":[{"id":"A","amount":25}],"expectedCompletion":true},
+    {"id":"approval-boundary","orders":[{"id":"A","amount":25,"approved":false},{"id":"B","amount":30,"approved":"true"},{"id":"C","amount":40}],"fault":"none","expectedRecords":[],"expectedCompletion":true},
+    {"id":"committed-response-lost","orders":[{"id":"A","amount":25,"approved":true}],"fault":"commit-then-503","expectedRecords":[{"id":"A","amount":25}],"expectedCompletion":true},
+    {"id":"persistent-outage","orders":[{"id":"A","amount":25,"approved":true}],"fault":"always-503","expectedRecords":[],"expectedCompletion":false}
+  ]
+}

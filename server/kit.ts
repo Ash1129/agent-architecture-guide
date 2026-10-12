@@ -42,6 +42,9 @@ Return one JSON object with any of these keys (leave out a key if you have nothi
 }
 
 Rules:
+- The finished delivery must be a usable application or connected workflow with simple input, progress, review where required, and output controls. Skills and agents are implementation components, not the finished product. Describe the owner's everyday experience in overview and concrete interface/output acceptance in buildNotes.
+- Never make custom chat commands, editing files, installing a plugin, or staying in the coding chat the everyday user experience. Do not stop at one completed task. Preserve the fixed architecture and safeguards behind the interface.
+- Start implementation with labeled synthetic cases; owner examples validate quality later. Distinguish a working demo from verified live processing and identify only genuine setup blockers. Do not claim an interface or service already exists.
 - Never name an AI model or AI company: the guide's rules choose the models.
 - No links, no keys, no real people's details.
 - Don't contradict or weaken any safeguard in the design.

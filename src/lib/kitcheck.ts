@@ -1,5 +1,7 @@
 // Structural checks for a starter kit (see kitProblems).
 
+import { deliveryContract } from "./delivery";
+import { effectiveAnswers } from "./questions";
 import type { Blueprint } from "./blueprint";
 import type { Answers } from "./questions";
 import type { Recommendation } from "./rules";
@@ -17,7 +19,12 @@ export function kitProblems(r: Recommendation, bp: Blueprint, a: Answers, { file
     const ok = t.action.kind === "zip" ? files.some((f) => f.path.startsWith((t.action as { prefix: string }).prefix)) : files.some((f) => f.path === (t.action as { path: string }).path);
     if (!ok) p.push(`tool ${t.id} points at missing files`);
   }
+  const delivery = deliveryContract(r, effectiveAnswers(a));
+  if (file("DELIVERY.md")?.content !== delivery) p.push("usable product delivery contract missing or changed");
+  for (const t of tools) if (t.action.kind === "zip" && file(`${t.action.prefix}DELIVERY.md`)?.content !== delivery)
+    p.push(`tool ${t.id} missing delivery contract`);
   const brief = files[0];
+  if (!brief?.content.includes(delivery)) p.push("BUILD.md missing usable product requirements");
   if (brief.path !== "BUILD.md") p.push("BUILD.md not first");
   for (const f of files.slice(1)) if (!brief.content.includes(f.content.trim())) p.push(`BUILD.md missing ${f.path}`);
   for (const n of bp.nodes) if (!brief.content.includes(n.name)) p.push(`BUILD.md missing step ${n.name}`);
@@ -39,6 +46,12 @@ export function kitProblems(r: Recommendation, bp: Blueprint, a: Answers, { file
   }
   for (const skill of files.filter((f) => /SKILL\.md$/.test(f.path))) {
     if (!/^---\nname: [a-z0-9-]{1,64}\ndescription: (>\n  .+|.+)\n[\s\S]*?\n---\n/.test(skill.content)) p.push(`${skill.path} frontmatter malformed`);
+  }
+  for (const agent of files.filter(f => /^claude-plugin\/agents\/.+\.md$/.test(f.path))) {
+    const header = /^---\nname: [a-z0-9-]+\ndescription: (.+)\nmodel: [a-z0-9-]+\ncolor: [a-z]+\n---\n/.exec(agent.content);
+    try {
+      if (!header || typeof JSON.parse(header[1]) !== "string") p.push(`${agent.path} frontmatter malformed`);
+    } catch { p.push(`${agent.path} frontmatter malformed`); }
   }
   const manifest = file("claude-plugin/.claude-plugin/plugin.json");
   if (manifest && !/^[a-z0-9-]+$/.test(JSON.parse(manifest.content).name)) p.push("plugin name not kebab-case");

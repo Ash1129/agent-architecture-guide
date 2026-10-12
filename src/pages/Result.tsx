@@ -67,6 +67,7 @@ import { RULES, recommend, type Recommendation } from "../lib/rules";
 import { resultAsText, resultCode, resultUrl } from "../lib/share";
 import { SOURCES, type SourceId } from "../lib/sources";
 import { type DesignState, type KitTextState, fetchDesign, fetchKitText, rememberedDesign } from "../lib/designs";
+import { ImplementationShortlist } from "../components/ImplementationShortlist";
 import { AI_ENABLED } from "../lib/features";
 
 type Props = {
@@ -834,6 +835,8 @@ function Ready({
           )}
         </div>
       </section>
+
+      <ImplementationShortlist answers={answers} />
 
       <section className="studio-section" aria-labelledby="operates-title">
         <div className="section-kicker studio-caption">02 — Behind the solution</div>

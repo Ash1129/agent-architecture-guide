@@ -102,3 +102,41 @@ review process, initial release gate and coverage limits. The cases still need
 independent human review; a passing score is not proof of optimal tool selection.
 
 Published-case evaluation: run `npm run eval:guide:external`. See [source-backed findings and limitations](evals/recommendations/external-findings.md). This exploratory report is separate from the synthetic regression gate.
+
+## Usable-product delivery contract
+
+Every new starter kit includes `DELIVERY.md`, embedded near the beginning of
+`BUILD.md` and carried into independently downloaded component archives. It
+requires a runnable user-facing app or connected workflow, a launch path,
+repeatable input-to-output operation, and observed acceptance evidence. A plugin,
+prompt set or one completed task is not a finished product. Fixed-rule designs
+remain free of AI; workflows may use an existing intake/review surface instead
+of an unnecessary new website.
+
+The guide exports build instructions and scaffolds, not prebuilt applications.
+The downstream builder must distinguish READY from DEMO ONLY and BLOCKED, verify
+real integrations, and provide `START-HERE.md` plus `DELIVERY-REPORT.md`. Structural
+kit checks enforce inclusion of the fixed contract; they do not certify a future
+builder's runtime. AI-written build notes follow the same requirement, and the
+kit prompt fingerprint invalidates earlier cached writing.
+
+The regression tests cover contract propagation, missing-contract rejection,
+Claude agent frontmatter with quoted task titles, complete long project
+instructions, and workflow/no-AI preservation. The existing resume project can
+continue using [this follow-up brief](docs/resume-tool-follow-up.md).
+
+## Local execution benchmark pilot
+
+Run `npm run benchmark:local` after the isolated Airflow setup in
+[`evals/benchmarks/README.md`](evals/benchmarks/README.md). This compares installed
+n8n and Airflow on repeated synthetic order-processing cases, checking actual
+records, approval boundaries, duplicate handling and HTTP failure recovery.
+Timestamped reports appear under `outputs/benchmarks/`. It does not measure
+AI quality or benchmark user business examples; unmeasured total cost and human
+intervention remain explicit. See the benchmark README for execution controls
+and limitations.
+
+The AI-agent pilot is available through `npm run benchmark:agents`: n8n and
+LangGraph use the same GPT-6 Luna model on synthetic support cases. See
+[`evals/benchmarks/agents/README.md`](evals/benchmarks/agents/README.md) for the
+cumulative $3 spending cap, setup, approval checks, cost interpretation and limits.

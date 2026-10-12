@@ -1,0 +1,5 @@
+{
+  "status": "interrupted",
+  "reason": "User requested gpt-6-luna; excluded from the Luna comparison.",
+  "completedTrials": 6
+}

@@ -1,0 +1,5 @@
+{
+  "error": "Error: listen EPERM: operation not permitted 127.0.0.1",
+  "completedTrials": 0,
+  "isolated": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-RTwlf6"
+}

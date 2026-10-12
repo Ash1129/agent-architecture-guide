@@ -448,7 +448,7 @@ export function StarterKit({
               >
                 BUILD.md
               </button>{" "}
-              brings your plan together.
+              turns your plan into a tool you can open and use.
             </p>
             {AI_ENABLED && writing && writing !== "template" && (
               <p role="status" aria-live="polite" className="mt-2 flex items-start gap-1.5 text-[13.5px] leading-snug text-muted">
@@ -468,7 +468,7 @@ export function StarterKit({
             <span className="step-number">01</span>
             <div className="build-item-text">
               <h3>Build it with an AI coding assistant</h3>
-              <p>Paste BUILD.md into Claude Code, Codex or any AI assistant. It explains each step and asks before it creates files, spends money or sends anything.</p>
+              <p>Give BUILD.md to Claude Code or Codex. It asks the builder to create and test a usable app or workflow, with a simple way to start, review and save your work. This download is the build kit, not the finished app.</p>
             </div>
             <div className="build-item-actions">
               <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide("build")}>
@@ -542,7 +542,7 @@ export function StarterKit({
                 <h2 id={`${panelId}-brief`} className="font-mono text-[15px] font-semibold text-ink">
                   BUILD.md
                 </h2>
-                <p className="text-[13px] text-muted">Paste it into Claude Code, Codex or any AI assistant.</p>
+                <p className="text-[13px] text-muted">Paste it into Claude Code or Codex to build a tool you can use after the chat ends.</p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <button type="button" className="studio-outline" onClick={copyBrief}>
@@ -581,7 +581,7 @@ export function StarterKit({
             Build it with an AI coding assistant
           </h2>
           <Instructions className="mt-1.5">
-            Paste <span className="font-mono text-[12.5px] text-ink">BUILD.md</span> into Claude Code, Codex or any AI assistant.
+            Paste <span className="font-mono text-[12.5px] text-ink">BUILD.md</span> into Claude Code or Codex to build a tool you can use after the chat ends.
           </Instructions>
           {AI_ENABLED && writing && writing !== "template" && (
             <p role="status" aria-live="polite" className="mt-1.5 flex items-start gap-1.5 text-[12.5px] leading-snug text-muted">
