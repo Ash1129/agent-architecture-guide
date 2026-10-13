@@ -1,9 +1,11 @@
 import type { Answers } from '../lib/questions';
-import { shortlist } from '../lib/shortlist';
+import { shortlist, shortlistAddsSomething } from '../lib/shortlist';
 import { TOOLS } from '../lib/catalog';
 
 export function ImplementationShortlist({ answers }: { answers: Answers }) {
   const result = shortlist(answers);
+  // One candidate that is the main tool only repeats the recommendation above, so the section stays out of the way.
+  if (!shortlistAddsSomething(result, answers)) return null;
   return <section className="studio-section" aria-labelledby="shortlist-title">
     <h2 id="shortlist-title" className="text-xl font-semibold">Implementation shortlist</h2>
     <p className="mt-3 text-muted">{result.explanation}</p>

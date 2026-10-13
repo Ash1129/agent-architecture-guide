@@ -26,7 +26,10 @@ workflows use localhost. n8n telemetry and version checks are disabled.
 
 Outputs go to timestamped `outputs/benchmarks/` directories. Raw platform logs
 remain in the temporary isolated directory named by each trial. A failed setup
-writes `blocked.json`; do not treat a partial run as a comparison. The CLI returns
+writes `blocked.json`; do not treat a partial run as a comparison. Each run's
+`trials.json` (every trial's full record) stays on the machine that ran it and is
+not committed, because it is large and new on every run; commit the run's
+`report.md` and `report.json`. Trial files from runs before 2026-10-13 remain in git. The CLI returns
 nonzero for infrastructure failures or a failed safe-handling check.
 
 ## Cases and ground truth

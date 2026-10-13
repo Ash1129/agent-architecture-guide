@@ -11,3 +11,7 @@ ai-cache.nosync/
 # Generated Python runtime artifacts
 __pycache__/
 *.pyc
+
+# Raw per-trial benchmark records: large and new on every run. Reports
+# (report.md, report.json), the budget ledger and blocked/status files stay in git.
+outputs/**/trials.json

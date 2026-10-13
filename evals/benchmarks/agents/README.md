@@ -67,7 +67,9 @@ input tokens. The proxy fixes standard service tier and disables provider retrie
 Cost per successful result includes unsuccessful trials. Zero-success or missing
 usage produces unknown, not zero cost.
 
-Reports are timestamped under `outputs/agent-benchmarks/`. A runtime failure
+Reports are timestamped under `outputs/agent-benchmarks/`. Each run's
+`trials.json` (every model and tool call) stays local and is not committed; the
+report and `budget.json` are. A runtime failure
 stops the run and writes an incomplete report. Partial or interrupted runs must
 not be treated as complete paired comparisons. Three repetitions do not support
 a general claim that one platform is better.

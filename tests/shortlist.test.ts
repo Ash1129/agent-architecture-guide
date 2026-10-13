@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shortlist } from '../src/lib/shortlist';
+import { shortlist, shortlistAddsSomething } from '../src/lib/shortlist';
 import { recommend } from '../src/lib/rules';
 import type { Answers } from '../src/lib/questions';
 import synthetic from '../evals/recommendations/cases.json';
@@ -44,6 +44,21 @@ describe('implementation shortlist', () => {
         expect(shortlist({ ...a, knowledge: ['memory'] }).candidates.map(c => c.tool)).not.toContain('n8n-agent');
       }
     }
+  });
+  it('is shown only when it adds something to the recommendation', () => {
+    // A real comparison.
+    expect(shortlistAddsSomething(shortlist(base), base)).toBe(true);
+    // Only the main tool: it would repeat the recommendation, so it is hidden.
+    const small = { ...base, team: 'small' } as Answers;
+    expect(shortlistAddsSomething(shortlist(small), small)).toBe(false);
+    // A requirement narrows it to LangGraph, which the rules already chose as the main tool: hidden too.
+    const agent: Answers = { ...base, shape: 'varies', roles: 'one', quality: 'clear', knowledge: ['none'], trigger: 'event', kinds: 'no', requirements: ['sandbox'] };
+    expect(recommend(agent).tools.find(t => t.core)!.tool).toBe('langgraph');
+    expect(shortlist(agent).candidates.map(c => c.tool)).toEqual(['langgraph']);
+    expect(shortlistAddsSomething(shortlist(agent), agent)).toBe(false);
+    // Nothing cleared: the requirement gap is worth showing.
+    const assets = { ...base, requirements: ['assets'] } as Answers;
+    expect(shortlistAddsSomething(shortlist(assets), assets)).toBe(true);
   });
   it('blocks unsupported asset requirements and incomplete inputs', () => {
     expect(shortlist({ ...base, requirements: ['assets'] }).candidates).toHaveLength(0);
