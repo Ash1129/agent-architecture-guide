@@ -928,7 +928,7 @@ export const RULES: Rule[] = [
         "Swap in smaller, cheaper models one step at a time, keeping each swap only if quality still meets the baseline.",
         "Judge each choice on three things: quality against your examples, cost per run, and speed.",
       ];
-      d.models.examples = `Examples as of ${LAST_REVIEWED}; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced and the default for routine steps: Claude Sonnet 5.5. Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default. OpenAI, Google and others offer similar tiers.${
+      d.models.examples = `Examples as of ${LAST_REVIEWED}; check before choosing. Start with Claude Opus 5.5, Anthropic's default starting point, and use Claude Fable 5.1 only where Opus falls short. Balanced and the default for routine steps: Claude Sonnet 5.5. Fastest and cheapest, for sorting and extraction at high volume: Claude Haiku 5.5, a step down to test once Sonnet's results are your baseline. OpenAI, Google and others offer similar tiers.${
         vendorFree(a) || a.location === "residency"
           ? " Leading open-weight models include Kimi, GLM, DeepSeek and MiniMax, about four months behind the best closed models. They can run on your own hardware or through regional providers."
           : ""

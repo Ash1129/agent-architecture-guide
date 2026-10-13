@@ -34,7 +34,7 @@ export const ROLE_MULTIPLIER: Record<Role, number> = { router: 1, worker: 1, att
 export const MODEL_PRICES: Record<ModelId, { input: Range; output: Range; source: string }> = {
   opus: { input: [4, 4], output: [20, 20], source: "Claude Opus 5.5" },
   sonnet: { input: [2, 2], output: [10, 10], source: "Claude Sonnet 5.5" },
-  haiku: { input: [1, 1], output: [5, 5], source: "Claude Haiku 4.5" },
+  haiku: { input: [0.1, 0.1], output: [0.5, 0.5], source: "Claude Haiku 5.5" },
   openLarge: { input: [0.66, 1.32], output: [2, 4], source: "DeepSeek V4-Pro and Kimi K2.6, off-peak to peak" },
   openSmall: { input: [0.15, 0.3], output: [0.6, 1.2], source: "DeepSeek V4.1-Flash, off-peak to peak" },
 };

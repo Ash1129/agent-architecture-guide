@@ -52,8 +52,7 @@ last_verified: 2026-10-10
   (agents about 4× a single call). The large open-weight tier is priced from
   V4-Pro and Kimi K2.6 (about $0.66 to $1.32 input, $2 to $4 output); the
   small tier from V4.1-Flash.
-- **Discrepancies in the site (2026-10-10):**
-  1. `src/lib/models.ts` still offers Haiku 4.5, now legacy and possibly
-     retired from 2026-10-15; Haiku 5.5 is cheaper and current.
-  2. `OPEN_LARGE_PICKS` names DeepSeek-V3.2; DeepSeek now serves V4.
+- **Discrepancies in the site (2026-10-10), both fixed 2026-10-12:**
+  1. `src/lib/models.ts` offered Haiku 4.5, now legacy; it offers Haiku 5.5.
+  2. `OPEN_LARGE_PICKS` named DeepSeek-V3.2; it names DeepSeek-V4-Pro (M03).
 - Plan prices and model prices change often: re-read before each release.

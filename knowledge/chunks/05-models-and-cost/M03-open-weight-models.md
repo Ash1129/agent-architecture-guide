@@ -2,8 +2,8 @@
 id: M03
 title: Open-weight models - how far behind, and which lead
 topic: models
-sources: [epoch-2026-open-closed-gap, team-2026-assignment4, pabani-2026-openclaw-hermes-cowork]
-last_verified: 2026-10-05
+sources: [epoch-2026-open-closed-gap, team-2026-assignment4, pabani-2026-openclaw-hermes-cowork, deepseek-2026-v4-pro-card, deepseek-docs-pricing]
+last_verified: 2026-10-12
 ---
 
 ## Claims
@@ -22,6 +22,10 @@ last_verified: 2026-10-05
 
   All are from Chinese developers. Alibaba's **Qwen3-235B** (July 2025)
   scored a step lower. [epoch-2026-open-closed-gap]
+- DeepSeek has since published **DeepSeek-V4-Pro** weights (1.6T total
+  parameters, 49B active) under the MIT licence; the model card calls it a
+  preview. [deepseek-2026-v4-pro-card] DeepSeek's own API now serves only the
+  V4 series. [deepseek-docs-pricing]
 - The team's notes give the business reasons to want models beyond one vendor
   [team-2026-assignment4 §Hermes]:
   - a business operating where Anthropic's models are unavailable, the

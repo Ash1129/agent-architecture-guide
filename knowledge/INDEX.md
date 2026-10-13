@@ -48,7 +48,7 @@ that chunk. Format and rules: README.md. Sources: sources.md.
 
 | ID | Chunk | Summary |
 | --- | --- | --- |
-| M01 | [Choosing a model, and the current Claude lineup](chunks/05-models-and-cost/M01-choosing-a-model.md) | Capable-first then step down; efficiency-first vs capability-first; effort setting; lineup and prices as of 2026-10-05 (Fable 5.1, Opus 5.5, Sonnet 5.5, Haiku 4.5). |
+| M01 | [Choosing a model, and the current Claude lineup](chunks/05-models-and-cost/M01-choosing-a-model.md) | Capable-first then step down; efficiency-first vs capability-first; effort setting; lineup and prices as of 2026-10-12 (Fable 5.1, Opus 5.5, Sonnet 5.5, Haiku 5.5; Haiku 4.5 now legacy). |
 | M02 | [Cutting cost without losing quality](chunks/05-models-and-cost/M02-cutting-cost.md) | Cascades (FrugalGPT, up to 98%), routing (RouteLLM, >2×), escalation; batch 50% off; prompt caching; agents use 4–15× tokens. |
 | M03 | [Open-weight models](chunks/05-models-and-cost/M03-open-weight-models.md) | Open models ~4 months behind closed (Epoch); leading open models as of 2026-10-05; Hermes is model-agnostic; site examples are dated. |
 | M04 | [What plans and models cost](chunks/05-models-and-cost/M04-plan-and-token-prices.md) | Claude plans and API prices (Haiku 5.5 now $0.10/$0.50); n8n Cloud plans by executions; DeepSeek and Kimi API prices; Hermes free (MIT). Read 2026-10-10. |

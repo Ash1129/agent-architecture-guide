@@ -53,12 +53,12 @@
         "model": {
           "__rl": true,
           "mode": "id",
-          "value": "claude-haiku-4-5-20251001"
+          "value": "claude-haiku-5-5"
         },
         "options": {}
       },
       "id": "aag-0003",
-      "name": "2. Model: Haiku 4.5",
+      "name": "2. Model: Haiku 5.5",
       "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1.3,
       "position": [
@@ -182,7 +182,7 @@
     }
   ],
   "connections": {
-    "2. Model: Haiku 4.5": {
+    "2. Model: Haiku 5.5": {
       "ai_languageModel": [
         [
           {

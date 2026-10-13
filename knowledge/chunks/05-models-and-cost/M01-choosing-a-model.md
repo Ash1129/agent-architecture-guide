@@ -3,7 +3,7 @@ id: M01
 title: Choosing a model, and the current Claude lineup
 topic: models
 sources: [openai-2025-practical-guide, anthropic-docs-choosing-a-model, anthropic-docs-models-overview]
-last_verified: 2026-10-05
+last_verified: 2026-10-12
 ---
 
 ## Claims
@@ -33,7 +33,7 @@ last_verified: 2026-10-05
   setting trades intelligence for speed and cost within one model, and tuning
   it is often a better lever than switching models.
   [anthropic-docs-choosing-a-model §Establish key criteria; §Model selection matrix]
-- **The Claude lineup as listed on 2026-10-05**
+- **The Claude lineup as listed on 2026-10-12**
   [anthropic-docs-models-overview §Compare models]:
 
 | Model | Anthropic's positioning | Price in / out per million tokens | Context | Earliest retirement |
@@ -41,7 +41,10 @@ last_verified: 2026-10-05
 | Claude Fable 5.1 | Most capable; demanding reasoning and long-horizon agentic work | $10 / $50 | 1M | Sep 1, 2027 |
 | Claude Opus 5.5 | Long-running agentic coding and knowledge work; default starting point | $4 / $20 | 1M | Sep 22, 2027 |
 | Claude Sonnet 5.5 | Best combination of speed and intelligence | $2 / $10 | 1M | Sep 28, 2027 |
-| Claude Haiku 4.5 | Fastest; near-frontier intelligence; sub-agent and high-volume tasks | $1 / $5 | 200K | Oct 15, 2026 |
+| Claude Haiku 5.5 | Fastest; high-volume, latency-sensitive tasks such as classification, extraction and routing | from $0.10 / $0.50 | 1M | Oct 7, 2027 |
+
+- Claude Haiku 4.5 ($1 / $5, 200K context) is now listed as a legacy model,
+  still available. [anthropic-docs-models-overview §Compare models]
 
 - Anthropic's selection matrix [anthropic-docs-choosing-a-model §Model selection matrix]:
   - **Fable 5.1:** hours-long agent sessions and deep research
@@ -58,8 +61,10 @@ last_verified: 2026-10-05
   fixed on 2026-10-05:
   1. It has no Fable 5.1, and treats Opus 5.5 as "most capable", which is
      no longer true.
-  2. Haiku 4.5's earliest retirement is Oct 15, 2026, so designs that rely on
-     it for routing need a stated fallback, Sonnet 5.5.
+  2. Haiku 4.5's earliest retirement was Oct 15, 2026, so no step defaulted
+     to it. Superseded 2026-10-12: Haiku 5.5 replaces it in the site as the
+     cheaper step down to test for sorting and extraction; Sonnet 5.5 stays
+     the starting pick.
   3. "Try lower effort before a smaller model" should become a stated step.
 - Model names and prices change fast. Every model claim in the guide should
   carry the date it was checked, and this chunk must be re-verified before

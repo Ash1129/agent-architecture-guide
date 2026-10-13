@@ -214,7 +214,7 @@ describe("decision paths", () => {
     expect(m.kind === "model" && m.why).toMatch(/only in the US or worldwide/);
   });
 
-  it("model picks name Fable 5.1 as the step up and never default to Haiku 4.5", () => {
+  it("model picks name Fable 5.1 as the step up and start on Sonnet, not Haiku", () => {
     const router = pickModel("router", customerSupport);
     expect(router.kind === "model" && router.prototype).toMatch(/Fable 5\.1/);
     for (const role of ["router", "worker", "attempt", "checker", "agent", "coordinator", "specialist"] as const) {

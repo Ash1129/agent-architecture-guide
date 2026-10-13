@@ -3,7 +3,7 @@
 // model, then step each part down to the smallest model that still matches
 // your test baseline. The role-to-model table below is this guide's starting
 // suggestion; model names are examples as of the review date (knowledge base
-// chunks M01 and M03, checked October 5, 2026).
+// chunks M01 and M03, checked October 12, 2026).
 
 import { LAST_REVIEWED } from "./catalog";
 import type { Answers } from "./questions";
@@ -13,12 +13,12 @@ import type { Basis } from "./rules";
 export type ModelId = "opus" | "sonnet" | "haiku" | "openLarge" | "openSmall";
 
 /** Leading open-weight models as of the review date (M03), shown as examples of the large open-weight tier. */
-export const OPEN_LARGE_PICKS = ["Kimi K2.6", "GLM-5", "DeepSeek-V3.2"];
+export const OPEN_LARGE_PICKS = ["Kimi K2.6", "GLM-5", "DeepSeek-V4-Pro"];
 
 export const MODELS: Record<ModelId, { name: string; short: string; size: string; examples?: string }> = {
   opus: { name: "Claude Opus 5.5", short: "Opus 5.5", size: "Default starting point" },
   sonnet: { name: "Claude Sonnet 5.5", short: "Sonnet 5.5", size: "Balanced" },
-  haiku: { name: "Claude Haiku 4.5", short: "Haiku 4.5", size: "Fast, low cost; may retire from October 15, 2026" },
+  haiku: { name: "Claude Haiku 5.5", short: "Haiku 5.5", size: "Fastest, lowest cost; for sorting, extraction and high volume" },
   openLarge: {
     name: "Large open-weight model",
     short: "Open-weight, large",
@@ -37,11 +37,12 @@ export const MODELS: Record<ModelId, { name: string; short: string; size: string
 export const TOP_MODEL = { name: "Claude Fable 5.1", note: "it requires Anthropic to keep data for 30 days, so it is unavailable under zero data retention" };
 
 /**
- * Haiku 4.5 may be retired from October 15, 2026 (M01), so no step defaults to
- * it. Sonnet 5.5 takes the small-model roles; Haiku stays an option to test
- * while it remains available.
+ * Haiku 5.5 is Anthropic's model for high-volume sorting and extraction, at a
+ * twentieth of Sonnet 5.5's price (M01, M04). The guide's method still starts
+ * these steps on Sonnet and steps down once tests show the smaller model
+ * matches, so Haiku is the step down to test, not the starting pick.
  */
-export const HAIKU_NOTE = "Claude Haiku 4.5 is cheaper for simple steps but may be retired from October 15, 2026, so it isn't the default.";
+export const HAIKU_NOTE = "At this volume, test Claude Haiku 5.5 here once Sonnet's results are your baseline: it costs a twentieth as much and is built for sorting and extraction.";
 
 export type Engine =
   | { kind: "model"; model: ModelId; role: Role; name: string; short: string; prototype: string; why: string; alternative?: string }

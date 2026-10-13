@@ -51,12 +51,13 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | beurer-kellner-2025-design-patterns | Beurer-Kellner, L., Buesser, B., Creţu, A.-M., Debenedetti, E., Dobos, D., Fabian, D., Fischer, M., Froelicher, D., et al. (2025). Design patterns for securing LLM agents against prompt injections. Invariant Labs, IBM, EPFL, ETH Zurich, Google and others. arXiv:2506.08837 | B | 2026-10-05 |
 | zheng-2023-llm-as-judge | Zheng, L., Chiang, W.-L., Sheng, Y., et al. (2023). Judging LLM-as-a-judge with MT-Bench and Chatbot Arena. NeurIPS 2023 Datasets and Benchmarks Track. arXiv:2306.05685 | A | 2026-10-05 |
 | anthropic-2026-agent-evals | Anthropic. (2026, January 9). Demystifying evals for AI agents. https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents | C | 2026-10-05 |
-| anthropic-docs-models-overview | Anthropic. (n.d.). Models overview. Claude Platform documentation. https://platform.claude.com/docs/en/models/overview | C | 2026-10-05 |
+| anthropic-docs-models-overview | Anthropic. (n.d.). Models overview. Claude Platform documentation. https://platform.claude.com/docs/en/models/overview | C | 2026-10-12 (first read 2026-10-05) |
 | anthropic-docs-choosing-a-model | Anthropic. (n.d.). Choosing a model. Claude Platform documentation. https://platform.claude.com/docs/en/about-claude/models/choosing-a-model | C | 2026-10-05 |
 | anthropic-docs-pricing | Anthropic. (n.d.). Pricing. Claude Platform documentation. https://platform.claude.com/docs/en/about-claude/pricing | C | 2026-10-05 |
 | claude-2026-plans-pricing | Anthropic. (n.d., read 2026). Pricing: plans and API. https://claude.com/pricing | C | 2026-10-10 |
 | n8n-2026-pricing | n8n. (n.d., read 2026). Plans and pricing. https://n8n.io/pricing/ | C | 2026-10-10 |
 | deepseek-docs-pricing | DeepSeek. (n.d., read 2026). Models & pricing. DeepSeek API documentation. https://api-docs.deepseek.com/quick_start/pricing | C | 2026-10-10 |
+| deepseek-2026-v4-pro-card | DeepSeek. (2026). DeepSeek-V4-Pro model card. Hugging Face. https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro | C | 2026-10-12 |
 | moonshot-docs-pricing | Moonshot AI. (n.d., read 2026). Chat model pricing. Kimi Open Platform documentation. https://platform.kimi.com/docs/pricing/chat | C | 2026-10-10 |
 | chen-2024-frugalgpt | Chen, L., Zaharia, M., & Zou, J. (2024). FrugalGPT: How to use large language models while reducing cost and improving performance. Transactions on Machine Learning Research (12/2024). arXiv:2305.05176 | A | 2026-10-05 |
 | ong-2025-routellm | Ong, I., Almahairi, A., Wu, V., Chiang, W.-L., Wu, T., Gonzalez, J. E., Kadous, M. W., & Stoica, I. (2025). RouteLLM: Learning to route LLMs from preference data. ICLR 2025. arXiv:2406.18665 | A | 2026-10-05 |
