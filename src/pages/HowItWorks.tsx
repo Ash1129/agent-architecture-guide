@@ -77,8 +77,19 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
       <header className="max-w-3xl">
         <h1 className="text-[2.25rem] font-semibold leading-[1.08] tracking-tight text-ink sm:text-[3rem]">How the guide decides</h1>
         <p className="mt-5 max-w-[60ch] text-[18px] leading-relaxed text-muted">
-          Every recommendation comes from {RULES.length} fixed rules written from the AI Assignment 4 research. No AI model
-          writes your result, so the same answers always produce the same result, and you can check every step below.
+          {AI_ENABLED ? (
+            <>
+              Every recommendation starts from {RULES.length} fixed rules written from the AI Assignment 4 research. An AI model also
+              reads your description, words the questions in your terms, and drafts the design and starter kit for your task, but
+              every draft is checked against these rules, and if it fails, the rules' own design is what you see. You can check every
+              rule below.
+            </>
+          ) : (
+            <>
+              Every recommendation comes from {RULES.length} fixed rules written from the AI Assignment 4 research. No AI model
+              writes your result, so the same answers always produce the same result, and you can check every step below.
+            </>
+          )}
         </p>
       </header>
 
@@ -100,7 +111,7 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
           <h2 className="text-[16px] font-semibold text-ink">{AI_ENABLED ? "What leaves your browser" : "Your answers stay with you"}</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
             {AI_ENABLED
-              ? "Everything runs in your browser and there's no account. The one exception is Tailor with AI: if you choose it, your task and answers go to OpenAI through this site's server to tailor the n8n workflow. A shared link carries the answers inside the link itself."
+              ? "There's no account. Your description and answers go to OpenAI through this site's server to read the description (and split it into jobs), word the questions, draft the design, write the starter kit and tailor the n8n workflow. Your history stays in your browser, and a shared link carries the answers inside the link itself."
               : "Everything runs in your browser. There's no account and nothing is sent anywhere. A shared link carries the answers inside the link itself."}
           </p>
         </div>
