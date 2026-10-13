@@ -618,8 +618,8 @@ function Ready({
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [variant, setVariant] = useState<"recommended" | "simpler">("recommended");
-  // The Workflow view lists the steps; the full diagram is one switch away.
-  const [display, setDisplay] = useState<"list" | "diagram">("list");
+  // The Workflow view opens on the diagram; the step list is one switch away.
+  const [display, setDisplay] = useState<"list" | "diagram">("diagram");
   const [selected, setSelected] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const bp = variant === "recommended" ? full : simple;
@@ -1195,6 +1195,14 @@ function Ready({
     </>
   );
 
+  // The walkthrough starts from a square button in the top-right corner of the steps it walks through.
+  const walkControl = (
+    <button ref={walkButton} type="button" className="workflow-walk no-print" onClick={walk}>
+      <Play size={18} weight="fill" aria-hidden />
+      <span>Walk me through it</span>
+    </button>
+  );
+
   const workflowView = (
     <section aria-labelledby="workflow-title">
       <div className="section-kicker studio-caption">Behind the solution</div>
@@ -1208,10 +1216,6 @@ function Ready({
             {bp.nodes[bp.nodes.length - 1].name.charAt(0).toLowerCase() + bp.nodes[bp.nodes.length - 1].name.slice(1)}.
           </p>
         </div>
-        <button ref={walkButton} type="button" className="studio-btn no-print" onClick={walk}>
-          <Play size={17} weight="fill" aria-hidden />
-          Walk me through it
-        </button>
       </div>
       <div className="workflow-tools no-print">
         <div role="group" aria-label="Which design to show" className="view-switch">
@@ -1222,7 +1226,7 @@ function Ready({
           ))}
         </div>
         <div role="group" aria-label="How to show it" className="view-switch">
-          {(["list", "diagram"] as const).map((v) => (
+          {(["diagram", "list"] as const).map((v) => (
             <button key={v} type="button" aria-pressed={display === v} onClick={() => setDisplay(v)}>
               {v === "list" ? "List" : "Diagram"}
             </button>
@@ -1253,7 +1257,8 @@ function Ready({
       )}
       {variant === "simpler" && <p className="mb-5 text-[15.5px] font-medium text-ink">{simple.title}</p>}
       {display === "list" ? (
-        <div className="workflow-layout">
+        <div className="workflow-layout has-walk">
+          {walkControl}
           <ol className="full-timeline" aria-label="Steps">
             {bp.nodes.map((n) => (
               <li key={n.id}>
@@ -1273,7 +1278,8 @@ function Ready({
           </aside>
         </div>
       ) : (
-        <div ref={cardRef} className="workflow-canvas">
+        <div ref={cardRef} className="workflow-canvas has-walk">
+          {walkControl}
           <div className="px-3 sm:px-6">
             <DiagramBoundary
               resetKey={`${bp.variant}-${bp.nodes.map((n) => n.id).join()}`}

@@ -2459,3 +2459,49 @@
     margin-left: 20px;
   }
 }
+
+/* ---------------------------------------------------------------- the walkthrough's button, in the corner of the steps */
+
+.has-walk {
+  position: relative;
+}
+.workflow-walk {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px -14px color-mix(in oklab, var(--ink) 55%, transparent);
+  transition: opacity 150ms, transform 150ms;
+}
+.workflow-walk svg {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+.workflow-walk:hover {
+  opacity: 0.92;
+}
+.workflow-walk:active {
+  transform: scale(0.97);
+}
+/* Top to bottom, the first step sits at the top of the box: keep it clear of the button. */
+.workflow-canvas.has-walk:has([data-vertical]) {
+  padding-top: 58px;
+}
+/* The list's corner belongs to the details panel, so there the button sits above it, beside the steps. */
+.workflow-layout.has-walk {
+  padding-top: 58px;
+}
+.workflow-layout.has-walk .workflow-walk {
+  top: 0;
+  right: 0;
+}

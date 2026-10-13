@@ -294,7 +294,7 @@ export function ArchitectureMap({
   });
 
   return (
-    <div ref={outerRef} className={scroll ? "w-full overflow-x-auto" : "w-full overflow-visible"}>
+    <div ref={outerRef} data-vertical={vertical || undefined} className={scroll ? "w-full overflow-x-auto" : "w-full overflow-visible"}>
       <div
         ref={gridRef}
         data-layout={layoutKey}
