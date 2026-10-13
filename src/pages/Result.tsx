@@ -34,9 +34,11 @@ import { Walkthrough } from "../components/Walkthrough";
 import { StarterKit, type TailoringState } from "../components/StarterKit";
 import { keySteps, leadStep } from "../components/ArchitectureArt";
 import { BuildInvite } from "../components/BuildInvite";
+import { DECIDING, DESIGNING, Thinking } from "../components/Thinking";
 import { type SystemNav, StudioShell } from "../components/StudioShell";
 import { buildStarterKit, slugify } from "../lib/starter";
 import { drawioXml } from "../lib/exportxml";
+import { MODELS, type ModelId, type Role, pickModel } from "../lib/models";
 import { type CostEstimate, PRICES_CHECKED, costLines, estimateCost, hoursRange, moneyRange, weeksRange } from "../lib/cost";
 import { AutonomyScale, Ladder } from "../components/Scales";
 import { ModelGuidance, StepPanel } from "../components/StepPanel";
@@ -63,10 +65,10 @@ import {
   optionLabel,
 } from "../lib/questions";
 import { type ResultView, href } from "../lib/router";
-import { RULES, recommend, type Recommendation } from "../lib/rules";
+import { APPROACH_NAME, RULES, recommend, type Recommendation } from "../lib/rules";
 import { resultAsText, resultCode, resultUrl } from "../lib/share";
 import { SOURCES, type SourceId } from "../lib/sources";
-import { type DesignState, type KitTextState, fetchDesign, fetchKitText, rememberedDesign } from "../lib/designs";
+import { type DecisionState, type DesignState, type KitTextState, fetchDecision, fetchDesign, fetchKitText, rememberedDecision, rememberedDesign } from "../lib/designs";
 import { ImplementationShortlist } from "../components/ImplementationShortlist";
 import { AI_ENABLED } from "../lib/features";
 
@@ -83,11 +85,13 @@ type Props = {
   historyCount: number;
   /** When this result is one job of a process: the process's place in the sidebar. */
   system?: SystemNav;
+  /** The AI's decision for these answers has arrived (so History can show it). */
+  onDecided?: () => void;
 };
 
-export function Result({ answers, saved = false, onChange, onStartOver, invalidLink, view, onView, historyCount, system }: Props) {
+export function Result({ answers, saved = false, onChange, onStartOver, invalidLink, view, onView, historyCount, system, onDecided }: Props) {
   if (!isComplete(answers)) return <NotReady answers={answers} invalidLink={invalidLink} onStartOver={onStartOver} />;
-  return <Ready answers={answers} saved={saved} onChange={onChange} onStartOver={onStartOver} view={view} onView={onView} historyCount={historyCount} system={system} />;
+  return <Ready answers={answers} saved={saved} onChange={onChange} onStartOver={onStartOver} view={view} onView={onView} historyCount={historyCount} system={system} onDecided={onDecided} />;
 }
 
 // ------------------------------------------------------------------ empty state
@@ -224,8 +228,102 @@ function AnswerList({ answers, onChange }: { answers: Answers; onChange: (q: Que
 }
 
 /** Where the design on screen came from, and a way to compare it with the rules' version. */
+/**
+ * How the main choices were made: by AI (with where it departs from the
+ * rules, and a switch to the rules' version), or by the rules.
+ */
+/** Kinds of AI step, as the note names them. */
+const ROLE_WORDS: Record<Role, string> = {
+  router: "sorting",
+  worker: "the main work",
+  attempt: "the attempts",
+  checker: "checking",
+  agent: "the agent",
+  coordinator: "coordinating",
+  specialist: "the specialists",
+};
+
+function DecisionNote({
+  answers,
+  bp,
+  decision,
+  design,
+  ai,
+  rules,
+  showRules,
+  onShowRules,
+}: {
+  answers: Answers;
+  /** The design on screen: model differences count only for the steps it has. */
+  bp: Blueprint;
+  decision: DecisionState;
+  design: DesignState;
+  ai?: Recommendation;
+  rules: Recommendation;
+  showRules: boolean;
+  onShowRules: (v: boolean) => void;
+}) {
+  if (decision.status === "off") return null;
+  const toggle = (label: string, value: boolean) => (
+    <button type="button" onClick={() => onShowRules(value)} className="font-medium text-accent underline-offset-4 hover:underline">
+      {label}
+    </button>
+  );
+  const core = (x: Recommendation) => TOOLS[x.tools.find((t) => t.core)!.tool].name;
+  const shape = (x: Recommendation) => [x.topology.primary, ...x.topology.addOns].map((t) => TOPOLOGIES[t].name.toLowerCase()).join(" + ");
+  const diffs = ai
+    ? [
+        ai.approach.id !== rules.approach.id && `${APPROACH_NAME[ai.approach.id]}, where the rules suggested ${APPROACH_NAME[rules.approach.id]}`,
+        shape(ai) !== shape(rules) && `shape: ${shape(ai)}, where the rules suggested ${shape(rules)}`,
+        core(ai) !== core(rules) && `${core(ai)} as the main tool, where the rules suggested ${core(rules)}`,
+        ai.hosting.title !== rules.hosting.title && `runs on "${ai.hosting.title}", where the rules suggested "${rules.hosting.title}"`,
+        ai.autonomy.level !== rules.autonomy.level && `autonomy level ${ai.autonomy.level}, where the rules suggested level ${rules.autonomy.level}`,
+        ...(Object.entries(ai.modelPicks ?? {}) as [Role, ModelId][])
+          .filter(([role]) => bp.nodes.some((n) => n.engine?.kind === "model" && n.engine.role === role))
+          .map(([role, model]) => {
+          const ruled = pickModel(role, answers);
+          return ruled.kind === "model" && ruled.model !== model && `${MODELS[model].short} for ${ROLE_WORDS[role]}, where the rules suggested ${MODELS[ruled.model].short}`;
+        }),
+      ].filter((x): x is string => !!x)
+    : [];
+  return (
+    <div role="status" aria-live="polite" className="no-print decision-note text-[13.5px] leading-relaxed text-muted">
+      {decision.status === "loading" ? (
+        <>
+          <Thinking words={DECIDING} />
+          <p className="mt-1">The AI is deciding how to build this from the knowledge base, weighing quality, cost and speed. Until it's ready (under a minute), this is the rules' recommendation.</p>
+        </>
+      ) : decision.status === "failed" ? (
+        <p>Showing the rules' recommendation. {decision.note}</p>
+      ) : showRules ? (
+        <p>Showing the rules' recommendation and design. {toggle("Back to the AI's decision", false)}</p>
+      ) : (
+        <>
+          <p>
+            <Sparkle size={14} weight="fill" aria-hidden className="mr-1.5 inline align-[-2px] text-accent" />
+            Decided by AI{decision.source === "cache" ? " (saved from an earlier run)" : ""} from the knowledge base, weighing quality, cost and speed, within the guide's limits.{" "}
+            {diffs.length ? "Where it differs from the rules:" : "It agrees with the rules on every main choice."} {toggle("Compare with the rules", true)}
+          </p>
+          {diffs.length > 0 && (
+            <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
+              {diffs.map((d) => (
+                <li key={d}>{d.charAt(0).toUpperCase() + d.slice(1)}.</li>
+              ))}
+            </ul>
+          )}
+          {design.status === "loading" && (
+            <p className="mt-2">
+              <Thinking words={DESIGNING} />
+            </p>
+          )}
+          {design.status === "failed" && <p className="mt-1.5">The design below is the rules' layout for this decision. {design.note}</p>}
+        </>
+      )}
+    </div>
+  );
+}
+
 function DesignNote({ design, showRules, onShowRules, bare = false }: { design: DesignState; showRules: boolean; onShowRules: (v: boolean) => void; bare?: boolean }) {
-  const reduce = useReducedMotion();
   if (design.status === "off") return null;
   const toggle = (label: string, value: boolean) => (
     <button type="button" onClick={() => onShowRules(value)} className="font-medium text-accent underline-offset-4 hover:underline">
@@ -244,17 +342,17 @@ function DesignNote({ design, showRules, onShowRules, bare = false }: { design: 
     >
       {design.status === "loading" ? (
         <>
-          <CircleNotch size={14} aria-hidden className={`text-accent ${reduce ? "" : "animate-spin"}`} />
-          Drafting a design for your task with AI, grounded in the knowledge base. This is the rules' design until it's ready (about a minute).
+          <Thinking words={DESIGNING} className="mr-2" />
+          <span className="block">The AI is drafting the design for your task from the knowledge base. Until it's ready, this is the rules' design.</span>
         </>
       ) : design.status === "failed" ? (
         <>Showing the rules' design. {design.note}</>
       ) : showRules ? (
-        <>Showing the rules' design. {toggle("Back to the AI design", false)}</>
+        <>Showing the rules' recommendation and design. {toggle("Back to the AI's version", false)}</>
       ) : (
         <>
           <Sparkle size={14} weight="fill" aria-hidden className="text-accent" />
-          Designed for your task by AI{design.source === "cache" ? " (saved from an earlier run)" : ""}, checked against the guide's rules and knowledge base. Select a step to see its sources. {toggle("Compare with the rules' design", true)}
+          Designed for your task by AI{design.source === "cache" ? " (saved from an earlier run)" : ""}, checked against the guide's rules and knowledge base. Select a step to see its sources. {toggle("Compare with the rules", true)}
         </>
       )}
     </p>
@@ -532,6 +630,7 @@ function Ready({
   onView,
   historyCount,
   system,
+  onDecided,
 }: {
   answers: Answers;
   saved: boolean;
@@ -541,18 +640,40 @@ function Ready({
   onView: (view: ResultView) => void;
   historyCount: number;
   system?: SystemNav;
+  onDecided?: () => void;
 }) {
-  const r = useMemo(() => recommend(answers), [answers]);
-  const ruleDesign = useMemo(() => buildBlueprint(r, answers), [r, answers]);
-
-  // With AI on, the architecture is drafted for this task by the local AI
-  // server and checked against the rules; the rules' design shows until then,
-  // and stays if the AI's draft can't pass the checks.
-  const [design, setDesign] = useState<DesignState>({ status: "off" });
+  // With AI on, an AI model makes the main choices first (approach, tools,
+  // hosting, autonomy, models, shortlist), within the rules' limits; then the
+  // architecture is drafted for that decision and checked. The rules' version
+  // shows until each is ready, stays when one can't pass the checks, and is
+  // always one click away.
+  const rulesR = useMemo(() => recommend(answers), [answers]);
+  const [decision, setDecision] = useState<DecisionState>({ status: "off" });
   const [showRules, setShowRules] = useState(false);
   useEffect(() => {
     setShowRules(false);
+    if (!AI_ENABLED || !isComplete(answers)) return setDecision({ status: "off" });
+    const known = rememberedDecision(answers);
+    if (known) return setDecision({ status: "ready", decision: known, source: "cache" });
+    const ctl = new AbortController();
+    setDecision({ status: "loading" });
+    fetchDecision(answers, ctl.signal)
+      .then((d) => setDecision({ status: "ready", ...d }))
+      .catch((e: Error) => !ctl.signal.aborted && setDecision({ status: "failed", note: e.message }));
+    return () => ctl.abort();
+  }, [answers]);
+  const aiR = useMemo(() => (decision.status === "ready" ? recommend(answers, decision.decision) : undefined), [decision, answers]);
+  const r = aiR && !showRules ? aiR : rulesR;
+  const ruleDesign = useMemo(() => buildBlueprint(r, answers), [r, answers]);
+  useEffect(() => {
+    if (aiR) onDecided?.();
+  }, [aiR]); // eslint-disable-line react-hooks/exhaustive-deps -- once per decision
+
+  // The design is drafted for the decision, so it waits until the decision has settled.
+  const [design, setDesign] = useState<DesignState>({ status: "off" });
+  useEffect(() => {
     if (!AI_ENABLED || !isComplete(answers)) return setDesign({ status: "off" });
+    if (decision.status === "off" || decision.status === "loading") return setDesign({ status: "loading" });
     const known = rememberedDesign(answers);
     if (known) return setDesign({ status: "ready", ...known });
     const ctl = new AbortController();
@@ -561,7 +682,7 @@ function Ready({
       .then((d) => setDesign({ status: "ready", ...d }))
       .catch((e: Error) => !ctl.signal.aborted && setDesign({ status: "failed", note: e.message }));
     return () => ctl.abort();
-  }, [answers]);
+  }, [decision.status, answers]); // eslint-disable-line react-hooks/exhaustive-deps -- answers change only with the decision
   const full = design.status === "ready" && !showRules ? design.blueprint : ruleDesign;
 
   // Once the design has settled, the kit's task-specific text is written for it.
@@ -577,7 +698,7 @@ function Ready({
   }, [design.status, answers]); // eslint-disable-line react-hooks/exhaustive-deps -- answers change only with the design
   // The text belongs to the design it was written for; the other design keeps the template kit.
   const shownDesign = full === ruleDesign ? "rules" : "ai";
-  const text = kitText.status === "ready" && kitText.response.design === shownDesign ? kitText.response.text : undefined;
+  const text = !showRules && kitText.status === "ready" && kitText.response.design === shownDesign ? kitText.response.text : undefined;
   const simple = useMemo(() => buildSimplerBlueprint(r, answers), [r, answers]);
   const kit = useMemo(() => buildStarterKit(r, full, answers, text), [r, full, answers, text]);
 
@@ -590,7 +711,7 @@ function Ready({
   useEffect(() => setBuilt(!AI_ENABLED), [answers]);
   const settling = (x: { status: string }) => x.status === "off" || x.status === "loading";
   const building = AI_ENABLED && !built && (settling(design) || settling(kitText) || tailorState === "idle" || tailorState === "working");
-  const buildStage = settling(design) ? "Drafting your design" : settling(kitText) ? "Writing your kit" : "Tailoring your n8n workflow";
+  const buildStage = settling(decision) && AI_ENABLED ? "Deciding how to build it" : settling(design) ? "Drafting your design" : settling(kitText) ? "Writing your kit" : "Tailoring your n8n workflow";
   // A short note when the tools finish while someone is reading elsewhere.
   const sawBuilding = useRef(false);
   const [readyNote, setReadyNote] = useState(false);
@@ -794,7 +915,7 @@ function Ready({
         <p className="studio-intro">{full.summary || r.approach.summary}</p>
         {AI_ENABLED && (
           <div className="-mt-4 mb-8 max-w-[70ch]">
-            <DesignNote design={design} showRules={showRules} onShowRules={setShowRules} bare />
+            <DecisionNote answers={answers} bp={full} decision={decision} design={design} ai={aiR} rules={rulesR} showRules={showRules} onShowRules={setShowRules} />
           </div>
         )}
         <div className="architecture-grid">
@@ -836,7 +957,7 @@ function Ready({
         </div>
       </section>
 
-      <ImplementationShortlist answers={answers} />
+      <ImplementationShortlist answers={answers} r={r} />
 
       <section className="studio-section" aria-labelledby="operates-title">
         <div className="section-kicker studio-caption">02 — Behind the solution</div>
@@ -993,6 +1114,12 @@ function Ready({
             title="Model guidance"
             meta={r.models.needed ? "The pick for each step, what to look for, and how to test before committing." : "No AI model needed. The methods each step uses."}
           >
+            {r.decided?.reasons.models.text && (
+              <WhyList
+                className="mb-6"
+                items={[{ text: r.decided.reasons.models.text, ruleId: "AI", basis: { kind: "ai", chunks: r.decided.reasons.models.kb } }]}
+              />
+            )}
             <h3 className="text-[15px] font-semibold text-ink">{r.models.needed ? "The pick for each step" : "The method for each step"}</h3>
             <ul className="mt-3 mb-7 divide-y divide-line border-y border-line">
               {full.nodes

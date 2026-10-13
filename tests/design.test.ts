@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type Blueprint, OK_EVERY_ACTION, buildBlueprint } from "../src/lib/blueprint";
-import { type DesignDraft, asDraft, checkDesign } from "../src/lib/design";
+import { type DesignDraft, asDraft, checkDesign, tidyDraft } from "../src/lib/design";
 import type { Answers } from "../src/lib/questions";
 import { recommend } from "../src/lib/rules";
 import { buildStarterKit } from "../src/lib/starter";
@@ -224,6 +224,39 @@ describe("design endpoint", () => {
     const t = fake("not json");
     await handleTailor({ answers: emails }, { ...env, cache }, t.complete);
     expect(t.calls[0]).toContain("Work the customer's case");
+  });
+});
+
+describe("slips corrected before the checks", () => {
+  it("turns a tool step no AI step uses into the fixed, scripted step its check describes", () => {
+    const { d, ctx } = draftOf(invoices);
+    const fixed = d.steps.find((x) => x.kind === "fixed")!;
+    const slipped = { ...d, steps: d.steps.map((x) => (x.id === fixed.id ? { ...x, kind: "tool" as const, method: undefined } : x)) };
+    const { blueprint, problems } = checkDesign(slipped, ctx);
+    expect(problems).toEqual([]);
+    const node = blueprint!.nodes.find((n) => n.id === fixed.id)!;
+    expect(node.kind).toBe("fixed");
+    expect(node.engine?.kind === "algorithm" && node.engine.name).toBe("Scripted action");
+    // The draft itself is left as it was.
+    expect(slipped.steps.find((x) => x.id === fixed.id)!.kind).toBe("tool");
+  });
+
+  it("keeps tool steps an AI step uses, and any tool step that carries a safeguard", () => {
+    const { d } = draftOf(emails);
+    const used = d.steps.find((x) => x.kind === "tool")!;
+    const tidied = tidyDraft(d) as DesignDraft;
+    expect(tidied.steps.find((x) => x.id === used.id)!.kind).toBe("tool");
+    const guarded = { ...d, steps: [...d.steps, { ...used, id: "stray", gates: [{ kind: "human" as const, text: OK_EVERY_ACTION }] }] };
+    expect((tidyDraft(guarded) as DesignDraft).steps.find((x) => x.id === "stray")!.kind).toBe("tool");
+  });
+
+  it("shortens an over-long branch label at a word boundary", () => {
+    const { d, ctx } = draftOf(emails);
+    const withLabel = { ...d, edges: d.edges.map((e, i) => (i === 0 ? { ...e, label: "only when the order is already shipped" } : e)) };
+    const label = (tidyDraft(withLabel) as DesignDraft).edges[0].label!;
+    expect(label.length).toBeLessThanOrEqual(24);
+    expect(label).toMatch(/…$/);
+    expect(checkDesign(withLabel, ctx).problems).toEqual([]);
   });
 });
 

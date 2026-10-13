@@ -9,12 +9,13 @@ import { DECISION_METHODS, DECISION_ROLES, type DesignResponse, FIXED_METHODS, M
 import { detailLines } from "../src/lib/interview";
 import { ALGORITHMS } from "../src/lib/models";
 import { type Answers, QUESTIONS, isComplete, said } from "../src/lib/questions";
-import { type Recommendation, recommend } from "../src/lib/rules";
+import type { Recommendation } from "../src/lib/rules";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, selectChunks } from "./knowledge";
 import { type Complete, extractJson, openAIComplete } from "./ai";
+import { decidedRecommendation, decisionTag } from "./decide";
 
 export type DesignEnv = { apiKey?: string; model?: string; cache?: Cache };
 type ReadyEnv = DesignEnv & { apiKey: string; model: string };
@@ -30,6 +31,7 @@ Return one JSON object:
 {"title": string, "summary": string, "steps": [{"id", "kind", "name", "label", "role", "method", "what", "why", "passes", "gates": [{"kind", "text"}], "kb": [chunk ids]}], "edges": [{"from", "to", "label", "style"}]}
 
 - kind: "start", "ai", "fixed", "decision", "human", "tool" or "end".
+- "tool" is only for something an AI step uses while it works, such as a search or a look-up in the owner's systems: connect it from that AI step, and back to it with a "loop". A step that fetches or saves data as part of the flow (load the order, save the ticket, send the reply) is "fixed" with method "scripted".
 - role: required on "ai" steps, and on a "decision" made by AI. It says what kind of AI step it is; the model is chosen from it by the guide's rules, so never name a model.
 - method: required on "fixed" steps and on a "decision" made without AI.
 - gates: safeguards on a step. "human" means a person steps in; "stop" is a stop rule.
@@ -42,11 +44,13 @@ Return only the JSON object. No prose, no code fences.`;
 /** Changes whenever the instructions change, so old designs aren't reused. */
 export const DESIGN_VERSION = fingerprint(INSTRUCTIONS);
 
-export const designKey = (answers: Answers, model: string) => `${DESIGN_VERSION}:${knowledgeFingerprint()}:${model}:${resultCode(answers)}`;
+/** Keyed by the decision too: the same answers decided differently get a different design. */
+export const designKey = (answers: Answers, model: string, env: DesignEnv = {}) =>
+  `${DESIGN_VERSION}:${knowledgeFingerprint()}:${model}:${resultCode(answers)}:${decisionTag(answers, { ...env, model })}`;
 
-/** What the checks need: the rules' design for these answers and the chunks the model was given. */
-function contextFor(answers: Answers) {
-  const r = recommend(answers);
+/** What the checks need: the starting design for these answers (from the AI's decision, or the rules') and the chunks the model was given. */
+function contextFor(answers: Answers, env: DesignEnv = {}) {
+  const r = decidedRecommendation(answers, env);
   const baseline = buildBlueprint(r, answers);
   const chunks = selectChunks(r, baseline);
   return { r, baseline, chunks, ctx: { r, a: answers, baseline, chunks: chunks.map(({ id, title }) => ({ id, title })) } };
@@ -59,8 +63,8 @@ function contextFor(answers: Answers) {
  * too, and a draft that no longer passes is simply not used.
  */
 export function cachedDesign(answers: Answers, env: DesignEnv): Blueprint | undefined {
-  const draft = env.model ? env.cache?.get<unknown>("design", designKey(answers, env.model))?.value : undefined;
-  return draft === undefined ? undefined : checkDesign(draft, contextFor(answers).ctx).blueprint;
+  const draft = env.model ? env.cache?.get<unknown>("design", designKey(answers, env.model, env))?.value : undefined;
+  return draft === undefined ? undefined : checkDesign(draft, contextFor(answers, env).ctx).blueprint;
 }
 
 function limitsFor(r: Recommendation, baseline: Blueprint): string[] {
@@ -112,12 +116,12 @@ export async function handleDesign(body: unknown, env: DesignEnv, complete?: Com
   const hit = cachedDesign(answers, env);
   if (hit) return respond({ blueprint: hit, source: "cache", model: env.model });
 
-  return singleFlight(`design:${designKey(answers, env.model)}`, () => draftDesign(answers, env as ReadyEnv, complete));
+  return singleFlight(`design:${designKey(answers, env.model, env)}`, () => draftDesign(answers, env as ReadyEnv, complete));
 }
 
 async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete): Promise<DesignResult> {
   const respond = (r: DesignResponse): DesignResult => ({ status: 200, body: r });
-  const { r, baseline, chunks, ctx } = contextFor(answers);
+  const { r, baseline, chunks, ctx } = contextFor(answers, env);
   const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model });
   const input = buildDesignInput(answers, r, baseline, chunks);
   try {
@@ -133,7 +137,7 @@ async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete)
         problems = [(e as Error).message];
       }
       if (blueprint) {
-        env.cache?.put("design", { key: designKey(answers, env.model), label: answers.task, value: draft });
+        env.cache?.put("design", { key: designKey(answers, env.model, env), label: answers.task, value: draft });
         return respond({ blueprint, source: "ai", model: env.model });
       }
       // Rejections are logged on the dev server so failures can be diagnosed.

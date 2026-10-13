@@ -23,7 +23,7 @@ import { decodeAnswers, resultCode } from "./lib/share";
 import { loadAnswers, loadDescribed, saveAnswers, saveDescribed } from "./lib/storage";
 import { type HistoryEntry, findByCode, loadHistory, loadSessionId, newSessionId, saveSessionId, upsertHistory } from "./lib/history";
 import { AI_ENABLED } from "./lib/features";
-import { type Detail, type InterviewResponse, MAX_DESCRIPTION, MAX_TASK_TITLE, fillFromPlan, taskTitle } from "./lib/interview";
+import { type Detail, type InterviewResponse, MAX_DESCRIPTION, MAX_TASK_TITLE, fillFromPlan, keepsOwnWords, taskTitle } from "./lib/interview";
 import {
   type Process,
   type ProcessDraft,
@@ -180,10 +180,9 @@ export default function App() {
           return;
         }
         // A long description that is one job is read from the split's own account of it.
-        if (!short && s) {
-          jobText = s.split.jobs[0].description;
-          title = s.split.jobs[0].title;
-        }
+        if (!short && s) jobText = s.split.jobs[0].description;
+        // Anything longer than a short sentence is titled by the split's name for the job, not pasted whole.
+        if (s && !title && !keepsOwnWords(text)) title = s.split.jobs[0].title;
       }
       const response = await (early ?? fetchPlan(jobText, ctl.signal));
       if (ctl.signal.aborted) return;
@@ -590,6 +589,7 @@ export default function App() {
             onView={(view) => navigate({ name: "result", code: resultCode(answers), view })}
             historyCount={history.length}
             system={part >= 0 && systemProcess && system ? systemNav(systemProcess, system.code, part, false) : undefined}
+            onDecided={() => isComplete(answers) && setHistory(upsertHistory(sessionId, answers))}
           />
         )}
         {route.name === "how" && <HowItWorks cta={cta} />}

@@ -5,10 +5,10 @@
 // returning it. It cannot be used as a general-purpose chat proxy.
 
 import { APIConnectionTimeoutError } from "openai";
+import { decidedRecommendation } from "./decide";
 import { type Blueprint, OK_EVERY_ACTION, buildBlueprint, outgoing } from "../src/lib/blueprint";
 import { detailLines } from "../src/lib/interview";
 import { type Answers, QUESTIONS, isComplete, said } from "../src/lib/questions";
-import { recommend } from "../src/lib/rules";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { MODEL_API_ID, buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
@@ -158,7 +158,7 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
   const answers = rawAnswers && typeof rawAnswers === "object" ? decodeAnswers(encodeAnswers(rawAnswers as Answers)) : null;
   if (!answers || !isComplete(answers)) return { status: 400, body: { error: "Send a complete set of answers from the guide." } };
 
-  const r = recommend(answers);
+  const r = decidedRecommendation(answers, env);
   // Tailor the design the owner is looking at: the AI design when one was made, the rules' otherwise.
   const bp = cachedDesign(answers, env) ?? buildBlueprint(r, answers);
   const template = buildStarterKit(r, bp, answers, cachedKitText(answers, env)).files.find((f) => f.path === "n8n/workflow.json");

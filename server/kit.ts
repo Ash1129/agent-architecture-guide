@@ -6,11 +6,12 @@
 // kit that passes is used; otherwise the template kit stays.
 
 import { type Blueprint, buildBlueprint } from "../src/lib/blueprint";
+import { decidedRecommendation } from "./decide";
 import { detailLines } from "../src/lib/interview";
 import { kitProblems } from "../src/lib/kitcheck";
 import { type KitResponse, type KitText, checkKitText } from "../src/lib/kittext";
 import { type Answers, QUESTIONS, isComplete, said } from "../src/lib/questions";
-import { type Recommendation, recommend } from "../src/lib/rules";
+import type { Recommendation } from "../src/lib/rules";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
@@ -57,7 +58,7 @@ export const KIT_VERSION = fingerprint(INSTRUCTIONS);
 
 /** What the kit is written for: the design shown, the rules, and the chunks given to the model. */
 function contextFor(answers: Answers, env: KitEnv) {
-  const r = recommend(answers);
+  const r = decidedRecommendation(answers, env);
   const ai = cachedDesign(answers, env);
   const bp = ai ?? buildBlueprint(r, answers);
   const chunks = selectChunks(r, bp, undefined, MAX_CHUNKS, KIT_CHUNKS);

@@ -5,7 +5,8 @@ import { type SystemNav, StudioShell } from "../components/StudioShell";
 import { btn } from "../components/ui";
 import { type Blueprint, buildBlueprint, modelPlan } from "../lib/blueprint";
 import { AUTONOMY, TOOLS } from "../lib/catalog";
-import { type DesignState, fetchDesign, rememberedDesign } from "../lib/designs";
+import { type DesignState, fetchDecision, fetchDesign, rememberedDecision, rememberedDesign } from "../lib/designs";
+import type { Decision } from "../lib/decision";
 import { drawioSystemXml } from "../lib/exportxml";
 import { type Range, estimateCost, moneyRange, weeksRange } from "../lib/cost";
 import { AI_ENABLED } from "../lib/features";
@@ -22,23 +23,33 @@ import { SHORT_TITLE } from "./History";
 
 const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 
-/** Each job's design: the AI's when it has one (as its own result shows), the rules' until then. */
-function useDesigns(p: ProcessT): DesignState[] {
+/**
+ * Each job's decision and design: the AI's when it has made them (as the job's
+ * own result shows), the rules' until then. Each design waits for its job's
+ * decision, since it is drafted for that decision.
+ */
+function useDesigns(p: ProcessT): { design: DesignState; decision?: Decision }[] {
   const key = p.parts.map(resultCode).join("|");
-  const [states, setStates] = useState<DesignState[]>(() => p.parts.map(() => ({ status: "off" })));
+  const [states, setStates] = useState<{ design: DesignState; decision?: Decision }[]>(() => p.parts.map(() => ({ design: { status: "off" } })));
   useEffect(() => {
-    if (!AI_ENABLED) return setStates(p.parts.map(() => ({ status: "off" })));
+    if (!AI_ENABLED) return setStates(p.parts.map(() => ({ design: { status: "off" } })));
     const ctl = new AbortController();
     setStates(p.parts.map((a) => {
       const known = rememberedDesign(a);
-      return known ? { status: "ready", ...known } : { status: "loading" };
+      return { design: known ? { status: "ready", ...known } : { status: "loading" }, decision: rememberedDecision(a) };
     }));
     p.parts.forEach((a, i) => {
       if (rememberedDesign(a)) return;
-      const set = (s: DesignState) => setStates((all) => all.map((x, k) => (k === i ? s : x)));
-      fetchDesign(a, ctl.signal)
-        .then((d) => set({ status: "ready", ...d }))
-        .catch((e: Error) => !ctl.signal.aborted && set({ status: "failed", note: e.message }));
+      const set = (next: { design: DesignState; decision?: Decision }) => setStates((all) => all.map((x, k) => (k === i ? next : x)));
+      fetchDecision(a, ctl.signal)
+        .then((d) => d.decision, () => undefined)
+        .then((decision) => {
+          if (ctl.signal.aborted) return;
+          set({ design: { status: "loading" }, decision });
+          return fetchDesign(a, ctl.signal)
+            .then((d) => set({ design: { status: "ready", ...d }, decision }))
+            .catch((e: Error) => !ctl.signal.aborted && set({ design: { status: "failed", note: e.message }, decision }));
+        });
     });
     return () => ctl.abort();
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps -- the key stands for the parts
@@ -51,8 +62,8 @@ export function ProcessMap({ process: p, code, historyCount, onNew }: { process:
   const jobs = useMemo(
     () =>
       p.parts.map((a, i) => {
-        const r = recommend(a);
-        const d = designs[i];
+        const r = recommend(a, designs[i]?.decision);
+        const d = designs[i]?.design;
         const design: Blueprint = d?.status === "ready" ? d.blueprint : buildBlueprint(r, a);
         const plan = modelPlan(design);
         return {

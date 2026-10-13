@@ -280,7 +280,7 @@ function evaluator(g: Graph, r: Recommendation, a: Answers, producer: Draft, tra
   const check = g.add({
     id: "check",
     kind: "decision",
-    engine: pickModel("checker", a),
+    engine: pickModel("checker", a, r.modelPicks),
     track,
     name: "Check against your checklist",
     label: "Checker model",
@@ -422,7 +422,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const router = g.add({
         id: "router",
         kind: "decision",
-        engine: pickModel("router", a),
+        engine: pickModel("router", a, r.modelPicks),
         name: "Sort by type",
         label: "Small, fast model",
         what: "A quick AI step reads each item and decides which type it is, so it can go down the right path.",
@@ -439,7 +439,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const typeA = g.add({
         id: "typeA",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         track: 0,
         name: "Most common type",
         label: routeLabel,
@@ -452,7 +452,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const typeB = g.add({
         id: "typeB",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         track: 1,
         name: "Other known types",
         label: routeLabel,
@@ -486,7 +486,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
         g.add({
           id: `part${x}`,
           kind: "ai",
-          engine: pickModel(voting ? "attempt" : "worker", a),
+          engine: pickModel(voting ? "attempt" : "worker", a, r.modelPicks),
           track: i,
           name: voting ? `Independent attempt ${x}` : `Section ${x}`,
           label: aiWhere,
@@ -521,7 +521,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const step1 = g.add({
         id: "step1",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         name: "First AI step",
         label: aiWhere,
         what: `The first part of the job, for example reading the input and producing a draft.${playbookNote}${refNote}`,
@@ -549,7 +549,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const step2 = g.add({
         id: "step2",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         name: "Second AI step",
         label: aiWhere,
         what: "The next part of the job builds on the checked draft, for example refining, translating or formatting it.",
@@ -582,7 +582,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
     entry = g.add({
       id: "router",
       kind: "decision",
-      engine: pickModel("router", a),
+      engine: pickModel("router", a, r.modelPicks),
       name: "Routine or open-ended?",
       label: "Small, fast model",
       what: "A quick AI step separates routine requests, which follow a fixed path, from the open-ended ones that need an agent.",
@@ -644,7 +644,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       id: "agent",
       kind: "ai",
       track: offset,
-      engine: pickModel("agent", a),
+      engine: pickModel("agent", a, r.modelPicks),
       name: "Agent works the case",
       label: `Agent in ${home}`,
       gates: [{ kind: "stop", text: "Stops at goal or step limit" }],
@@ -662,7 +662,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
     const coord = g.add({
       id: "coord",
       kind: "ai",
-      engine: pickModel("coordinator", a),
+      engine: pickModel("coordinator", a, r.modelPicks),
       track: band(offset, offset + 2 - (routed ? 1 : 0)),
       name: "Coordinator plans",
       label: `Agent in ${home}`,
@@ -684,7 +684,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       g.add({
         id: `spec${x}`,
         kind: "ai",
-        engine: pickModel("specialist", a),
+        engine: pickModel("specialist", a, r.modelPicks),
         track: offset + i,
         name: material ? `Covers area ${x}` : `Specialist ${x}`,
         label: material ? "Own slice of material" : "Own brief and tools",
@@ -701,7 +701,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
     const combine = g.add({
       id: "combine",
       kind: "ai",
-      engine: pickModel("coordinator", a),
+      engine: pickModel("coordinator", a, r.modelPicks),
       track: band(offset, offset + count - 1),
       name: "Coordinator combines",
       label: `Agent in ${home}`,
@@ -779,7 +779,7 @@ export function buildSimplerBlueprint(r: Recommendation, raw: Answers): Blueprin
       id: "agent",
       kind: "ai",
       track: 0,
-      engine: pickModel("agent", a),
+      engine: pickModel("agent", a, r.modelPicks),
       name: "One agent, every role",
       label: `Agent in ${home}`,
       gates: [{ kind: "stop", text: "Stops at goal or step limit" }],
@@ -862,7 +862,7 @@ export function buildSimplerBlueprint(r: Recommendation, raw: Answers): Blueprin
     const prompt = g.add({
       id: "prompt",
       kind: "ai",
-      engine: pickModel("worker", a),
+      engine: pickModel("worker", a, r.modelPicks),
       name: id === "S3" ? "Claude follows your playbook" : "One well-written prompt",
       label: id === "S3" ? "Claude + written playbook" : "Claude, examples attached",
       what:

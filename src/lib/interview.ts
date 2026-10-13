@@ -168,14 +168,28 @@ export const MAX_DESCRIPTION = 1000;
 /** The longest task title, as carried in answers and share links. */
 export const MAX_TASK_TITLE = 200;
 
+/** A description this short, in one sentence, is already a good title, so it's kept in the owner's own words. */
+export const TITLE_AS_IS = 90;
+
+/** Whether a description can be the task's title as it stands: short, and one sentence. */
+export function keepsOwnWords(description: string): boolean {
+  const text = description.replace(/\s+/g, " ").trim();
+  return text.length <= TITLE_AS_IS && !/[.!?]\s+\S/.test(text);
+}
+
 /**
- * The task title for a description: the description itself when it's short
- * enough, otherwise the AI's one-sentence summary of it.
+ * The task title for a description: the description itself when it's a short,
+ * single sentence; otherwise the AI's one-sentence summary of it; without one,
+ * its first sentence. A title, not the whole description, is what History and
+ * every result show.
  */
 export function taskTitle(description: string, plan?: InterviewPlan): string {
   const text = description.replace(/\s+/g, " ").trim();
-  if (text.length <= MAX_TASK_TITLE) return text;
-  return plan?.summary?.trim() || `${text.slice(0, MAX_TASK_TITLE - 1).trimEnd()}…`;
+  if (keepsOwnWords(text)) return text;
+  const summary = plan?.summary?.trim();
+  if (summary && summary.length <= MAX_TASK_TITLE) return summary;
+  const first = text.split(/(?<=[.!?])\s+/)[0];
+  return first.length <= MAX_TASK_TITLE ? first : `${first.slice(0, MAX_TASK_TITLE - 1).trimEnd()}…`;
 }
 
 /**

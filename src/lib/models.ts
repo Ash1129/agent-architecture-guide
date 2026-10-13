@@ -135,18 +135,26 @@ export function usesOpenWeight(a: Answers): boolean {
   return a.location === "restricted" || a.location === "independence" || (a.location === "residency" && a.team === "large");
 }
 
-export function pickModel(role: Role, a: Answers): Engine {
+/**
+ * The model for a kind of AI step. `picks`: the AI's choices, when it made the
+ * decision (already checked against what's available); otherwise the guide's
+ * starting picks.
+ */
+export function pickModel(role: Role, a: Answers, picks?: Partial<Record<Role, ModelId>>): Engine {
   const rule = MODEL_RULES.find((x) => x.role === role)!;
   const open = usesOpenWeight(a);
   const sensitive = !!a.risks?.some((x) => x === "visible" || x === "irreversible" || x === "personal");
   let id: ModelId = open ? rule.open : rule.pick;
 
   if (role === "checker" && sensitive) id = open ? "openLarge" : "opus";
+  const ruled = id;
+  if (picks?.[role]) id = picks[role]!;
 
   const m = MODELS[id];
   const top = open ? MODELS.openLarge : MODELS.opus;
   const inRegion = a.location === "residency" && !open;
   const why =
+    (id !== ruled ? `Chosen by AI for this step, weighing quality, cost and speed (the guide's starting pick is ${MODELS[ruled].name.split(",")[0]}). ` : "") +
     rule.why +
     (role === "checker" && sensitive ? " Mistakes here would be visible or costly, so the checker gets a stronger model." : "") +
     (!open && a.volume === "high" && (role === "router" || role === "attempt" || role === "worker" || role === "specialist") ? ` ${HAIKU_NOTE}` : "") +

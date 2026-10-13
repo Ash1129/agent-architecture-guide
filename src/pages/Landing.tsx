@@ -1,6 +1,6 @@
 import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
-import { useState, type FormEvent } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import workspaceImage from "../assets/workspace.jpg";
 import { BrandMark, BrandWord } from "../components/Brand";
 import { AI_ENABLED } from "../lib/features";
@@ -33,6 +33,14 @@ export function Landing({
   const reduce = useReducedMotion();
   const [problem, setProblem] = useState("");
   const ready = problem.trim().length > 0;
+  // The box grows with the description, up to its maximum height, so what's typed stays in view.
+  const box = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [problem]);
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
     if (ready) onTask(problem.replace(/\s+/g, " ").trim());
@@ -71,6 +79,7 @@ export function Landing({
           <div className="problem-field">
             <MagnifyingGlass size={20} aria-hidden />
             <textarea
+              ref={box}
               aria-label="Your business problem"
               placeholder="What business problem would you like to solve?"
               rows={1}

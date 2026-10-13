@@ -1,8 +1,9 @@
-import { ArrowLeft, ArrowRight, CaretDown, Check, CircleNotch, PencilSimple, Sparkle } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, CaretDown, Check, PencilSimple, Sparkle } from "@phosphor-icons/react";
 import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { PlanState } from "../App";
 import { TaskInput } from "../components/TaskInput";
+import { ADAPTING, READING, Thinking } from "../components/Thinking";
 import { AI_ENABLED } from "../lib/features";
 import { type Detail, type DetailQuestion, type InterviewPlan, adaptQuestion } from "../lib/interview";
 import {
@@ -111,13 +112,9 @@ export function Guide({ qid, answers, editing, direction, plan, reading, describ
 }
 
 function Adapting({ task, reading, job, onUseStandard }: { task: string; reading?: string; job?: { index: number; total: number }; onUseStandard: () => void }) {
-  const reduce = useReducedMotion();
   return (
     <div role="status" aria-live="polite">
-      <p className="flex items-center gap-2 text-[15px] font-medium text-accent">
-        <CircleNotch size={18} aria-hidden className={reduce ? "" : "animate-spin"} />
-        {reading ? "Reading your description" : "Adapting the questions to your task"}
-      </p>
+      <Thinking words={reading ? READING : ADAPTING} />
       {reading ? (
         <>
           <h1 className="survey-title mt-4">{job ? `Job ${job.index + 1} of ${job.total}: ${task}` : "Your problem, in your words."}</h1>

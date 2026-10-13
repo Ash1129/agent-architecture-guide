@@ -65,13 +65,51 @@ export type DesignContext = { r: Recommendation; a: Answers; baseline: Blueprint
 /** A step id as written, tidied: models often use underscores or spaces, which read the same as hyphens. */
 const tidyId = (v: unknown) => (typeof v === "string" ? v.trim().replace(/[_\s]+/g, "-") : v);
 
+/** A label shortened at a word boundary to fit, marked with an ellipsis. */
+function shorten(v: string, max: number): string {
+  const t = v.replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
+/**
+ * Corrects the slips models make most often, before the checks, where the
+ * fix is mechanical and can't weaken the design: a "tool" step that no AI
+ * step uses is the plain fetch or save step its own check describes, so it
+ * becomes a fixed, scripted step (unless it carries a safeguard, which must
+ * stay on a tool step); and an over-long branch label is shortened. Leaves
+ * the draft itself untouched.
+ */
+export function tidyDraft(raw: unknown): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const d = raw as { steps?: unknown; edges?: unknown };
+  if (!Array.isArray(d.steps) || !Array.isArray(d.edges)) return raw;
+  const steps = d.steps.map((s) => (s && typeof s === "object" ? { ...(s as Record<string, unknown>) } : s)) as Record<string, unknown>[];
+  const edges = d.edges.map((e) => (e && typeof e === "object" ? { ...(e as Record<string, unknown>) } : e)) as Record<string, unknown>[];
+  const kindOf = new Map(steps.map((s) => [tidyId(s?.id), s?.kind]));
+  for (const s of steps) {
+    if (s?.kind !== "tool") continue;
+    const id = tidyId(s.id);
+    const usedByAi = edges.some((e) => tidyId(e?.to) === id && kindOf.get(tidyId(e?.from)) === "ai");
+    const guarded = Array.isArray(s.gates) && s.gates.length > 0;
+    if (usedByAi || guarded) continue;
+    s.kind = "fixed";
+    s.method = FIXED_METHODS.includes(s.method as AlgorithmId) ? s.method : "scripted";
+    delete s.role;
+  }
+  for (const e of edges) if (e && typeof e.label === "string") e.label = shorten(e.label, LIMITS.edgeLabel);
+  return { ...d, steps, edges };
+}
+
 /**
  * Checks a draft against the hard limits and, if it passes, turns it into a
  * blueprint. Returns every problem found, worded so the model can fix them.
  */
 export function checkDesign(raw: unknown, ctx: DesignContext): { blueprint?: Blueprint; problems: string[] } {
   const p: string[] = [];
-  const d = raw as Partial<DesignDraft> | null;
+  const d = tidyDraft(raw) as Partial<DesignDraft> | null;
   if (!d || typeof d !== "object" || !Array.isArray(d.steps) || !Array.isArray(d.edges)) {
     return { problems: ['The design must be an object with "steps" and "edges" arrays.'] };
   }
@@ -282,7 +320,7 @@ function toBlueprint(d: DesignDraft, steps: DraftStep[], edges: BEdge[], order: 
     .map((s) => {
       const b = base.get(s.id);
       const engine =
-        s.kind === "start" ? b?.engine : s.role ? pickModel(s.role, a) : s.method ? algorithm(s.method) : undefined;
+        s.kind === "start" ? b?.engine : s.role ? pickModel(s.role, a, ctx.r.modelPicks) : s.method ? algorithm(s.method) : undefined;
       return {
         id: s.id,
         step: 0,

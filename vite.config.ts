@@ -8,6 +8,7 @@ import type { IncomingMessage } from "node:http";
  * from .env on the server side only:
  *   POST /api/interview  adapts the guide's questions to a task
  *   POST /api/split      reads a described problem into one or more jobs
+ *   POST /api/decide     makes the main choices for a finished set of answers
  *   POST /api/design     drafts the architecture for a finished set of answers
  *   POST /api/kit        writes the task-specific text of the starter kit
  *   POST /api/tailor     tailors the n8n workflow to a finished design
@@ -33,6 +34,10 @@ function aiApi(): Plugin {
         "/api/tailor": async (body) => {
           const [{ handleTailor }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/tailor.ts"), server.ssrLoadModule("/server/cache.ts")]);
           return handleTailor(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+        },
+        "/api/decide": async (body) => {
+          const [{ handleDecide }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/decide.ts"), server.ssrLoadModule("/server/cache.ts")]);
+          return handleDecide(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
         },
         "/api/design": async (body) => {
           const [{ handleDesign }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/design.ts"), server.ssrLoadModule("/server/cache.ts")]);

@@ -139,6 +139,13 @@ describe("a problem described on the start page", () => {
     expect(taskTitle(long).length).toBeLessThanOrEqual(200);
   });
 
+  it("never uses a paragraph as the title: two sentences, or a long one, get the summary or the first sentence", () => {
+    const clinic = "We run a small dental clinic. Patients email us all day to book, move or cancel appointments.";
+    expect(taskTitle(clinic, validatePlan(goodPlan()))).toBe("Reply to routine customer emails.");
+    expect(taskTitle(clinic)).toBe("We run a small dental clinic.");
+    expect(taskTitle("Answer routine customer emails. Fast.")).toBe("Answer routine customer emails.");
+  });
+
   it("reads the whole description, not just its first 200 characters", async () => {
     const f = fakeModel(JSON.stringify(goodPlan()));
     const description = `${"We answer customer emails about orders. ".repeat(6)}Every reply is checked by a person before it goes out.`;

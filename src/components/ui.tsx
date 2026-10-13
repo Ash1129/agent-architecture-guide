@@ -66,6 +66,21 @@ export function Term({ id, children }: { id: keyof typeof GLOSSARY; children?: R
 }
 
 export function BasisLabel({ basis }: { basis: Basis }) {
+  if (basis.kind === "ai") {
+    return basis.chunks.length ? (
+      <span className="text-muted">
+        Knowledge base:{" "}
+        {basis.chunks.map((c, i) => (
+          <span key={c.id}>
+            {i > 0 && "; "}
+            <span title={c.id}>{c.title}</span>
+          </span>
+        ))}
+      </span>
+    ) : (
+      <span className="text-muted">From the knowledge base</span>
+    );
+  }
   if (basis.kind === "design") {
     return (
       <a href={href({ name: "how", section: "design-choices" })} className="text-muted underline-offset-4 hover:underline">
@@ -98,8 +113,9 @@ export function WhyList({ items, className = "" }: { items: Why[]; className?: s
           <span aria-hidden className="mt-[9px] h-px w-3 bg-line-strong" />
           <div>
             <p className="text-[15px] leading-relaxed text-ink">{w.text}</p>
+            {w.differs && <p className="mt-1 text-[13.5px] leading-snug text-muted">{w.differs}</p>}
             <p className="mt-0.5 text-[13px] leading-snug">
-              <span className="font-mono text-[12px] text-muted">Rule {w.ruleId}</span>
+              <span className="font-mono text-[12px] text-muted">{w.ruleId === "AI" ? "AI decision" : `Rule ${w.ruleId}`}</span>
               <span className="text-muted"> / </span>
               <BasisLabel basis={w.basis} />
             </p>

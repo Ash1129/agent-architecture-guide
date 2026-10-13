@@ -1,8 +1,14 @@
-// The decision rules. No AI model generates a recommendation: each rule below
-// has a plain-English condition, a plain-English effect, a basis (a source
-// from AI Assignment 4, or a design choice made for this guide) and the
-// knowledge-base chunks that back it (see src/lib/knowledge.ts). Rules run in
-// order, so later rules can refine what earlier ones decided.
+// The decision rules. Each rule below has a plain-English condition, a
+// plain-English effect, a basis (a source from AI Assignment 4, or a design
+// choice made for this guide) and the knowledge-base chunks that back it (see
+// src/lib/knowledge.ts). Rules run in order, so later rules can refine what
+// earlier ones decided.
+//
+// With AI on, a model makes the main choices instead (src/lib/decision.ts),
+// using the rules' recommendation as one input. recommend() then takes that
+// decision: each choice replaces the rules' as soon as the rules have made
+// theirs, so the rules that follow (gotchas, first steps, the simpler start)
+// react to the AI's choice. The rules' limits (autonomy caps) still apply.
 
 import {
   type Answers,
@@ -16,15 +22,21 @@ import {
 import {
   AUTONOMY,
   LAST_REVIEWED,
+  TOOLS,
+  TOPOLOGIES,
   type AutonomyLevel,
   type ToolId,
   type TopologyId,
 } from "./catalog";
 import type { ChunkId } from "./knowledge";
 import type { SourceId } from "./sources";
+import type { Decision, DecisionField, HostingId } from "./decision";
+import type { ModelId, Role } from "./models";
 
-export type Basis = { kind: "source"; sources: SourceId[] } | { kind: "design" };
-export type Why = { text: string; ruleId: string; basis: Basis };
+/** "ai": a choice the AI made, grounded in these knowledge-base chunks. */
+export type Basis = { kind: "source"; sources: SourceId[] } | { kind: "design" } | { kind: "ai"; chunks: { id: ChunkId; title: string }[] };
+/** `differs`: where an AI choice departs from the rules, what the rules suggested. */
+export type Why = { text: string; ruleId: string; basis: Basis; differs?: string };
 export type Approach = "automation" | "workflow" | "agent" | "multi";
 
 export type ToolPick = { tool: ToolId; role: string; core: boolean; why: Why[] };
@@ -40,11 +52,16 @@ export type Recommendation = {
   /** `also`: reasons from rules that build on the hosting choice rather than make it (H6). */
   hosting: { title: string; body: string; why: Why; also?: Why[] };
   models: { needed: boolean; capabilities: Capability[]; process: string[]; examples: string };
-  autonomy: { level: AutonomyLevel; why: Why[]; checkpoints: string[]; guardrails: string[] };
+  /** `cap`: the highest level the answers' risks allow; any decision stays at or below it. */
+  autonomy: { level: AutonomyLevel; why: Why[]; checkpoints: string[]; guardrails: string[]; cap?: AutonomyLevel };
   simpler: { title: string; body: string; why: Why };
   gotchas: Gotcha[];
   firstSteps: string[];
   fired: string[];
+  /** The model the AI chose for each kind of AI step, when it decided. */
+  modelPicks?: Partial<Record<Role, ModelId>>;
+  /** When the AI made the main choices: its summary, shortlist and reasons. */
+  decided?: Pick<Decision, "summary" | "shortlist" | "reasons">;
 };
 
 type Draft = Omit<Recommendation, "approach" | "topology" | "hosting" | "simpler" | "autonomy"> & {
@@ -52,7 +69,9 @@ type Draft = Omit<Recommendation, "approach" | "topology" | "hosting" | "simpler
   topology: { primary?: TopologyId; addOns: TopologyId[]; why: Why[] };
   hosting?: Recommendation["hosting"];
   simpler?: Recommendation["simpler"];
-  autonomy: { level?: AutonomyLevel; why: Why[]; checkpoints: string[]; guardrails: string[] };
+  autonomy: { level?: AutonomyLevel; why: Why[]; checkpoints: string[]; guardrails: string[]; cap?: AutonomyLevel };
+  /** The reasons behind each autonomy cap: limits, which an AI decision keeps. */
+  capWhy: Why[];
 };
 
 export type RuleGroup =
@@ -103,6 +122,8 @@ function addTool(d: Draft, tool: ToolId, role: string, why: Why, isCore = false)
 }
 
 function cap(d: Draft, max: AutonomyLevel, why: Why) {
+  if ((d.autonomy.cap ?? 4) > max) d.autonomy.cap = max;
+  d.capWhy.push(why);
   if ((d.autonomy.level ?? 4) > max) {
     d.autonomy.level = max;
     d.autonomy.why.push(why);
@@ -1439,29 +1460,134 @@ export const RULES: Rule[] = [
 
 // ---------------------------------------------------------------- engine
 
-export function recommend(raw: Answers): Recommendation {
+const emptyDraft = (task: string): Draft => ({
+  task,
+  topology: { addOns: [], why: [] },
+  tools: [],
+  hybrid: [],
+  models: { needed: false, capabilities: [], process: [], examples: "" },
+  autonomy: { why: [], checkpoints: [], guardrails: [] },
+  gotchas: [],
+  firstSteps: [],
+  fired: [],
+  capWhy: [],
+});
+
+/** Applies the named rules to a scratch draft, for the wording of an option the AI chose. */
+function scratch(a: Answers, ids: string[]): Draft {
+  const d = emptyDraft("");
+  for (const id of ids) {
+    const rule = RULES.find((x) => x.id === id)!;
+    rule.apply(d, a, (text) => ({ text, ruleId: rule.id, basis: rule.basis }));
+  }
+  return d;
+}
+
+const APPROACH_RULE: Record<Approach, string> = { automation: "A1", workflow: "A2", agent: "A3", multi: "A4" };
+const HOSTING_RULES: Record<HostingId, string[]> = {
+  cloud: ["H5"],
+  "in-region": ["H3"],
+  "self-hosted": ["H2"],
+  available: ["H1"],
+  "cloud-then-local": ["H4"],
+  "available-own-hardware": ["H1", "H6"],
+};
+/** The plain name of each approach, for "the rules suggested…". */
+export const APPROACH_NAME: Record<Approach, string> = {
+  automation: "plain automation with no AI",
+  workflow: "a workflow with AI steps",
+  agent: "one AI agent",
+  multi: "a coordinator with specialist agents",
+};
+
+/** An approach's title, summary and agent count, in the guide's words. */
+export function approachOption(id: Approach, a: Answers): Omit<Recommendation["approach"], "why"> {
+  const { why: _why, ...rest } = scratch(a, [APPROACH_RULE[id]]).approach!;
+  return rest;
+}
+
+/** A hosting option's title and advice, in the guide's words. */
+export function hostingOption(id: HostingId, a: Answers): { title: string; body: string } {
+  const h = scratch(a, HOSTING_RULES[id]).hosting!;
+  return { title: h.title, body: h.body };
+}
+
+/** The simpler way to start that fits an approach. */
+function simplerFor(approach: Approach, a: Answers): Recommendation["simpler"] {
+  const id = approach === "automation" ? "S5" : approach === "workflow" ? (a.trigger === "manual" ? "S4" : "S3") : approach === "agent" ? "S2" : "S1";
+  return scratch(a, [id]).simpler!;
+}
+
+/**
+ * The recommendation for a set of answers: the rules' own, or, given an AI
+ * decision (already checked by checkDecision), the AI's choices with the
+ * rules' consequences and limits around them.
+ */
+export function recommend(raw: Answers, decision?: Decision): Recommendation {
   if (!isComplete(raw)) {
     throw new Error("Incomplete answers: the guide needs every question answered before recommending.");
   }
   const a = effectiveAnswers(raw);
-  const d: Draft = {
-    task: (raw.task ?? "").trim(),
-    topology: { addOns: [], why: [] },
-    tools: [],
-    hybrid: [],
-    models: { needed: false, capabilities: [], process: [], examples: "" },
-    autonomy: { why: [], checkpoints: [], guardrails: [] },
-    gotchas: [],
-    firstSteps: [],
-    fired: [],
+  const d = emptyDraft((raw.task ?? "").trim());
+
+  // An AI reason, noting what the rules suggested when the AI chose differently.
+  const ai = (field: DecisionField, rulesSaid?: string): Why => ({
+    text: decision!.reasons[field].text,
+    ruleId: "AI",
+    basis: { kind: "ai", chunks: decision!.reasons[field].kb },
+    ...(rulesSaid ? { differs: `The rules suggested ${rulesSaid}.` } : {}),
+  });
+  // Each AI choice replaces the rules' as soon as the rules have made theirs.
+  const force = (group: RuleGroup) => {
+    if (!decision) return;
+    if (group === "Approach") {
+      const rules = d.approach?.id;
+      d.approach = { ...approachOption(decision.approach, a), why: [ai("approach", rules && rules !== decision.approach ? APPROACH_NAME[rules] : undefined)] };
+    } else if (group === "Topology") {
+      const rules = [d.topology.primary, ...d.topology.addOns].filter(Boolean).map((t) => TOPOLOGIES[t as TopologyId].name).join(" + ");
+      const chosen = [decision.topology.primary, ...decision.topology.addOns].map((t) => TOPOLOGIES[t].name).join(" + ");
+      d.topology = { primary: decision.topology.primary, addOns: [...decision.topology.addOns], why: [ai("topology", rules && rules !== chosen ? rules.toLowerCase() : undefined)] };
+    } else if (group === "Tools") {
+      const rulesCore = core(d);
+      const keep = rulesCore === decision.tools[0].tool;
+      d.tools = decision.tools.map((t, i) => {
+        const before = d.tools.find((x) => x.tool === t.tool);
+        return {
+          tool: t.tool,
+          role: t.role || before?.role || "",
+          core: i === 0,
+          why: i === 0 ? [ai("tools", rulesCore && !keep ? `${TOOLS[rulesCore].name} as the main tool` : undefined)] : (before?.why ?? []),
+        };
+      });
+      if (!keep) d.hybrid = [];
+    } else if (group === "Hosting") {
+      const rules = d.hosting?.title;
+      const chosen = hostingOption(decision.hosting, a);
+      d.hosting = { ...chosen, why: ai("hosting", rules && rules !== chosen.title ? `"${rules}"` : undefined) };
+    } else if (group === "Models") {
+      d.models.needed = decision.approach !== "automation";
+      if (!d.models.needed) d.models = { needed: false, capabilities: [], process: [], examples: "" };
+    } else if (group === "Autonomy") {
+      // The rules' caps are limits: the AI's level never goes above them.
+      const level = Math.min(decision.autonomy, d.autonomy.cap ?? 4) as AutonomyLevel;
+      const rules = d.autonomy.level;
+      d.autonomy.level = level;
+      d.autonomy.why = [ai("autonomy", rules && rules !== level ? `level ${rules}` : undefined), ...d.capWhy];
+    } else if (group === "Simpler start") {
+      d.simpler = simplerFor(decision.approach, a);
+    }
   };
 
+  let group: RuleGroup | undefined;
   for (const rule of RULES) {
+    if (group && rule.group !== group) force(group);
+    group = rule.group;
     if (!rule.when(a, d)) continue;
     d.fired.push(rule.id);
     const why = (text: string): Why => ({ text, ruleId: rule.id, basis: rule.basis });
     rule.apply(d, a, why);
   }
+  if (group) force(group);
 
   if (!d.approach || !d.topology.primary || !d.hosting || !d.simpler || !d.autonomy.level) {
     throw new Error("Incomplete answers: the guide needs every question answered before recommending.");
@@ -1471,13 +1597,17 @@ export function recommend(raw: Answers): Recommendation {
   d.tools.sort((x, y) => Number(y.core) - Number(x.core));
   d.gotchas.sort((x, y) => x.priority - y.priority);
 
+  const { capWhy: _capWhy, ...rest } = d;
   return {
-    ...d,
+    ...rest,
     approach: d.approach,
     topology: { primary: d.topology.primary, addOns: d.topology.addOns, why: d.topology.why },
     hosting: d.hosting,
     simpler: d.simpler,
     autonomy: { ...d.autonomy, level: d.autonomy.level },
+    ...(decision
+      ? { modelPicks: decision.models, decided: { summary: decision.summary, shortlist: decision.shortlist, reasons: decision.reasons } }
+      : {}),
   };
 }
 

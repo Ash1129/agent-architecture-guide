@@ -79,10 +79,12 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
         <p className="mt-5 max-w-[60ch] text-[18px] leading-relaxed text-muted">
           {AI_ENABLED ? (
             <>
-              Every recommendation starts from {RULES.length} fixed rules written from the AI Assignment 4 research. An AI model also
-              reads your description, words the questions in your terms, and drafts the design and starter kit for your task, but
-              every draft is checked against these rules, and if it fails, the rules' own design is what you see. You can check every
-              rule below.
+              An AI model makes the main choices for your task: whether it needs AI or agents at all, the shape of the work, the tools,
+              where it runs, how much it does on its own, the model for each step, and a shortlist. It decides from the knowledge
+              base, weighing output quality, cost and speed, with what the {RULES.length} fixed rules below would choose as one input.
+              The rules also set its limits: it can't pick a provider that isn't available where you operate, keep data anywhere it
+              mustn't go, or give the system more autonomy than your risks allow. Every result says where the AI departs from the
+              rules, and the rules' version is one click away.
             </>
           ) : (
             <>
@@ -95,9 +97,11 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
 
       <div className="mt-12 grid gap-x-10 gap-y-8 border-t border-line pt-10 md:grid-cols-3">
         <div>
-          <h2 className="text-[16px] font-semibold text-ink">Rules, not a black box</h2>
+          <h2 className="text-[16px] font-semibold text-ink">{AI_ENABLED ? "Decisions you can check" : "Rules, not a black box"}</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
-            Each rule reads as "if this, then that". Your result lists the rules it used, and each reason links back here.
+            {AI_ENABLED
+              ? "Each AI choice comes with its reasons and the research behind them, and says what the rules suggested where it differs. Each rule reads as \"if this, then that\"."
+              : "Each rule reads as \"if this, then that\". Your result lists the rules it used, and each reason links back here."}
           </p>
         </div>
         <div>
