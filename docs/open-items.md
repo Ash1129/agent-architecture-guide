@@ -93,6 +93,11 @@ Most of this landed as general rules (see Done). What remains:
 
 ## Done
 
+- (this commit) The rules' version of a result no longer waits for the AI
+  version's build, so its kit (often a different main tool) can be opened;
+  when the AI's main tool differs from the rules', the shortlist shows the
+  rules' tool as the alternative; the switch names where it leads ("See the
+  rules' version, built in Hermes Agent").
 - `e56d5f3` An AI design's over-long step text is shortened at a word
   boundary instead of failing the design, and a missing field is named.
 - `279381b` **Decisions about people, and reviews that

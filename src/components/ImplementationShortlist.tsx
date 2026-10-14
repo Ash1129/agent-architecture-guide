@@ -9,8 +9,8 @@ import { BasisLabel } from './ui';
  * tool plus at most one alternative it judged worth weighing); otherwise the
  * rules' bounded comparisons. Either way, shown only when there's a real choice.
  */
-export function ImplementationShortlist({ answers, r }: { answers: Answers; r?: Recommendation }) {
-  if (r?.decided) return <DecidedShortlist r={r} />;
+export function ImplementationShortlist({ answers, r, rules }: { answers: Answers; r?: Recommendation; rules?: Recommendation }) {
+  if (r?.decided) return <DecidedShortlist r={r} rules={rules} />;
   const result = shortlist(answers);
   // One candidate that is the main tool only repeats the recommendation above, so the section stays out of the way.
   if (!shortlistAddsSomething(result, answers)) return null;
@@ -34,9 +34,15 @@ export function ImplementationShortlist({ answers, r }: { answers: Answers; r?: 
   </section>;
 }
 
-function DecidedShortlist({ r }: { r: Recommendation }) {
+function DecidedShortlist({ r, rules }: { r: Recommendation; rules?: Recommendation }) {
   const d = r.decided!;
-  if (d.shortlist.length < 2) return null;
+  const core = (x: Recommendation) => x.tools.find((t) => t.core)!;
+  // When the AI chose a different main tool from the rules and named no alternative, the rules' tool is the alternative worth seeing.
+  const rulesTool = rules && core(rules).tool !== core(r).tool && !d.shortlist.some((c) => c.tool === core(rules).tool) ? core(rules) : undefined;
+  const shortlist = rulesTool
+    ? [...d.shortlist.slice(0, 1), { tool: rulesTool.tool, reason: `The guide's rules' choice: ${rulesTool.why.map((w) => w.text).join(" ")}`, tradeoff: "Switch to the rules' version (the link under the title) to see its design and build its kit." }]
+    : d.shortlist;
+  if (shortlist.length < 2) return null;
   // Whichever option is built, the design's safeguards and hosting come with it.
   const obligations = [...r.autonomy.checkpoints, ...r.autonomy.guardrails, `Keep where it runs: ${r.hosting.title}. ${r.hosting.body}`];
   return <section className="studio-section" aria-labelledby="shortlist-title">
@@ -47,7 +53,7 @@ function DecidedShortlist({ r }: { r: Recommendation }) {
       {d.reasons.shortlist.kb.length > 0 && <> <BasisLabel basis={{ kind: 'ai', chunks: d.reasons.shortlist.kb }} /></>}
     </p>
     <div className="mt-5 grid gap-4 md:grid-cols-2">
-      {d.shortlist.map((c, i) => <article key={c.tool} className="rounded-xl border border-line p-5">
+      {shortlist.map((c, i) => <article key={c.tool} className="rounded-xl border border-line p-5">
         <h3 className="font-semibold">{i === 0 ? 'Recommended' : 'Alternative'}: {TOOLS[c.tool].name}</h3>
         {c.reason && <p className="mt-3">{c.reason}</p>}
         {c.tradeoff && <p className="mt-3 text-muted">{c.tradeoff}</p>}

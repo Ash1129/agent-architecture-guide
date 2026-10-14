@@ -302,7 +302,8 @@ function DecisionNote({
           <p>
             <Sparkle size={14} weight="fill" aria-hidden className="mr-1.5 inline align-[-2px] text-accent" />
             Decided by AI{decision.source === "cache" ? " (saved from an earlier run)" : ""} from the knowledge base, weighing quality, cost and speed, within the guide's limits.{" "}
-            {diffs.length ? "Where it differs from the rules:" : "It agrees with the rules on every main choice."} {toggle("Compare with the rules", true)}
+            {diffs.length ? "Where it differs from the rules:" : "It agrees with the rules on every main choice."}{" "}
+            {toggle(ai && core(ai) !== core(rules) ? `See the rules' version, built in ${core(rules)}` : "See the rules' version", true)}
           </p>
           {diffs.length > 0 && (
             <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
@@ -729,8 +730,10 @@ function Ready({
     const t = window.setTimeout(() => setReadyNote(false), 12000);
     return () => window.clearTimeout(t);
   }, [readyNote]);
+  // The rules' version needs no AI to build, so it never waits for the AI version's tools.
+  const lockedBuild = building && !showRules;
   const go = (v: ResultView) => {
-    if (v === "build" && building) return;
+    if (v === "build" && lockedBuild) return;
     if (v === "build") setReadyNote(false);
     onView(v);
   };
@@ -957,7 +960,7 @@ function Ready({
         </div>
       </section>
 
-      <ImplementationShortlist answers={answers} r={r} />
+      <ImplementationShortlist answers={answers} r={r} rules={rulesR} />
 
       <section className="studio-section" aria-labelledby="operates-title">
         <div className="section-kicker studio-caption">02 — Behind the solution</div>
@@ -1429,7 +1432,7 @@ function Ready({
   );
 
   return (
-    <StudioShell view={view} onView={go} historyCount={historyCount} building={building} system={system}>
+    <StudioShell view={view} onView={go} historyCount={historyCount} building={lockedBuild} system={system}>
       {walking && <Walkthrough bp={bp} onClose={endWalk} />}
       <main id="main" className={`studio-page${view === "workflow" ? " is-wide" : ""}`}>
         {/* A new view swaps in at once and fades up; it never waits on the old one to leave. */}
@@ -1437,7 +1440,7 @@ function Ready({
           {view === "solution" && solutionView}
           {view === "workflow" && workflowView}
         </m.div>
-        {view === "build" && building && (
+        {view === "build" && lockedBuild && (
           <section className="build-pending" role="status" aria-live="polite">
             <div className="section-kicker studio-caption">Your build brief</div>
             <h1>
