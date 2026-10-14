@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-14, after the "decisions about people" commit (items 17, 19 to 23 and 25 moved to Done, with what remains of each noted there).
+Last updated: 2026-10-14, after `279381b` (decisions about people). Items are renumbered as they close; the Done section names what each commit covered.
 
 ## Next up
 
@@ -64,42 +64,36 @@ Last updated: 2026-10-14, after the "decisions about people" commit (items 17, 1
     checkDesign"). Partly addressed in `8ccbda3`: misused tool steps and long
     labels are now corrected. Missing research citations still send a design
     back for repair.
-16. **"Decisions about people" risk option.** A general answer ("it decides or
-    recommends something about a person's access to a job, money, housing,
-    education, insurance or care") with three rules: a person confirms every
-    "no", every decision keeps its reasons, and outcomes are checked for
-    unequal treatment; plus an EU AI Act gotcha (chunk D04). Keep it general,
-    not shaped around one example.
-17. **Independent review** of the 14 deferred manual evaluation checks.
+16. **Independent review** of the 14 deferred manual evaluation checks.
 
 ## From reviewer feedback on the Kushim deliverable (2026-10-14)
 
 Most of this landed as general rules (see Done). What remains:
 
-18. **Precondition gates.** A requirement that must hold before processing
+17. **Precondition gates.** A requirement that must hold before processing
     (a notice live for N days per requisition) is a gate on the whole flow,
     not a step that fires and proceeds. Nothing expresses this yet; the
     opt-out branch from the same feedback is done (AU12's "Human review on
     request" gate).
-19. **Jurisdictions and regulatory mapping.** The location question is a
+18. **Jurisdictions and regulatory mapping.** The location question is a
     single answer; a business in two jurisdictions (New York and Dublin) can't
     say so, so the design can't say where each region's data is processed.
     Chunk D04 lists what is high-risk but not the deployer obligations
     (Arts 9, 10, 11, 12, 13, 14, 15, 26). Where: `src/lib/questions.ts`,
     `knowledge/chunks/08-deployment-and-data/D04`.
-20. **Counterfactual tests and a shadow-mode period in the kit.** AU12 asks
+19. **Counterfactual tests and a shadow-mode period in the kit.** AU12 asks
     for outcomes compared across groups; the kit's test set could include
     name-swap and counterfactual pairs and a shadow-mode first phase that
     produces the first comparison data. Where: `evals/examples.csv` in the
     kit (`src/lib/starter.ts`, `server/kit.ts`).
-21. **The AI design's checker.** The rules' baseline picks an independent
+20. **The AI design's checker.** The rules' baseline picks an independent
     checker; an AI-drafted design's checker step is picked without knowing
     the producer, so it can coincide. Pass the producer into `pickModel` in
     `src/lib/design.ts` as `evaluator()` does.
 
 ## Done
 
-- (uncommitted as of this update) **Decisions about people, and reviews that
+- `279381b` **Decisions about people, and reviews that
   mean something.** A "decides or recommends something about a person" risk
   answer; AU12 (cap at 2, adverse outcomes confirmed with evidence, human
   review on request, proxy details stripped, outcomes compared across groups,
@@ -108,9 +102,12 @@ Most of this landed as general rules (see Done). What remains:
   wherever AI acts behind an approval; independent checker with fixed checks
   when the stakes are high, as a rule and as an AI-decision limit; BUILD.md
   pins versions and keeps a decision record; the kit notes how to retire the
-  practice it replaces. Covers former items 1, 17, 19 (mechanisms, credential
-  scopes, all outputs approved), 20, 21, 22 (pinning, record; "audited" is
-  signalled by the answer), 23 (opt-out) and 25.
+  practice it replaces. From the reviewer feedback this covers: safeguards as
+  mechanisms (redaction step, credential scopes, every output approved),
+  designed review, independent checker, version pinning and the decision
+  record ("audited" is signalled by the answer), the opt-out branch, and
+  retiring what the system replaces. It also closes the earlier "firm limit
+  for checking sensitive work" item.
 
 - `8ccbda3` AI makes the decisions within the rules' limits; decision and design
   slips corrected instead of rejected; cogitating animation; growing start box;
