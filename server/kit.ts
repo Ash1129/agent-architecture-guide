@@ -35,7 +35,7 @@ Return one JSON object with any of these keys (leave out a key if you have nothi
  "output": the exact format each result should take, with one short example (markdown, up to 1500 characters),
  "briefs": {step id: a brief for that agent: its area and exactly what it hands back}, only for the agent ids listed,
  "overview": a short paragraph on how the system works for this owner,
- "buildNotes": up to 6 notes for whoever builds it, specific to this task (data to gather, edge cases to test, setup order),
+ "buildNotes": up to 6 notes for whoever builds it, specific to this task (data to gather, edge cases to test, setup order); when the owner's description or details name a current practice this replaces (for example staff pasting data into a consumer chatbot), one note says how to retire it: remove or block the old route and point people to the sanctioned one,
  "ownerAsks": up to 5 more things to ask the owner for, beyond the ones listed,
  "watchOut": up to 4 pitfalls specific to this task: [{"title" (up to 70 characters), "body" (up to 300), "kb": [ids of the KNOWLEDGE chunks that support it]}],
  "examples": 3 to 8 illustrative test cases: [{"input", "good", "notes"}], realistic for this task, short, with no real personal data,

@@ -27,7 +27,7 @@ function aiDecision(over: Record<string, unknown> = {}) {
     ],
     hosting: "cloud",
     autonomy: 2,
-    models: { router: "haiku", worker: "sonnet", checker: "sonnet" },
+    models: { router: "haiku", worker: "sonnet", checker: "opus" },
     shortlist: [
       { tool: "airflow", reason: "Code-first alternative.", tradeoff: "Needs developers." },
       { tool: "n8n", reason: "Visual and quick to build.", tradeoff: "Less control over recovery." },
@@ -101,11 +101,11 @@ describe("reading what the model meant", () => {
       tools: [{ tool: "N8N", role: "Runs it." }, { tool: "system prompt", role: "The brief." }],
       hosting: "Cloud",
       autonomy: "2",
-      models: { Router: "Claude Haiku 5.5", worker: "claude-sonnet-5-5", checker: "Sonnet" },
+      models: { Router: "Claude Haiku 5.5", worker: "claude-sonnet-5-5", checker: "Claude Opus 5.5" },
     });
     const { decision, problems } = checkDecision(loose, support, chunks);
     expect(problems).toEqual([]);
-    expect(decision).toMatchObject({ approach: "workflow", topology: { primary: "routing", addOns: ["evaluator"] }, hosting: "cloud", autonomy: 2, models: { router: "haiku", worker: "sonnet", checker: "sonnet" } });
+    expect(decision).toMatchObject({ approach: "workflow", topology: { primary: "routing", addOns: ["evaluator"] }, hosting: "cloud", autonomy: 2, models: { router: "haiku", worker: "sonnet", checker: "opus" } });
     expect(decision!.tools.map((t) => t.tool)).toEqual(["n8n", "system-prompt"]);
   });
 
@@ -118,6 +118,13 @@ describe("reading what the model meant", () => {
     expect(problems).toEqual([]);
     expect(decision!.topology.addOns).toEqual(["evaluator", "parallel-sections"]);
     expect(decision!.shortlist.map((c) => c.tool)).toEqual(["n8n"]);
+  });
+
+  it("won't let the same model check its own work when the stakes are high", () => {
+    const same = aiDecision({ models: { router: "haiku", worker: "sonnet", checker: "sonnet" } });
+    expect(checkDecision(same, support, chunks).problems.join(" ")).toMatch(/models.checker" must differ/);
+    const calm = { ...support, risks: ["none"] } as Answers;
+    expect(checkDecision(same, calm, chunks).problems).toEqual([]);
   });
 
   it("still refuses what breaks a real limit, and says what it got", () => {

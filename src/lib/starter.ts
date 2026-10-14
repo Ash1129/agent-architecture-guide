@@ -206,7 +206,9 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
   const level = r.autonomy.level;
   const models = [...new Map(bp.nodes.filter(modelOf).map((n) => [modelOf(n)!.model, modelOf(n)!])).values()];
   // Steps already on the strongest model have nothing to step down to.
-  const stepDown = models.some((m) => m.model !== "opus" && m.model !== "openLarge");
+  // A decision about a person is tested and, where the law asks, audited as one version: no stepping models down afterwards.
+  const decides = !!a.risks?.includes("decides");
+  const stepDown = !decides && models.some((m) => m.model !== "opus" && m.model !== "openLarge");
 
   add(
     `# Build brief: ${task}`,
@@ -268,7 +270,7 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     add(
       "## Models",
       "",
-      `Build the first version with the most capable model on every AI step (${models.some((m) => m.model.startsWith("open")) ? "a large open-weight model" : `\`${MODEL_API_ID.opus}\``}) and record results on the test set. ${stepDown ? "Then switch each step whose model below is smaller, and keep the switch only if quality still meets the baseline. Steps listed with the most capable model stay on it." : "Every step below stays on that model."} Judge on quality, cost per run and speed.`,
+      `Build the first version with the most capable model on every AI step (${models.some((m) => m.model.startsWith("open")) ? "a large open-weight model" : `\`${MODEL_API_ID.opus}\``}) and record results on the test set. ${stepDown ? "Then switch each step whose model below is smaller, and keep the switch only if quality still meets the baseline. Steps listed with the most capable model stay on it." : decides ? "Once tested, and audited where the law requires it, pin the model, prompt and rubric versions. Do not switch models step by step afterwards: any change re-runs the outcome checks and, where audited, the audit." : "Every step below stays on that model."} Judge on quality, cost per run and speed.`,
       "",
       "| Model | API id | Used for steps | Why |",
       "| --- | --- | --- | --- |",
@@ -286,7 +288,23 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     add("## Models", "", "No AI model. Every step follows fixed rules. Do not add AI to this system.", "");
   }
 
-  add("## Components", "", ...r.tools.map((t) => `- **${TOOLS[t.tool].name}**${t.core ? " (main tool)" : ""}: ${t.role}`), "");
+  add(
+    "## Components",
+    "",
+    ...r.tools.map((t) => `- **${TOOLS[t.tool].name}**${t.core ? " (main tool)" : ""}: ${t.role}`),
+    ...(r.fired.includes("AU14")
+      ? ["- **Credentials**: the AI steps' credential is read-only (free/busy for calendars) and cannot perform the approved action. The action step uses a separate credential that runs only after approval. Enforce this in the tool's own permissions, not in the prompt."]
+      : []),
+    "",
+  );
+  if (decides) {
+    add(
+      "## Decision record",
+      "",
+      "Every decision stores: the evidence packet it rested on, the recommendation and its reasons, the model, prompt and rubric versions, a hash of the input, the reviewer, their decision and the time. Keep it for as long as the person affected could challenge the decision; Legal sets that period. Anyone affected can ask for a review by a person, and the record shows who did it. Demographic data used to compare outcomes across groups lives in a separate store and never reaches the model.",
+      "",
+    );
+  }
   if (r.hybrid.length) add(...r.hybrid.map((h) => `- Hybrid: ${h.text}`), "");
 
   add(

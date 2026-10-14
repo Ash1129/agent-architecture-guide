@@ -256,7 +256,8 @@ function problems(a: Answers): string[] {
   if (r.tools.filter((t) => t.core).length !== 1) p.push("not exactly one main tool");
   if (!TOPOLOGIES[r.topology.primary]) p.push("unknown topology");
   if (r.autonomy.level < 1 || r.autonomy.level > 4) p.push("autonomy out of range");
-  if (r.firstSteps.length !== 3) p.push("first steps != 3");
+  // Three things to do this week; a decision about a person adds a fourth, the legal check (F4).
+  if (r.firstSteps.length !== (a.risks?.includes("decides") ? 4 : 3)) p.push("first steps != 3");
   if (r.gotchas.length === 0) p.push("no gotchas");
   if (r.approach.why.length === 0) p.push("approach unexplained");
   if (r.models.needed !== (a.shape !== "rules")) p.push("model need mismatch");

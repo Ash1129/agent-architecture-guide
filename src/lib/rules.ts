@@ -95,6 +95,8 @@ export type Rule = {
   kb: ChunkId[];
   when: (a: Answers, d: Draft) => boolean;
   apply: (d: Draft, a: Answers, why: (text: string) => Why) => void;
+  /** Runs after every other rule, and after an AI decision has been applied, so it sees the final autonomy level. */
+  late?: boolean;
 };
 
 // ---------------------------------------------------------------- helpers
@@ -1456,7 +1458,96 @@ export const RULES: Rule[] = [
     when: (a) => !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
     apply: (d, a) => { gotcha(d, { id: "G32", priority: 1, title: "Design the execution boundary", body: "A framework alone does not provide a secure sandbox. Define authentication, per-request isolation, persistent recovery state, schema and value validation, timeouts and retry limits. For generated code, restrict filesystem and network access, keep credentials outside the sandbox and limit compute. The starter does not implement these production controls." + (a.team !== "large" ? " Arrange developer ownership before using this as an embedded service; the suggested assistant is only a prototype." : "") }, design); },
   },
+  // ------------------------------------------------------------ Decisions about people, and reviews that mean something
+  {
+    id: "AU12",
+    group: "Autonomy",
+    if: "It decides or recommends something about a person",
+    then: "Cap autonomy at level 2. A person confirms every adverse outcome with the evidence and reasons in front of them, before the person affected hears of it; anyone affected can ask for a review by a person; identifying details are stripped before any AI step; outcomes are compared across groups; versions are pinned once tested.",
+    basis: design,
+    kb: ["A02", "A03", "D04", "G03"],
+    when: (a) => risk(a, "decides"),
+    apply: (d, _a, why) => {
+      cap(d, 2, why(`You said ${saidOption("risks", "decides")}. Nothing adverse reaches the person affected until a person has confirmed it.`));
+      d.autonomy.checkpoints.push(
+        "A named person confirms every adverse outcome (a rejection, a decline, a lower offer) with the evidence and the reasons in front of them, before the person affected hears of it.",
+        "Anyone affected can ask for a review by a person, and gets one.",
+      );
+      d.autonomy.guardrails.push(
+        "A fixed step strips details that stand in for who the person is (name, contact details, address, school, age, photo, gaps in dates) before any AI step sees the case; one of those details is used only with a documented, tested reason.",
+        "Compare outcomes across groups before launch and regularly after; a widening gap stops the system until it is explained.",
+        "Pin the model, prompt and rubric versions once tested; any change re-runs the outcome checks (and the audit, where one was required) before it goes live.",
+      );
+    },
+  },
+  {
+    id: "G33",
+    group: "Gotchas",
+    if: "It decides or recommends something about a person",
+    then: "Warn that such uses are often regulated as high-risk, with duties that start before launch.",
+    basis: design,
+    kb: ["D04"],
+    when: (a) => risk(a, "decides"),
+    apply: (d) =>
+      gotcha(
+        d,
+        {
+          id: "G33",
+          priority: 1,
+          title: "Decisions about people are often regulated",
+          body: "The EU AI Act lists employment, credit, insurance, education and access to essential services as high-risk uses, with duties on risk management, data governance, record-keeping, human oversight and informing the people affected (applying from 2 December 2027). Many places add rules of their own, such as a bias audit, advance notice and a right to a human review. Check which apply where the people affected are, before launch, and treat any model, prompt or rubric change after an audit as a change to what was audited.",
+        },
+        design,
+      ),
+  },
+  {
+    id: "F4",
+    group: "First steps",
+    if: "It decides or recommends something about a person",
+    then: "Add a first step: confirm with Legal which laws apply where the people affected are, whether an outside audit is needed, and what each decision record keeps and for how long.",
+    basis: design,
+    kb: ["D04", "A02"],
+    when: (a) => risk(a, "decides"),
+    apply: (d) => {
+      d.firstSteps.push(
+        "Confirm with Legal which laws apply where the people affected are, whether an outside audit is needed before launch, and what each decision record must keep and for how long (the period in which a person could challenge it).",
+      );
+    },
+  },
+  {
+    id: "AU13",
+    group: "Autonomy",
+    if: "A person approves every result (level 1 or 2)",
+    then: "Design the review so it can't become a rubber stamp: the checklist beside the source, one case at a time with no batch approval, and override rate, time per review and seeded known-wrong cases tracked.",
+    basis: design,
+    kb: ["A03"],
+    late: true,
+    when: (_a, d) => (d.autonomy.level ?? 4) <= 2,
+    apply: (d) => {
+      d.autonomy.checkpoints.push(
+        "The reviewer sees the checklist or requirements beside the source material and any item marked insufficient evidence, and approves, changes or rejects one case at a time. No batch approval.",
+        "Track the override rate and the time per review. Overrides near zero, or reviews that take seconds, mean the review has become a rubber stamp.",
+        "Seed known-wrong cases into the queue, so catching them is measured.",
+      );
+    },
+  },
+  {
+    id: "AU14",
+    group: "Autonomy",
+    if: "AI steps act in your systems, and a person approves before actions (level 3 or below)",
+    then: "Enforce the approval with credentials, not only workflow logic: the credential AI steps use cannot perform the approved action; the action runs under a separate credential after approval.",
+    basis: src("mcp", "n8nDocs"),
+    kb: ["T04", "N03", "G01"],
+    late: true,
+    when: (a, d) => ai(a) && a.systems === "act" && (d.autonomy.level ?? 4) <= 3,
+    apply: (d) => {
+      d.autonomy.guardrails.push(
+        "The credential the AI steps use is read-only (free/busy for calendars) and cannot perform the approved action itself. The action step runs under a separate credential, only after approval.",
+      );
+    },
+  },
 ];
+
 
 // ---------------------------------------------------------------- engine
 
@@ -1580,6 +1671,7 @@ export function recommend(raw: Answers, decision?: Decision): Recommendation {
 
   let group: RuleGroup | undefined;
   for (const rule of RULES) {
+    if (rule.late) continue;
     if (group && rule.group !== group) force(group);
     group = rule.group;
     if (!rule.when(a, d)) continue;
@@ -1588,6 +1680,12 @@ export function recommend(raw: Answers, decision?: Decision): Recommendation {
     rule.apply(d, a, why);
   }
   if (group) force(group);
+  // Rules that react to the final autonomy level run once it is settled, by the rules' caps or the AI's decision.
+  for (const rule of RULES) {
+    if (!rule.late || !rule.when(a, d)) continue;
+    d.fired.push(rule.id);
+    rule.apply(d, a, (text) => ({ text, ruleId: rule.id, basis: rule.basis }));
+  }
 
   if (!d.approach || !d.topology.primary || !d.hosting || !d.simpler || !d.autonomy.level) {
     throw new Error("Incomplete answers: the guide needs every question answered before recommending.");

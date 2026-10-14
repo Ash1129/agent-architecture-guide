@@ -223,7 +223,8 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
       track: bypass.length ? [0, Math.min(...bypass) - 1] : undefined,
       name: "You approve each result",
       label: level === 1 ? "A person does the work" : "Before anything goes out",
-      what: "A named person reviews every result before it leaves the system, and either approves it or sends it back.",
+      gates: a.risks?.includes("decides") ? [{ kind: "human", text: "Adverse outcomes confirmed" }] : [],
+      what: "A named person reviews every result with the checklist beside the source material and any item marked insufficient evidence, one case at a time, and approves it, changes it or sends it back. No batch approval.",
       why: `Autonomy starts at level ${level}. ${approvalWhy}`,
       passes: "Approved results only. Rejected ones go back with a note, and become test examples.",
       rules: r.autonomy.why.map((w) => w.ruleId),
@@ -274,18 +275,47 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
   g.link(skips, end);
 }
 
-/** The checker step from the generator-and-checker pattern. */
+/**
+ * A decision about a person: the fixed step, before any AI step, that builds
+ * the evidence packet and strips who the person is. An instruction to ignore
+ * a detail is intent; not seeing it is a mechanism (AU12).
+ */
+function evidenceStep(g: Graph, from: Draft): Draft {
+  g.next();
+  const packet = g.add({
+    id: "evidence",
+    kind: "fixed",
+    engine: algorithm("scripted"),
+    name: "Build the evidence packet",
+    label: "Strips who the person is",
+    gates: [
+      { kind: "stop", text: "Identity stripped first" },
+      { kind: "human", text: "Human review on request" },
+    ],
+    what: "A fixed step copies only what the decision may rest on (facts, history, requirements) into a packet, stripping the name, contact details, address, photo, school, age and anything else that stands in for who the person is. AI steps work from the packet only. Anyone who asks for a human review goes to a person.",
+    why: "An instruction to ignore a detail is intent, not a mechanism. A step that removes it is.",
+    passes: "The evidence packet. The person's identity is held back for the final record only.",
+    rules: ["AU12"],
+  });
+  g.link(from, packet);
+  return packet;
+}
+
+/** The checker step from the generator-and-checker pattern: fixed checks first, then a second model. */
 function evaluator(g: Graph, r: Recommendation, a: Answers, producer: Draft, track?: number | [number, number]): Draft {
   g.next();
   const check = g.add({
     id: "check",
     kind: "decision",
-    engine: pickModel("checker", a, r.modelPicks),
+    engine: pickModel("checker", a, r.modelPicks, producer.engine?.kind === "model" ? producer.engine.model : undefined),
     track,
     name: "Check against your checklist",
-    label: "Checker model",
-    gates: [{ kind: "stop", text: "3 tries, then a person" }],
-    what: "A second AI pass compares the work with your written checklist. If it fails, specific feedback goes back for a fix.",
+    label: "Checks, then a second model",
+    gates: [
+      { kind: "stop", text: "Quotes must match source" },
+      { kind: "stop", text: "3 tries, then a person" },
+    ],
+    what: "Fixed checks run first: every quoted span must appear word for word in the source, and every item on the checklist must be addressed. Then a second model, not the one that did the work, judges it against the checklist. If it fails, specific feedback goes back for a fix.",
     why: whyOf(r, "T11")?.text ?? `You said ${said(a, "quality")}.`,
     passes: "Work that passes the checklist. After three failed rounds, the case goes to a person instead.",
     rules: ["T11"],
@@ -304,7 +334,10 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
   const home = TOOL_SHORT[core];
   const addOns = r.topology.addOns;
   const level = r.autonomy.level;
-  const start = startNode(g, r, a, home);
+  const trigger = startNode(g, r, a, home);
+  // A decision about a person: before any AI step, a fixed step builds the evidence packet and strips who the person is (AU12).
+  const decides = !!a.risks?.includes("decides") && r.approach.id !== "automation";
+  const start = decides ? evidenceStep(g, trigger) : trigger;
 
   const aiWhere = core === "claude" || core === "hermes" ? (has(r, "skill") ? `${home} with your Skill` : home) : `AI step in ${home}`;
   const playbookNote = has(r, "skill")

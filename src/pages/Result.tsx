@@ -1001,7 +1001,7 @@ function Ready({
         <div className="section-kicker studio-caption">03 — Everything behind it</div>
         <h2 id="detail">The details</h2>
         <div className="mt-4 grid gap-3">
-          <Disclosure id="first-steps" title="Your first steps" meta="Three things to do this week.">
+          <Disclosure id="first-steps" title="Your first steps" meta={`${["", "One thing", "Two things", "Three things", "Four things", "Five things"][r.firstSteps.length] ?? `${r.firstSteps.length} things`} to do this week.`}>
             <ol className="grid gap-4 md:grid-cols-3">
               {r.firstSteps.map((s, i) => (
                 <li key={s} className="grid grid-cols-[auto_1fr] gap-3">

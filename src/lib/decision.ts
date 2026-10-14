@@ -12,7 +12,7 @@
 
 import { type AutonomyLevel, TOOLS, TOPOLOGIES, type ToolId, type TopologyId } from "./catalog";
 import { ROLES_FOR } from "./design";
-import { MODELS, type ModelId, type Role, usesOpenWeight } from "./models";
+import { MODELS, type ModelId, type Role, highStakes, usesOpenWeight } from "./models";
 import { type Answers, effectiveAnswers } from "./questions";
 import { type Approach, type Recommendation, recommend } from "./rules";
 
@@ -133,6 +133,7 @@ export function limitsFor(a: Answers, rules: Recommendation = recommend(a)): str
       : []),
     "An agent or a team of agents that takes actions in the owner's systems: at most level 3.",
     "Plain automation uses no AI models.",
+    ...(highStakes(a) && !usesOpenWeight(a) ? ["The checker's model must differ from the model whose work it checks (customers see it, it's hard to undo, it touches personal data, or it decides about a person): the same model shares its blind spots."] : []),
   ];
 }
 
@@ -208,6 +209,11 @@ export function checkDecision(raw: unknown, rawAnswers: Answers, chunks: { id: s
     const m = readModel(v);
     if (!m) problems.push(`"models.${role}" must be one of ${MODEL_IDS.join(", ")} (got ${JSON.stringify(v)}).`);
     else models[role] = m;
+  }
+  // When the stakes are high, the checker can't be the model it checks (open-weight tiers hold several models, so they're exempt).
+  if (highStakes(a) && !usesOpenWeight(a) && models.checker) {
+    const checked = (["worker", "attempt", "agent", "specialist", "coordinator"] as Role[]).map((x) => models[x]).filter((m): m is ModelId => !!m);
+    if (checked.includes(models.checker)) problems.push(`"models.checker" must differ from the model whose work it checks (${[...new Set(checked)].join(", ")}): the stakes are high, and the same model shares its blind spots.`);
   }
   // Models for kinds of step this approach doesn't have are ignored; plain automation has none at all.
   if (approach === "automation" && Object.values(rawModels).some((v) => readModel(v))) problems.push("Plain automation uses no AI models.");

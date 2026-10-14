@@ -96,8 +96,8 @@ export const MODEL_RULES: ModelRule[] = [
     step: "Checking work against a checklist",
     pick: "sonnet",
     open: "openSmall",
-    adjust: "Opus 5.5 when output reaches customers, is irreversible or involves personal data",
-    why: "Checking against a clear checklist is narrower than producing the work.",
+    adjust: "Opus 5.5 when output reaches customers, is irreversible, involves personal data or decides about a person, and always a different model from the one whose work it checks",
+    why: "Checking against a clear checklist is narrower than producing the work. Fixed checks (quotes match the source, every item addressed) run first.",
     basis: { kind: "design" },
     kb: ["P02", "G04"],
   },
@@ -140,22 +140,36 @@ export function usesOpenWeight(a: Answers): boolean {
  * decision (already checked against what's available); otherwise the guide's
  * starting picks.
  */
-export function pickModel(role: Role, a: Answers, picks?: Partial<Record<Role, ModelId>>): Engine {
+/** Whether a design's mistakes would reach people, be hard to undo, touch personal data or decide about a person. */
+export const highStakes = (a: Answers) => !!a.risks?.some((x) => x === "visible" || x === "irreversible" || x === "personal" || x === "decides");
+
+/**
+ * The model for a kind of AI step. `picks`: the AI's choices, when it made the
+ * decision (already checked against what's available); otherwise the guide's
+ * starting picks. `checks`: for a checker, the model whose work it checks:
+ * when the stakes are high the checker is a different model, so the two don't
+ * share blind spots.
+ */
+export function pickModel(role: Role, a: Answers, picks?: Partial<Record<Role, ModelId>>, checks?: ModelId): Engine {
   const rule = MODEL_RULES.find((x) => x.role === role)!;
   const open = usesOpenWeight(a);
-  const sensitive = !!a.risks?.some((x) => x === "visible" || x === "irreversible" || x === "personal");
+  const sensitive = highStakes(a);
   let id: ModelId = open ? rule.open : rule.pick;
 
   if (role === "checker" && sensitive) id = open ? "openLarge" : "opus";
   const ruled = id;
   if (picks?.[role]) id = picks[role]!;
+  const independent = role === "checker" && sensitive && checks !== undefined;
+  // The same Claude model would share its blind spots; open-weight tiers hold several models, so a different one is chosen within the tier.
+  if (independent && checks === id && !open) id = id === "opus" ? "sonnet" : "opus";
 
   const m = MODELS[id];
   const top = open ? MODELS.openLarge : MODELS.opus;
   const inRegion = a.location === "residency" && !open;
   const why =
-    (id !== ruled ? `Chosen by AI for this step, weighing quality, cost and speed (the guide's starting pick is ${MODELS[ruled].name.split(",")[0]}). ` : "") +
+    (id !== ruled && !(independent && checks === ruled) ? `Chosen by AI for this step, weighing quality, cost and speed (the guide's starting pick is ${MODELS[ruled].name.split(",")[0]}). ` : "") +
     rule.why +
+    (independent ? (open ? " Use a different model from this tier than the one that did the work, so the two don't share blind spots." : " It is a different model from the one that did the work, so the two don't share blind spots.") : "") +
     (role === "checker" && sensitive ? " Mistakes here would be visible or costly, so the checker gets a stronger model." : "") +
     (!open && a.volume === "high" && (role === "router" || role === "attempt" || role === "worker" || role === "specialist") ? ` ${HAIKU_NOTE}` : "") +
     (open ? " You need models you can host or buy from several providers." : "") +

@@ -33,7 +33,8 @@ function problems(b: Blueprint, r: Recommendation | null): string[] {
   const byId = new Map(b.nodes.map((n) => [n.id, n]));
   if (byId.size !== b.nodes.length) p.push("duplicate node ids");
   b.nodes.forEach((n, i) => n.step !== i + 1 && p.push(`step order broken at ${n.id}`));
-  if (b.stages > 7) p.push(`too many stages: ${b.stages}`);
+  // A decision about a person adds the evidence-packet column before the AI steps.
+  if (b.stages > (b.nodes.some((n) => n.id === "evidence") ? 8 : 7)) p.push(`too many stages: ${b.stages}`);
   if (b.tracks > 3) p.push(`too many tracks: ${b.tracks}`);
   if (b.nodes.filter((n) => n.kind === "end").length !== 1) p.push("not exactly one finish");
   if (!b.nodes.some((n) => n.kind === "start")) p.push("no start");

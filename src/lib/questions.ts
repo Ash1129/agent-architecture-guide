@@ -13,7 +13,7 @@ export type Knowledge = "playbook" | "reference" | "memory" | "none";
 export type Systems = "none" | "read" | "act";
 export type Trigger = "manual" | "schedule" | "event" | "data";
 export type Volume = "occasional" | "daily" | "high";
-export type Risk = "visible" | "personal" | "irreversible" | "none";
+export type Risk = "visible" | "personal" | "irreversible" | "decides" | "none";
 export type Location = "open" | "residency" | "restricted" | "independence";
 export type Team = "small" | "mid" | "large";
 
@@ -309,6 +309,12 @@ export const QUESTIONS: Question[] = [
         label: "A mistake could cost money or be hard to undo",
         hint: "Payments, legal commitments, deleting data.",
         short: "a mistake could cost money or be hard to undo",
+      },
+      {
+        value: "decides",
+        label: "It decides or recommends something about a person",
+        hint: "A job, a loan, a home, a place, a policy, care or a benefit.",
+        short: "it decides or recommends something about a person",
       },
       { value: "none", label: "None of these", short: "mistakes would be internal and easy to fix" },
     ],
