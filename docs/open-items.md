@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-14, after `279381b` (decisions about people). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-10-14, after `e56d5f3`. Items are renumbered as they close; the Done section names what each commit covered.
 
 ## Next up
 
@@ -93,6 +93,8 @@ Most of this landed as general rules (see Done). What remains:
 
 ## Done
 
+- `e56d5f3` An AI design's over-long step text is shortened at a word
+  boundary instead of failing the design, and a missing field is named.
 - `279381b` **Decisions about people, and reviews that
   mean something.** A "decides or recommends something about a person" risk
   answer; AU12 (cap at 2, adverse outcomes confirmed with evidence, human
