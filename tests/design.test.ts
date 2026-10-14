@@ -250,6 +250,19 @@ describe("slips corrected before the checks", () => {
     expect((tidyDraft(guarded) as DesignDraft).steps.find((x) => x.id === "stray")!.kind).toBe("tool");
   });
 
+  it("shortens a step's over-long text at a word boundary instead of rejecting the design", () => {
+    const { d, ctx } = draftOf(emails);
+    const long = { ...d, steps: d.steps.map((x, i) => (i === 1 ? { ...x, what: `${x.what} ${"It also checks the order history and the return policy before drafting. ".repeat(6)}` } : x)) };
+    expect(long.steps[1].what.length).toBeGreaterThan(320);
+    const { blueprint, problems } = checkDesign(long, ctx);
+    expect(problems).toEqual([]);
+    expect(blueprint!.nodes[1].what.length).toBeLessThanOrEqual(320);
+    expect(blueprint!.nodes[1].what).toMatch(/…$/);
+    // A missing field is still a problem, and the message says which.
+    const bare = { ...d, steps: d.steps.map((x, i) => (i === 1 ? { ...x, why: "" } : x)) };
+    expect(checkDesign(bare, ctx).problems.join(" ")).toMatch(/is missing why/);
+  });
+
   it("shortens an over-long branch label at a word boundary", () => {
     const { d, ctx } = draftOf(emails);
     const withLabel = { ...d, edges: d.edges.map((e, i) => (i === 0 ? { ...e, label: "only when the order is already shipped" } : e)) };

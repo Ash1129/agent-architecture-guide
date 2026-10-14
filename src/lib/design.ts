@@ -99,6 +99,12 @@ export function tidyDraft(raw: unknown): unknown {
     s.method = FIXED_METHODS.includes(s.method as AlgorithmId) ? s.method : "scripted";
     delete s.role;
   }
+  // Text a little over its limit is shortened at a word boundary, not thrown away with the whole design.
+  for (const s of steps) {
+    for (const f of ["name", "label", "what", "why", "passes"] as const) {
+      if (typeof s?.[f] === "string") s[f] = shorten(s[f] as string, LIMITS[f]);
+    }
+  }
   for (const e of edges) if (e && typeof e.label === "string") e.label = shorten(e.label, LIMITS.edgeLabel);
   return { ...d, steps, edges };
 }
@@ -135,7 +141,8 @@ export function checkDesign(raw: unknown, ctx: DesignContext): { blueprint?: Blu
     const what = text(raw.what, LIMITS.what);
     const why = text(raw.why, LIMITS.why);
     const passes = text(raw.passes, LIMITS.passes) ?? (kind === "end" ? "Nothing; the run is finished." : undefined);
-    if (!name || !label || !what || !why || !passes) p.push(`${where} needs a name (up to ${LIMITS.name} characters), label (up to ${LIMITS.label}), what, why and passes.`);
+    const missing = (["name", "label", "what", "why", "passes"] as const).filter((f) => !{ name, label, what, why, passes }[f]);
+    if (missing.length) p.push(`${where} is missing ${missing.join(", ")} (name up to ${LIMITS.name} characters, label up to ${LIMITS.label}, what and why up to ${LIMITS.what}, passes up to ${LIMITS.passes}).`);
 
     let role: Role | undefined;
     let method: AlgorithmId | undefined;
