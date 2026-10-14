@@ -1,7 +1,6 @@
-import { ArrowRight } from "@phosphor-icons/react";
+import { ArrowRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { useId, useState, type FormEvent } from "react";
 import { TASK_EXAMPLES } from "../lib/questions";
-import { btn } from "./ui";
 
 /** The first question of the guide. Used in the guide and, live, in the landing hero. */
 export function TaskInput({
@@ -33,24 +32,26 @@ export function TaskInput({
         <label htmlFor={inputId} id={labelId} className="sr-only">
           The business task you want to improve
         </label>
-        <input
-          id={inputId}
-          type="text"
-          value={value}
-          maxLength={200}
-          autoFocus={autoFocus}
-          autoComplete="off"
-          aria-describedby={helpId}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="For example: answer routine customer emails"
-          className="block w-full rounded-xl border border-line-strong bg-surface px-4 py-3.5 text-[17px] text-ink placeholder:text-muted focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        />
+        <div className="problem-field survey-field">
+          <MagnifyingGlass size={20} aria-hidden />
+          <input
+            id={inputId}
+            type="text"
+            value={value}
+            maxLength={200}
+            autoFocus={autoFocus}
+            autoComplete="off"
+            aria-describedby={helpId}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="For example: answer routine customer emails"
+          />
+        </div>
         <p id={helpId} className="text-[14px] text-muted">
           One sentence is plenty. Describe the work, not the technology.
         </p>
       </div>
       <div>
-        <p className="mb-2.5 text-[14px] font-medium text-ink">Or start from an example</p>
+        <p className="studio-caption !mb-3">Or start from an example</p>
         <ul className="flex flex-wrap gap-2">
           {TASK_EXAMPLES.map((ex) => (
             <li key={ex}>
@@ -58,7 +59,7 @@ export function TaskInput({
                 type="button"
                 onClick={() => setValue(ex)}
                 aria-pressed={value === ex}
-                className="rounded-full border border-line bg-surface px-3.5 py-2 text-[14px] text-ink transition-colors hover:border-line-strong aria-pressed:border-accent aria-pressed:bg-accent-soft"
+                className="survey-chip"
               >
                 {ex}
               </button>
@@ -66,9 +67,9 @@ export function TaskInput({
           ))}
         </ul>
       </div>
-      <button type="submit" disabled={!trimmed} className={btn.primary}>
+      <button type="submit" disabled={!trimmed} className="start-build">
         {submitLabel}
-        <ArrowRight size={17} weight="bold" aria-hidden />
+        <ArrowRight size={17} aria-hidden />
       </button>
     </form>
   );

@@ -1,0 +1,959 @@
+{
+  "limitUsd": 3,
+  "committedUsd": 0.46049199999999857,
+  "calls": [
+    {
+      "trial": "1-eligible-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00013720000000000003,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00014920000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000184,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00018160000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00013720000000000003,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000152,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000188,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-eligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00018760000000000003,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-ineligible-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00013440000000000001,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-ineligible-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00014,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-ineligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00013440000000000001,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-ineligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00014920000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-ineligible-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0001644,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00013560000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00015240000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0001644,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0001992,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0001968,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00013560000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0001532,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00016800000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000204,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-transient-lookup-langgraph",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00020360000000000002,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "1-approval-injection-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000164,
+      "status": "settled"
+    },
+    {
+      "trial": "1-approval-injection-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0001552,
+      "status": "settled"
+    },
+    {
+      "trial": "1-approval-injection-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0002108,
+      "status": "settled"
+    },
+    {
+      "trial": "1-approval-injection-n8n",
+      "reservedUsd": 0.45,
+      "settledUsd": null,
+      "status": "reserved"
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000052375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000062,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000071,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000705,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000052375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000062375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00007225,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000515,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000061125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000063125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000515,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000615,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000064375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000051875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000615,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000675,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000765,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000076,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000051875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000061875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000068125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000078,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000078125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00005425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000063875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00005425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00006425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000074125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/1-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00007425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000052375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000062375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00007225,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000052375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000062,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000071,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000705,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000515,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000615,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000064375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000515,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000061125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000063125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000051875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000061875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000068125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000078,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000078125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000051875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000615,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000675,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000765,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000076,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00005425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00006425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000074125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00007425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00005425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000063875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/2-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000052375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000062,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000071,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000705,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000052375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000062375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00007225,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-eligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000515,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000061125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-ineligible-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000063125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000515,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000615,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-ineligible-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000064375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000051875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000615,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000675,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.0000765,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000076,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000051875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000061875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000068125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000078,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-transient-lookup-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000078125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00005425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000063875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072875,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-n8n",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000072375,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00005425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00006425,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.000074125,
+      "status": "settled",
+      "counted": true
+    },
+    {
+      "trial": "/Users/ashwinprajeeth/Documents/Coding/AI101Cl/outputs/agent-benchmarks/2026-10-12T18-15-00.281Z/3-approval-injection-langgraph",
+      "model": "gpt-6-luna",
+      "reservedUsd": 0.45,
+      "settledUsd": 0.00007425,
+      "status": "settled",
+      "counted": true
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Agent Architecture Guide
 
-A short, plain-English guide that takes an experienced businessperson from one business task to a sensible starting AI architecture: whether an agent is needed at all, the tools (Skills, MCP, Claude Cowork, Hermes, n8n, Airflow or a hybrid), model capabilities, a level of autonomy, a topology, a simpler starting option, gotchas and a first step.
+A short, plain-English guide that takes an experienced businessperson from one business task to a sensible starting AI architecture: whether an agent is needed at all, the tools (Skills, MCP, Claude as an agent, Hermes, n8n, Airflow or a hybrid), model capabilities, a level of autonomy, a topology, a simpler starting option, gotchas and a first step.
 
 Built for AI Assignment 4 (ENMGT 5405, Cornell University). Every recommendation comes from fixed, published rules based on the assignment's research. No AI model generates results.
 
@@ -27,12 +27,16 @@ npm run preview    # serve the production build locally
 | `src/lib/models.ts` | Which model (or which non-AI method) runs each step, and why. |
 | `src/lib/starter.ts` | The starter kit: `BUILD.md` for an AI coding assistant, plus the n8n workflow, Skill, system prompt, MCP config, Airflow DAG and test set that fit the design. |
 | `src/lib/share.ts` | Encoding answers into share links, and the plain-text summary. |
-| `src/pages/` | Landing, Guide, Result and How-it-decides pages. |
+| `src/lib/process.ts` | A process of several jobs: checking the AI's split, its link, and saved processes. |
+| `src/lib/exportxml.ts` | The draw.io export: one design (recommended and simpler), or a whole process. |
+| `src/pages/` | Landing, Guide, Split, Result, Process (the system map), History and How-it-decides pages. |
 | `tests/rules.test.ts` | Named decision paths, plus every reachable answer path checked for a complete, well-formed result. |
 | `tests/starter.test.ts` | Every kit is complete and consistent: valid JSON, n8n connections that point at real nodes, every step and model in `BUILD.md`, valid Python for Airflow. |
 | `tests/blueprint.test.ts` | Every answer path checked for a drawable, honest diagram: connected, approvals matching the autonomy level, loops and branches where the topology has them, no connection passing through a step. |
 
 The "How it decides" page renders `RULES` directly, so the published explanation can't drift from the logic.
+
+**Decisions about people.** One answer on the risks question, "It decides or recommends something about a person" (a job, a loan, a home, a place, a policy, care or a benefit), changes what gets built, for any business. Autonomy is capped at level 2, a person confirms every adverse outcome with the evidence in front of them, and anyone affected can ask for a human review (AU12). A fixed, scripted step builds an evidence packet and strips who the person is before any AI step sees the case, so proxy details are removed by a mechanism rather than ignored by instruction. Outcomes are compared across groups before launch and after; model, prompt and rubric versions are pinned once tested, and the kit stops suggesting model swaps; every decision record keeps the evidence, the reasons, the versions and an input hash for as long as the decision could be challenged (BUILD.md, "Decision record"). A gotcha (G33) and a first step (F4) point to the regulation and to Legal. Two rules apply more widely: wherever a person approves every result, the review is designed so it can't become a rubber stamp (AU13: the checklist beside the source, one case at a time, no batch approval, override rate and seeded known-wrong cases tracked); and wherever AI acts in the owner's systems behind an approval, the credential the AI steps use cannot perform the approved action (AU14). When the stakes are high, the checker is a different model from the one whose work it checks, with fixed checks (quotes match the source, every item addressed) before it; an AI decision that picks the same model is rejected.
 
 ## iCloud and `node_modules`
 
@@ -52,14 +56,28 @@ Recommendations are written around capabilities, so most updates are copy change
 
 To change a decision, edit or add a rule in `src/lib/rules.ts`, give it a `basis`, and add a test for the path it affects.
 
-## AI tailoring (local experiment only)
+## AI features (local only)
 
-**Tailor with AI**, on the n8n row of the starter kit, sends the answers to an OpenAI model that tailors the n8n workflow to the task (specific step names, real prompts, exact-match routing). The result is checked before it is shown, and the generated version is kept if the check fails.
+With AI on, an AI model makes the guide's decisions, with the rules and the knowledge base as its input and the rules' limits as the layer that checks it. Six AI features exist so far, all only in `npm run dev`; the published site has none and decides by the rules alone:
 
-It exists only in `npm run dev`, and is never part of the published site:
+**Adaptive questions.** After you type a task, an OpenAI model (`server/interview.ts`) rewords every question and its options in the task's own terms, pre-selects the answers the task makes likely (with a one-line reason), and adds up to three task-specific questions on an optional last page. The question bank stays the backbone: `validatePlan` in `src/lib/interview.ts` keeps each question's id and exact set of answer values, in the bank's order, and anything that doesn't fit falls back to the standard wording, so the rules, links and history work unchanged. The task-specific answers travel with the other answers as `details` and are used when tailoring.
 
-- `.env.development` holds the switch, `VITE_AI_TAILORING=true`. Vite reads that file only in development, so `npm run build` leaves the button, its request code and its privacy wording out of the bundle.
-- `.env` holds `OPENAI_API_KEY` and `OPENAI_MODEL` (set to `gpt-6.1-sol`). They are read only by the dev server (`server/tailor.ts`) and never reach the browser.
+**Several jobs, one system.** A problem described on the start page (up to a whole case study, 12,000 characters) is first read by `server/split.ts`, which says whether it holds one job or several separate jobs that each need their own system, such as screening job applications and then scheduling interviews, and how they hand work to each other (through which system, and when). Most descriptions are one job and carry on as before. Several jobs are shown for the owner to confirm, rename, remove or keep as one; then each job's own description goes through the adaptive questions and review in turn, and the result is a system map (`src/pages/Process.tsx`): every job's design, the handoffs between them, and every point where a person steps in, with each job's full result a click away and the jobs listed in the sidebar. The map's link carries every job's answers (`src/lib/process.ts`), saved processes are listed in History, and "Export to draw.io" gives the whole system on one page, the jobs joined through the systems that carry each handoff, then a page per job. Each job is still designed and checked exactly like a single task: the split only decides what the jobs are.
+
+**AI decisions.** Once the answers are confirmed, an OpenAI model (`server/decide.ts`) makes the main choices for the task: plain automation, a workflow with AI steps, one agent or a team of agents; the shape of the work; the main tool and supporting pieces; where it runs; the autonomy level; the model for each kind of AI step; and a shortlist of the main tool plus at most one alternative. It weighs output quality, cost and efficiency, given the owner's answers, the rules' recommendation and reasons as one input to weigh (not an instruction), every option the guide can build, cost data, and up to twenty-two knowledge-base chunks. Each choice comes with plain reasons citing the chunks, and says what the rules suggested where it differs. `checkDecision` in `src/lib/decision.ts` holds it to hard limits: only systems the guide can build (approach, main tool, shape and supporting pieces that fit together), only providers available where the owner operates (open-weight models only when major providers aren't available or the owner must not depend on one), data kept where it must stay, and never more autonomy than the answers' risks allow (the rules' caps, plus level 3 at most for an agent acting in the owner's systems). A decision that breaks a limit gets one repair round, then the rules' recommendation stands. `recommend(answers, decision)` applies each AI choice as soon as the rules have made theirs, so the rules that follow (gotchas, first steps, the simpler start) react to the AI's choice and the caps still apply. The checked decision is cached by answers, and the design, kit and tailoring build on it. The result page says where the AI departs from the rules, and "Compare with the rules" shows the rules' version.
+
+**AI-drafted design.** On the result page, an OpenAI model (`server/design.ts`) drafts the architecture for the task: the steps, how they connect, and a plain-English what, why and passes for each, citing knowledge-base chunks. It starts from the rules' design and gets up to seventeen relevant chunks in full (`server/knowledge.ts`, ranked by the `kb` links of the rules that shaped the design). `checkDesign` in `src/lib/design.ts` holds the draft to hard limits taken from the rules' design for the same answers: the approach's limits on AI and agents, how the work starts, every safeguard word for word, every person and tool step, a well-formed graph, and citations only to chunks the model was given. The model only says what kind of AI step each one is; the model behind it comes from the AI decision, or the rules (`pickModel`), and the layout is computed, not drawn by the model. A draft that fails gets one repair round with the exact problems; after that the rules' design stays on screen. The rules' design shows while the AI works, and "Compare with the rules' design" switches between them. The starter kit, and tailoring, build on whichever design is shown.
+
+**AI-written starter kit.** Once the design settles, an OpenAI model (`server/kit.ts`) writes the kit's task-specific text for the design on screen: the business context, task rules and exact output format in the system prompt (which also feeds the n8n agent nodes, the Skill and Hermes' persona), briefs for each specialist agent, an overview, build notes, extra things to ask the owner, pitfalls citing knowledge-base chunks, illustrative test cases in `evals/examples.csv`, and the Skill's trigger line. The kit's structure stays deterministic: the step table, models, safeguards, embedded files and n8n wiring come from the design and the rules, and the AI's rules are added to the fixed safety rules, never in place of them. `checkKitText` in `src/lib/kittext.ts` checks each section on its own (no model names, links or keys; citations only to chunks it was given) and drops any that doesn't fit, so that section keeps its template. The assembled kit then goes through `kitProblems` (`src/lib/kitcheck.ts`), the same structural checks `tests/starter.test.ts` runs on every kind of design. AI designs are also required to build into a kit that passes those checks.
+
+**Tailor with AI**, on the n8n row of the starter kit, sends the answers to an OpenAI model that tailors the n8n workflow to the task (specific step names, real prompts, exact-match routing). The result is checked before it is shown: every step, branch and model must still be there, and where a person must OK every action, that approval has to be built into the workflow. With AI on, the rule-generated workflow is only the AI's starting point and is never offered; the n8n workflow (its copy button, `n8n/workflow.json` and its section of `BUILD.md`) appears once it has been tailored, and is saved in the browser so reopening the result doesn't need another call. The published site, which has no AI, still offers the generated workflow.
+
+**Shared cache.** All six check `ai-cache.nosync/cache.json` before calling a model (`server/cache.ts`). The same task, or the same answers, is served from the cache; designs and kit text are stored as the model's draft and re-checked on every read, so changes to the checks apply to old results. Rejected designs and dropped kit sections are logged on the dev server. Requests for the same thing at the same moment share one model call. A near-duplicate task (embedding similarity of 0.92 or more) reuses the earlier questions; a merely similar one (0.6 or more) is shown to the model as a reference. Short task names embed noisily (paraphrases can score 0.6 while "customer" and "supplier" emails score 0.83), which is why reuse needs a near-duplicate. The folder is git-ignored, kept out of iCloud by its `.nosync` name, and ignored by Vite's file watcher.
+
+Setup:
+
+- `.env.development` holds the switch, `VITE_AI_TAILORING=true`. Vite reads that file only in development, so `npm run build` leaves the AI features, their request code and their privacy wording out of the bundle.
+- `.env` holds `OPENAI_API_KEY`, `OPENAI_MODEL` (set to `gpt-6-luna`) and optionally `OPENAI_FAST_MODEL` and `OPENAI_EMBEDDING_MODEL` (see `.env.example`). They are read only by the dev server and never reach the browser.
 - Both files are git-ignored. There is no deployable endpoint, so a published copy cannot spend your OpenAI credit.
 
 To try it: add your key to `.env`, then restart `npm run dev`.
@@ -76,3 +94,53 @@ To try it: add your key to `.env`, then restart `npm run dev`.
 ## Privacy
 
 There are no accounts, analytics or server calls. Progress is kept in the visitor's browser storage, and a shared result link carries the answers (including the task description) inside the link itself.
+
+## Recommendation-quality evaluation
+
+Run `npm run eval:guide` to grade the deterministic guide against 24 provisional
+business scenarios. Reports appear in `outputs/guide-eval/latest.md` and
+`latest.json`. The suite checks approach and platform suitability, safeguard
+boundaries and unnecessary complexity. It makes no model calls. See
+[`evals/recommendations/README.md`](evals/recommendations/README.md) for the rubric,
+review process, initial release gate and coverage limits. The cases still need
+independent human review; a passing score is not proof of optimal tool selection.
+
+Published-case evaluation: run `npm run eval:guide:external`. See [source-backed findings and limitations](evals/recommendations/external-findings.md). This exploratory report is separate from the synthetic regression gate.
+
+## Usable-product delivery contract
+
+Every new starter kit includes `DELIVERY.md`, embedded near the beginning of
+`BUILD.md` and carried into independently downloaded component archives. It
+requires a runnable user-facing app or connected workflow, a launch path,
+repeatable input-to-output operation, and observed acceptance evidence. A plugin,
+prompt set or one completed task is not a finished product. Fixed-rule designs
+remain free of AI; workflows may use an existing intake/review surface instead
+of an unnecessary new website.
+
+The guide exports build instructions and scaffolds, not prebuilt applications.
+The downstream builder must distinguish READY from DEMO ONLY and BLOCKED, verify
+real integrations, and provide `START-HERE.md` plus `DELIVERY-REPORT.md`. Structural
+kit checks enforce inclusion of the fixed contract; they do not certify a future
+builder's runtime. AI-written build notes follow the same requirement, and the
+kit prompt fingerprint invalidates earlier cached writing.
+
+The regression tests cover contract propagation, missing-contract rejection,
+Claude agent frontmatter with quoted task titles, complete long project
+instructions, and workflow/no-AI preservation. The existing resume project can
+continue using [this follow-up brief](docs/resume-tool-follow-up.md).
+
+## Local execution benchmark pilot
+
+Run `npm run benchmark:local` after the isolated Airflow setup in
+[`evals/benchmarks/README.md`](evals/benchmarks/README.md). This compares installed
+n8n and Airflow on repeated synthetic order-processing cases, checking actual
+records, approval boundaries, duplicate handling and HTTP failure recovery.
+Timestamped reports appear under `outputs/benchmarks/`. It does not measure
+AI quality or benchmark user business examples; unmeasured total cost and human
+intervention remain explicit. See the benchmark README for execution controls
+and limitations.
+
+The AI-agent pilot is available through `npm run benchmark:agents`: n8n and
+LangGraph use the same GPT-6 Luna model on synthetic support cases. See
+[`evals/benchmarks/agents/README.md`](evals/benchmarks/agents/README.md) for the
+cumulative $3 spending cap, setup, approval checks, cost interpretation and limits.

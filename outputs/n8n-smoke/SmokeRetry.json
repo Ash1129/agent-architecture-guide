@@ -1,0 +1,57 @@
+{
+  "id": "SmokeRetry",
+  "name": "SmokeRetry",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Start",
+      "id": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Write safely",
+      "id": "Writesafely",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:59996/write",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"id\":\"synthetic-invoice-A\",\"amount\":25}",
+        "options": {
+          "timeout": 3000
+        }
+      },
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 100
+    }
+  ],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Write safely",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

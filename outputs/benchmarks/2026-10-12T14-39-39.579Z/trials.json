@@ -1,0 +1,396 @@
+[
+  {
+    "platform": "n8n",
+    "caseId": "approved-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 972.1450000000004,
+    "workMs": 161.81145800000013,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-approved-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approved-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1441.1886250000007,
+    "workMs": 227.71604200000002,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-approved-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "duplicate-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 890.6923750000005,
+    "workMs": 143.69375000000036,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-duplicate-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "duplicate-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1356.402709,
+    "workMs": 231.8652920000004,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-duplicate-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "approval-boundary",
+    "repetition": 1,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 918.7372920000016,
+    "workMs": 142.56579199999942,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-approval-boundary-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approval-boundary",
+    "repetition": 1,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 1347.1990409999999,
+    "workMs": 226.19133299999885,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-approval-boundary-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "committed-response-lost",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1076.2906670000011,
+    "workMs": 287.75825000000077,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-committed-response-lost-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "committed-response-lost",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1495.3168750000004,
+    "workMs": 363.3869999999988,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-committed-response-lost-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "persistent-outage",
+    "repetition": 1,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1177.429208999998,
+    "workMs": 396.4123749999999,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "infrastructureError": "Could not verify n8n execution result.",
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": false,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-persistent-outage-n8n.log"
+  }
+]

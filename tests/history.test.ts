@@ -15,7 +15,7 @@ describe("saved history", () => {
   it("saves a finished result with its key facts", () => {
     const s = memory();
     const [e] = upsertHistory("a", emails, s, 1000);
-    expect(e).toMatchObject({ id: "a", task: "Answer routine customer emails", approach: "agent", models: "Sonnet 5.5 + Haiku 4.5", tool: "n8n with an AI agent step", autonomy: 2, steps: 7, createdAt: 1000 });
+    expect(e).toMatchObject({ id: "a", task: "Answer routine customer emails", approach: "agent", models: "Sonnet 5.5", tool: "n8n with an AI agent step", autonomy: 2, steps: 7, createdAt: 1000 });
     expect(e.code).toBe(resultCode(emails));
   });
 

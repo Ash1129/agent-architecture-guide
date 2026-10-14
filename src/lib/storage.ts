@@ -43,3 +43,28 @@ export function saveTheme(t: ThemePref) {
     /* ignore */
   }
 }
+
+/**
+ * The questions the AI answered from the owner's own description on the start
+ * page, until they confirm their answers. Kept so a reload doesn't lose which
+ * answers were theirs and which were read from their words.
+ */
+const DESCRIBED = "aag:described";
+
+export function loadDescribed(): string[] | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(DESCRIBED) ?? "null");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveDescribed(ids: string[] | null) {
+  try {
+    if (ids) localStorage.setItem(DESCRIBED, JSON.stringify(ids));
+    else localStorage.removeItem(DESCRIBED);
+  } catch {
+    /* ignore */
+  }
+}

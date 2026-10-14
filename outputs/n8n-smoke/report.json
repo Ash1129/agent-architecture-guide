@@ -1,0 +1,246 @@
+{
+  "checks": [
+    {
+      "name": "Unmodified generated scaffold imports and executes",
+      "status": "passed",
+      "evidence": "Manual-trigger, rules-only export; placeholders are not business logic."
+    },
+    {
+      "name": "Generated IF routes match and no match separately",
+      "status": "passed",
+      "evidence": {
+        "matched": [
+          "A"
+        ],
+        "unmatched": [
+          "B"
+        ]
+      }
+    },
+    {
+      "name": "Retry and replay avoid duplicate effects at an idempotent destination",
+      "status": "passed",
+      "evidence": {
+        "attempts": 3,
+        "records": 1
+      }
+    },
+    {
+      "name": "Real webhook failure exhausts retries and runs Error Trigger",
+      "status": "passed",
+      "evidence": {
+        "attempts": 3,
+        "alerts": 1,
+        "workflowId": "SmokeFailure"
+      }
+    }
+  ],
+  "limitations": [
+    "Tests installed n8n only; no AI model, MCP, approval or real app credentials are exercised.",
+    "Duplicate prevention is implemented by the mock destination, not automatically by n8n."
+  ],
+  "version": "1.107.4",
+  "mock": {
+    "attempts": [
+      {
+        "path": "/write",
+        "payload": {
+          "id": "synthetic-invoice-A",
+          "amount": 25
+        }
+      },
+      {
+        "path": "/write",
+        "payload": {
+          "id": "synthetic-invoice-A",
+          "amount": 25
+        }
+      },
+      {
+        "path": "/write",
+        "payload": {
+          "id": "synthetic-invoice-A",
+          "amount": 25
+        }
+      },
+      {
+        "path": "/fail",
+        "payload": {}
+      },
+      {
+        "path": "/fail",
+        "payload": {}
+      },
+      {
+        "path": "/fail",
+        "payload": {}
+      },
+      {
+        "path": "/alert",
+        "payload": {
+          "execution": {
+            "id": "5",
+            "url": "http://127.0.0.1:60012/workflow/SmokeFailure/executions/5",
+            "error": {
+              "level": "warning",
+              "tags": {},
+              "description": "synthetic outage",
+              "timestamp": 1791609827376,
+              "context": {
+                "itemIndex": 0,
+                "request": {
+                  "body": {},
+                  "headers": {
+                    "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7"
+                  },
+                  "method": "POST",
+                  "uri": "http://127.0.0.1:59996/fail",
+                  "gzip": true,
+                  "rejectUnauthorized": true,
+                  "followRedirect": true,
+                  "resolveWithFullResponse": true,
+                  "followAllRedirects": true,
+                  "timeout": 3000,
+                  "encoding": null,
+                  "json": false,
+                  "useStream": true
+                }
+              },
+              "functionality": "regular",
+              "name": "NodeApiError",
+              "node": {
+                "name": "Fail after retries",
+                "id": "Failafterretries",
+                "type": "n8n-nodes-base.httpRequest",
+                "typeVersion": 4.2,
+                "parameters": {
+                  "preBuiltAgentsCalloutHttpRequest": "",
+                  "curlImport": "",
+                  "method": "POST",
+                  "url": "http://127.0.0.1:59996/fail",
+                  "authentication": "none",
+                  "provideSslCertificates": false,
+                  "sendQuery": false,
+                  "sendHeaders": false,
+                  "sendBody": true,
+                  "contentType": "json",
+                  "specifyBody": "json",
+                  "jsonBody": "{}",
+                  "options": {
+                    "timeout": 3000
+                  },
+                  "infoMessage": ""
+                },
+                "position": [
+                  0,
+                  0
+                ],
+                "retryOnFail": true,
+                "maxTries": 3,
+                "waitBetweenTries": 100
+              },
+              "messages": [
+                "503 - \"{\\\"error\\\":\\\"synthetic outage\\\"}\""
+              ],
+              "httpCode": "503",
+              "message": "Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)",
+              "stack": "NodeApiError: Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)\n    at ExecuteContext.execute (/usr/local/lib/node_modules/n8n/node_modules/n8n-nodes-base/nodes/HttpRequest/V3/HttpRequestV3.node.ts:780:15)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at WorkflowExecute.runNode (/usr/local/lib/node_modules/n8n/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1212:9)\n    at /usr/local/lib/node_modules/n8n/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1582:27\n    at /usr/local/lib/node_modules/n8n/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:2158:11"
+            },
+            "lastNodeExecuted": "Fail after retries",
+            "mode": "webhook"
+          },
+          "workflow": {
+            "id": "SmokeFailure",
+            "name": "SmokeFailure"
+          }
+        }
+      }
+    ],
+    "records": [
+      {
+        "id": "synthetic-invoice-A",
+        "amount": 25
+      }
+    ],
+    "alerts": [
+      {
+        "execution": {
+          "id": "5",
+          "url": "http://127.0.0.1:60012/workflow/SmokeFailure/executions/5",
+          "error": {
+            "level": "warning",
+            "tags": {},
+            "description": "synthetic outage",
+            "timestamp": 1791609827376,
+            "context": {
+              "itemIndex": 0,
+              "request": {
+                "body": {},
+                "headers": {
+                  "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7"
+                },
+                "method": "POST",
+                "uri": "http://127.0.0.1:59996/fail",
+                "gzip": true,
+                "rejectUnauthorized": true,
+                "followRedirect": true,
+                "resolveWithFullResponse": true,
+                "followAllRedirects": true,
+                "timeout": 3000,
+                "encoding": null,
+                "json": false,
+                "useStream": true
+              }
+            },
+            "functionality": "regular",
+            "name": "NodeApiError",
+            "node": {
+              "name": "Fail after retries",
+              "id": "Failafterretries",
+              "type": "n8n-nodes-base.httpRequest",
+              "typeVersion": 4.2,
+              "parameters": {
+                "preBuiltAgentsCalloutHttpRequest": "",
+                "curlImport": "",
+                "method": "POST",
+                "url": "http://127.0.0.1:59996/fail",
+                "authentication": "none",
+                "provideSslCertificates": false,
+                "sendQuery": false,
+                "sendHeaders": false,
+                "sendBody": true,
+                "contentType": "json",
+                "specifyBody": "json",
+                "jsonBody": "{}",
+                "options": {
+                  "timeout": 3000
+                },
+                "infoMessage": ""
+              },
+              "position": [
+                0,
+                0
+              ],
+              "retryOnFail": true,
+              "maxTries": 3,
+              "waitBetweenTries": 100
+            },
+            "messages": [
+              "503 - \"{\\\"error\\\":\\\"synthetic outage\\\"}\""
+            ],
+            "httpCode": "503",
+            "message": "Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)",
+            "stack": "NodeApiError: Service unavailable - try again later or consider setting this node to retry automatically (in the node settings)\n    at ExecuteContext.execute (/usr/local/lib/node_modules/n8n/node_modules/n8n-nodes-base/nodes/HttpRequest/V3/HttpRequestV3.node.ts:780:15)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at WorkflowExecute.runNode (/usr/local/lib/node_modules/n8n/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1212:9)\n    at /usr/local/lib/node_modules/n8n/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:1582:27\n    at /usr/local/lib/node_modules/n8n/node_modules/n8n-core/src/execution-engine/workflow-execute.ts:2158:11"
+          },
+          "lastNodeExecuted": "Fail after retries",
+          "mode": "webhook"
+        },
+        "workflow": {
+          "id": "SmokeFailure",
+          "name": "SmokeFailure"
+        }
+      }
+    ]
+  },
+  "isolatedDatabaseRemoved": true
+}

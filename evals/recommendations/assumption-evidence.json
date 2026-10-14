@@ -1,0 +1,831 @@
+{
+  "version": 1,
+  "researchDate": "2026-10-10",
+  "scope": "All 37 fields originally marked assumption in external-cases v1. Source-backed mappings remain interpretations. Analogous cases never establish original-company facts.",
+  "sources": {
+    "bordr": {
+      "url": "https://n8n.io/case-studies/bordr/",
+      "title": "Bordr original case",
+      "section": "The solution",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "oversee": {
+      "url": "https://n8n.io/case-studies/oversee/",
+      "title": "Oversee original case",
+      "section": "Solution",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "adyen": {
+      "url": "https://airflow.apache.org/use-cases/adyen/",
+      "title": "Adyen original case",
+      "section": "How did Apache Airflow help to solve this problem?",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "adobe": {
+      "url": "https://airflow.apache.org/use-cases/adobe/",
+      "title": "Adobe original case",
+      "section": "What was the problem? / What are the results?",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "remote": {
+      "url": "https://www.langchain.com/blog/customers-remote",
+      "title": "Remote original case",
+      "section": "The Solution / Why LangChain and LangGraph",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "kensho": {
+      "url": "https://www.langchain.com/blog/customers-kensho",
+      "title": "Kensho original case",
+      "section": "Designing a Multi-Agent Framework / Key Learnings",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "discord": {
+      "url": "https://discord.com/blog/how-discord-uses-open-source-tools-for-scalable-data-orchestration-transformation",
+      "title": "Discord original case",
+      "section": "Dagster & dbt / Lessons learned / How users are benefiting",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "bordr-docs": {
+      "url": "https://support.bordr.com/article/27-what-documents-do-i-need-to-apply-for-a-nif",
+      "title": "Bordr required documents",
+      "section": "Passport and proof of address",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "bordr-privacy": {
+      "url": "https://bordr.com/privacy-policy",
+      "title": "Bordr privacy policy",
+      "section": "Privacy policy",
+      "scope": "same company; broader service policy",
+      "openedOn": "2026-10-10"
+    },
+    "oversee-privacy": {
+      "url": "https://oversee.biz/privacy-policy/",
+      "title": "Oversee privacy policy",
+      "section": "Support Requests",
+      "scope": "same company; broader service policy",
+      "openedOn": "2026-10-10"
+    },
+    "adyen-reliability": {
+      "url": "https://www.adyen.com/knowledge-hub/apache-airflow-at-adyen",
+      "title": "Adyen journey to reliability",
+      "section": "Business impact; workload scale; user productivity",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "adyen-platform": {
+      "url": "https://www.adyen.com/knowledge-hub/building-our-data-science-platform-with-spark-and-jupyter",
+      "title": "Adyen data science platform",
+      "section": "On-premise requirements; Spoink",
+      "scope": "same platform lineage; historical architecture",
+      "openedOn": "2026-10-10"
+    },
+    "adyen-infra": {
+      "url": "https://www.adyen.com/en_AU/infrastructure",
+      "title": "Adyen infrastructure",
+      "section": "Hosting facilities",
+      "scope": "same company; broader infrastructure policy",
+      "openedOn": "2026-10-10"
+    },
+    "adobe-engineering": {
+      "url": "https://medium.com/adobetech/adobe-experience-platform-orchestration-service-with-apache-airflow-952203723c0b",
+      "title": "Adobe orchestration engineering",
+      "section": "Flow summary; layered design",
+      "scope": "same service; historical 2019 architecture",
+      "openedOn": "2026-10-10"
+    },
+    "remote-privacy": {
+      "url": "https://remote.com/policy/privacy-policy",
+      "title": "Remote privacy policy",
+      "section": "Suppliers of large language model services",
+      "scope": "same company; broader AI policy, not migration-specific",
+      "openedOn": "2026-10-10"
+    },
+    "kensho-engineering": {
+      "url": "https://kensho.com/news/how-kensho-built-a-multi-agent-framework-with-langgraph-to-solve-trusted-financial-data-retrieval",
+      "title": "Kensho engineering account",
+      "section": "Key learnings; fragmented retrieval",
+      "scope": "same company",
+      "openedOn": "2026-10-10"
+    },
+    "kensho-api": {
+      "url": "https://docs.kensho.com/adaptive-retrieval/api-guide",
+      "title": "Kensho Adaptive Retrieval API",
+      "section": "Authentication; request and response parameters",
+      "scope": "same service lineage; current API, not original deployment snapshot",
+      "openedOn": "2026-10-10"
+    },
+    "koralplay": {
+      "url": "https://n8n.io/case-studies/koralplay/",
+      "title": "Koralplay support and reporting automation",
+      "section": "Solution",
+      "scope": "analogous company only",
+      "openedOn": "2026-10-10"
+    },
+    "itnt": {
+      "url": "https://n8n.io/case-studies/itnt-media-group/",
+      "title": "ITNT Media Group automation",
+      "section": "Strong data privacy and control",
+      "scope": "analogous company only",
+      "openedOn": "2026-10-10"
+    }
+  },
+  "summary": {
+    "partial": 10,
+    "unresolved": 14,
+    "supported": 7,
+    "corrected": 6
+  },
+  "assumptions": [
+    {
+      "caseId": "bordr",
+      "field": "trigger",
+      "originalValue": "event",
+      "currentValue": "event",
+      "status": "partial",
+      "sourceIds": [
+        "bordr"
+      ],
+      "finding": "Order and document status changes drive the described business process.",
+      "limitation": "The exact trigger mechanism is not stated; events and polling schedules remain plausible.",
+      "alternatives": [
+        "schedule",
+        "manual"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "bordr",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "daily",
+      "status": "unresolved",
+      "sourceIds": [
+        "bordr"
+      ],
+      "finding": "The source reports growing order demand, without executions per day.",
+      "limitation": "Revenue is not run volume. The retained daily value means dozens/day and is only hypothetical.",
+      "alternatives": [
+        "occasional",
+        "high"
+      ],
+      "analogousSourceIds": [
+        "koralplay"
+      ]
+    },
+    {
+      "caseId": "bordr",
+      "field": "risks",
+      "originalValue": [
+        "personal",
+        "visible"
+      ],
+      "currentValue": [
+        "personal",
+        "visible"
+      ],
+      "status": "supported",
+      "sourceIds": [
+        "bordr-docs",
+        "bordr"
+      ],
+      "finding": "Identity documents and customer emails support personal and visible flags.",
+      "limitation": "This is an engineering interpretation, not an exhaustive risk assessment.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "bordr",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "open",
+      "status": "unresolved",
+      "sourceIds": [
+        "bordr",
+        "bordr-privacy"
+      ],
+      "finding": "Reviewed the case and service privacy policy; neither establishes unrestricted workflow deployment.",
+      "limitation": "Third-party apps do not establish permission to use arbitrary hosting or model providers.",
+      "alternatives": [
+        "residency",
+        "independence"
+      ],
+      "analogousSourceIds": [
+        "itnt"
+      ]
+    },
+    {
+      "caseId": "bordr",
+      "field": "team",
+      "originalValue": "mid",
+      "currentValue": "mid",
+      "status": "partial",
+      "sourceIds": [
+        "bordr"
+      ],
+      "finding": "The founder ran a web design business and built multi-step integrations.",
+      "limitation": "This suggests technical comfort; the exact mid-level operator capability is not verified.",
+      "alternatives": [
+        "small",
+        "large"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "oversee",
+      "field": "shape",
+      "originalValue": "judgement",
+      "currentValue": "judgement",
+      "status": "supported",
+      "sourceIds": [
+        "oversee"
+      ],
+      "finding": "The scoped workflow retrieves context and uses AI to assemble a report for staff.",
+      "limitation": "Judgement is a reasonable mapping of that bounded workflow; it is not the entire support process.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "oversee",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "daily",
+      "status": "unresolved",
+      "sourceIds": [
+        "oversee"
+      ],
+      "finding": "Day-to-day use is reported, but not the count of investigation runs.",
+      "limitation": "Daily use does not prove dozens/day.",
+      "alternatives": [
+        "occasional",
+        "high"
+      ],
+      "analogousSourceIds": [
+        "koralplay"
+      ]
+    },
+    {
+      "caseId": "oversee",
+      "field": "risks",
+      "originalValue": [
+        "personal"
+      ],
+      "currentValue": [
+        "personal"
+      ],
+      "status": "supported",
+      "sourceIds": [
+        "oversee-privacy",
+        "oversee"
+      ],
+      "finding": "Support records include identity and contact information, supporting the personal flag.",
+      "limitation": "Exact fields accessible to the n8n workflow are not documented.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "oversee",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "open",
+      "status": "unresolved",
+      "sourceIds": [
+        "oversee-privacy",
+        "oversee"
+      ],
+      "finding": "The service policy covers handling of customer information.",
+      "limitation": "It does not specify permissible n8n hosting or model processing locations.",
+      "alternatives": [
+        "residency",
+        "independence"
+      ],
+      "analogousSourceIds": [
+        "itnt"
+      ]
+    },
+    {
+      "caseId": "oversee",
+      "field": "kinds",
+      "originalValue": "no",
+      "currentValue": "no",
+      "status": "unresolved",
+      "sourceIds": [
+        "oversee"
+      ],
+      "finding": "The case describes investigation/reporting without a support request taxonomy.",
+      "limitation": "No is an unverified simplification, not proof that routing is unnecessary.",
+      "alternatives": [
+        "yes"
+      ],
+      "analogousSourceIds": [
+        "koralplay"
+      ]
+    },
+    {
+      "caseId": "oversee",
+      "field": "quality",
+      "originalValue": "partly",
+      "currentValue": "partly",
+      "status": "unresolved",
+      "sourceIds": [
+        "oversee"
+      ],
+      "finding": "Reports assemble case information, but a report acceptance rubric is unpublished.",
+      "limitation": "Partly means subjective quality in the UI. Publication silence does not establish subjectivity; retain only as a sensitivity baseline.",
+      "alternatives": [
+        "clear",
+        "no"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "oversee",
+      "field": "knowledge",
+      "originalValue": [
+        "reference"
+      ],
+      "currentValue": [
+        "reference"
+      ],
+      "status": "partial",
+      "sourceIds": [
+        "oversee"
+      ],
+      "finding": "The workflow consults a case database and historical context.",
+      "limitation": "Reference inputs are supported; reference-only sufficiency and absence of learned memory are not established.",
+      "alternatives": [
+        [
+          "reference",
+          "playbook"
+        ],
+        [
+          "reference",
+          "memory"
+        ]
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "oversee",
+      "field": "split",
+      "originalValue": "sequential",
+      "currentValue": "sequential",
+      "status": "partial",
+      "sourceIds": [
+        "oversee"
+      ],
+      "finding": "Context collection logically precedes delivery of the structured report.",
+      "limitation": "The article does not rule out parallel retrieval; sequential is a top-level abstraction.",
+      "alternatives": [
+        "sections"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adyen",
+      "field": "systems",
+      "originalValue": "act",
+      "currentValue": "act",
+      "status": "supported",
+      "sourceIds": [
+        "adyen"
+      ],
+      "finding": "Jobs generate data and the custom backfill plugin clears generated data.",
+      "limitation": "Act describes writes and deletions, not just reads.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adyen",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "high",
+      "status": "corrected",
+      "sourceIds": [
+        "adyen-reliability"
+      ],
+      "finding": "Thousands of regularly executing tasks support high aggregate orchestration volume.",
+      "limitation": "This mapping covers the described fleet, not the frequency of any single DAG.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adyen",
+      "field": "risks",
+      "originalValue": [
+        "none"
+      ],
+      "currentValue": [
+        "personal",
+        "visible",
+        "irreversible"
+      ],
+      "status": "corrected",
+      "sourceIds": [
+        "adyen-reliability",
+        "adyen"
+      ],
+      "finding": "Merchant-facing payment reports and destructive custom backfills support visible, confidential-data and costly-error risks.",
+      "limitation": "Flags are our interpretation of the scoped fleet; they do not imply every task performs a payment.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adyen",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "residency",
+      "status": "corrected",
+      "sourceIds": [
+        "adyen-platform",
+        "adyen-infra"
+      ],
+      "finding": "The platform lineage required on-premise operation; infrastructure policy describes company-managed servers and payment-data locations.",
+      "limitation": "Residency is the closest available encoding of controlled deployment. Historical evidence and wider policy do not specify every current Airflow DAG.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adobe",
+      "field": "systems",
+      "originalValue": "act",
+      "currentValue": "act",
+      "status": "supported",
+      "sourceIds": [
+        "adobe-engineering"
+      ],
+      "finding": "The service creates workflow files, updates metadata and launches jobs.",
+      "limitation": "These are write/execute operations.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adobe",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "daily",
+      "status": "unresolved",
+      "sourceIds": [
+        "adobe-engineering"
+      ],
+      "finding": "The engineering account explicitly describes varying frequency and concurrency.",
+      "limitation": "Concurrent task capacity does not prove a daily execution count for this scoped workload.",
+      "alternatives": [
+        "occasional",
+        "high"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adobe",
+      "field": "risks",
+      "originalValue": [
+        "none"
+      ],
+      "currentValue": [
+        "none"
+      ],
+      "status": "unresolved",
+      "sourceIds": [
+        "adobe-engineering"
+      ],
+      "finding": "Authentication, authorization and workload isolation are documented.",
+      "limitation": "These controls do not establish that all outputs are internal/easy to fix; none remains an unverified baseline.",
+      "alternatives": [
+        [
+          "personal"
+        ],
+        [
+          "irreversible"
+        ],
+        [
+          "personal",
+          "irreversible"
+        ]
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "adobe",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "open",
+      "status": "unresolved",
+      "sourceIds": [
+        "adobe-engineering"
+      ],
+      "finding": "The historical service runs on Azure with separated service clusters.",
+      "limitation": "Observed cloud deployment does not prove unrestricted deployment permission.",
+      "alternatives": [
+        "residency",
+        "independence"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "remote",
+      "field": "trigger",
+      "originalValue": "manual",
+      "currentValue": "manual",
+      "status": "partial",
+      "sourceIds": [
+        "remote"
+      ],
+      "finding": "Customers upload files and staff supply them to the migration agent.",
+      "limitation": "This does not settle whether execution begins with a manual request or an upload event.",
+      "alternatives": [
+        "event"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "remote",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "daily",
+      "status": "unresolved",
+      "sourceIds": [
+        "remote"
+      ],
+      "finding": "Customer and file counts are described without migration executions/day.",
+      "limitation": "Thousands of customers is not daily run volume.",
+      "alternatives": [
+        "occasional",
+        "high"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "remote",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "open",
+      "status": "unresolved",
+      "sourceIds": [
+        "remote-privacy",
+        "remote"
+      ],
+      "finding": "The company describes governed third-party AI use and secure migration storage.",
+      "limitation": "Policy does not identify migration-specific locations or permit arbitrary providers.",
+      "alternatives": [
+        "residency",
+        "independence"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "remote",
+      "field": "kinds",
+      "originalValue": "no",
+      "currentValue": "no",
+      "status": "partial",
+      "sourceIds": [
+        "remote"
+      ],
+      "finding": "The scoped goal is one migration outcome across CSV, Excel and SQL formats.",
+      "limitation": "Different formats may require routed parsing; a single goal does not prove one handling path.",
+      "alternatives": [
+        "yes"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "remote",
+      "field": "quality",
+      "originalValue": "partly",
+      "currentValue": "clear",
+      "status": "corrected",
+      "sourceIds": [
+        "remote"
+      ],
+      "finding": "An explicit destination schema and validated JSON support checklist-based acceptance.",
+      "limitation": "Schema validity alone does not prove semantic correctness; field/value reconciliation still needs testing.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "remote",
+      "field": "knowledge",
+      "originalValue": [
+        "reference"
+      ],
+      "currentValue": [
+        "reference"
+      ],
+      "status": "partial",
+      "sourceIds": [
+        "remote"
+      ],
+      "finding": "The target onboarding schema supplies concrete reference material.",
+      "limitation": "Published details do not establish whether reference alone suffices or additional playbooks are used.",
+      "alternatives": [
+        [
+          "reference",
+          "playbook"
+        ]
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "kensho",
+      "field": "trigger",
+      "originalValue": "manual",
+      "currentValue": "manual",
+      "status": "partial",
+      "sourceIds": [
+        "kensho-api",
+        "kensho-engineering"
+      ],
+      "finding": "Interactive and service-account API access are both documented.",
+      "limitation": "Manual is one scenario; calling applications can trigger retrieval automatically.",
+      "alternatives": [
+        "event"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "kensho",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "daily",
+      "status": "unresolved",
+      "sourceIds": [
+        "kensho-engineering",
+        "kensho-api"
+      ],
+      "finding": "The articles/API guide do not publish absolute query executions per day.",
+      "limitation": "Enterprise scale and API availability are not traffic measurements.",
+      "alternatives": [
+        "occasional",
+        "high"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "kensho",
+      "field": "risks",
+      "originalValue": [
+        "visible"
+      ],
+      "currentValue": [
+        "visible"
+      ],
+      "status": "supported",
+      "sourceIds": [
+        "kensho-engineering"
+      ],
+      "finding": "Clients receive citation-backed financial answers, supporting visible output.",
+      "limitation": "The flag is not an exhaustive characterization of data licensing or confidentiality.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "kensho",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "open",
+      "status": "unresolved",
+      "sourceIds": [
+        "kensho-api"
+      ],
+      "finding": "The API requires authentication and documents controlled dataset access.",
+      "limitation": "Access control does not establish geographic hosting or provider constraints.",
+      "alternatives": [
+        "residency",
+        "independence"
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "kensho",
+      "field": "quality",
+      "originalValue": "partly",
+      "currentValue": "clear",
+      "status": "corrected",
+      "sourceIds": [
+        "kensho-engineering"
+      ],
+      "finding": "Routing, exact-match retrieval and completeness are explicitly evaluated.",
+      "limitation": "That supports clear criteria; it does not prove complete coverage or perfect reliability.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "kensho",
+      "field": "knowledge",
+      "originalValue": [
+        "reference"
+      ],
+      "currentValue": [
+        "reference"
+      ],
+      "status": "partial",
+      "sourceIds": [
+        "kensho-engineering",
+        "kensho-api"
+      ],
+      "finding": "Verified datasets are essential retrieval references.",
+      "limitation": "The publications do not establish reference-only sufficiency or rule out additional playbooks.",
+      "alternatives": [
+        [
+          "reference",
+          "playbook"
+        ],
+        [
+          "reference",
+          "memory"
+        ]
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "discord",
+      "field": "systems",
+      "originalValue": "act",
+      "currentValue": "act",
+      "status": "supported",
+      "sourceIds": [
+        "discord"
+      ],
+      "finding": "Table materializations and production merges write derived data.",
+      "limitation": "Act is appropriate for the scoped data operations.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "discord",
+      "field": "volume",
+      "originalValue": "daily",
+      "currentValue": "high",
+      "status": "corrected",
+      "sourceIds": [
+        "discord"
+      ],
+      "finding": "The article reports about 4,000 daily materializations.",
+      "limitation": "High applies to the described aggregate system, not necessarily one table.",
+      "alternatives": [],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "discord",
+      "field": "risks",
+      "originalValue": [
+        "none"
+      ],
+      "currentValue": [
+        "none"
+      ],
+      "status": "partial",
+      "sourceIds": [
+        "discord"
+      ],
+      "finding": "The article describes production merge races and consistency-sensitive backfills.",
+      "limitation": "None is not supported. Precise cost/reversibility is unknown, so compare costly-error and confidential-data scenarios.",
+      "alternatives": [
+        [
+          "irreversible"
+        ],
+        [
+          "personal"
+        ],
+        [
+          "personal",
+          "irreversible"
+        ]
+      ],
+      "analogousSourceIds": []
+    },
+    {
+      "caseId": "discord",
+      "field": "location",
+      "originalValue": "open",
+      "currentValue": "open",
+      "status": "unresolved",
+      "sourceIds": [
+        "discord"
+      ],
+      "finding": "The system uses Kubernetes, BigQuery and Dagster hybrid cloud.",
+      "limitation": "Those choices do not disclose all location restrictions; cloud use is not unrestricted permission.",
+      "alternatives": [
+        "residency",
+        "independence"
+      ],
+      "analogousSourceIds": []
+    }
+  ],
+  "searchNotes": [
+    "Re-read all seven original cases and searched company-authored engineering, support, API and privacy publications.",
+    "Targeted searches covered Bordr order triggers/operator background; Oversee support/security; Adyen data-platform scale/hosting; Adobe orchestration; Remote migration/AI handling; Kensho API/quality/traffic; Discord operations.",
+    "Privacy pages provide handling context only; this is not a legal interpretation or evidence of unrestricted deployment.",
+    "Kensho overview was returned in search but direct opens failed twice; it is not a validated link in this ledger. The opened API guide and engineering article provide the cited evidence.",
+    "Koralplay provides a concrete high-volume and routed support comparison; ITNT documents controlled self-hosting with selective cloud-model use. Neither proves Bordr or Oversee has identical constraints.",
+    "No exact source was found for remaining unknowns in this bounded research pass. Absence of published evidence is not evidence of absence."
+  ]
+}

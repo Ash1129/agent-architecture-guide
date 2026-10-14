@@ -1,0 +1,57 @@
+{
+  "id": "SmokeErrors",
+  "name": "SmokeErrors",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Error event",
+      "id": "Errorevent",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Record alert",
+      "id": "Recordalert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:59996/alert",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 3000
+        }
+      },
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 100
+    }
+  ],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "connections": {
+    "Error event": {
+      "main": [
+        [
+          {
+            "node": "Record alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

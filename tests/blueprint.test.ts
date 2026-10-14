@@ -33,7 +33,8 @@ function problems(b: Blueprint, r: Recommendation | null): string[] {
   const byId = new Map(b.nodes.map((n) => [n.id, n]));
   if (byId.size !== b.nodes.length) p.push("duplicate node ids");
   b.nodes.forEach((n, i) => n.step !== i + 1 && p.push(`step order broken at ${n.id}`));
-  if (b.stages > 7) p.push(`too many stages: ${b.stages}`);
+  // A decision about a person adds the evidence-packet column before the AI steps.
+  if (b.stages > (b.nodes.some((n) => n.id === "evidence") ? 8 : 7)) p.push(`too many stages: ${b.stages}`);
   if (b.tracks > 3) p.push(`too many tracks: ${b.tracks}`);
   if (b.nodes.filter((n) => n.kind === "end").length !== 1) p.push("not exactly one finish");
   if (!b.nodes.some((n) => n.kind === "start")) p.push("no start");
@@ -265,12 +266,14 @@ describe("models and methods on every step", () => {
     expect(failures).toEqual([]);
   }, 120_000);
 
-  it("uses a small model to sort, the most capable to coordinate, and steps down at volume", () => {
+  it("uses Sonnet to sort, the most capable to coordinate, and points high volume to Haiku 5.5 as the step down", () => {
     const routed = bp(cases.routing);
-    expect(routed.nodes.find((n) => n.id === "router")!.engine!.short).toBe("Haiku 4.5");
+    expect(routed.nodes.find((n) => n.id === "router")!.engine!.short).toBe("Sonnet 5.5");
     expect(bp(cases.routedMulti).nodes.find((n) => n.id === "coord")!.engine!.short).toBe("Opus 5.5");
     const busy = bp({ ...cases.chain, volume: "high" });
-    expect(busy.nodes.find((n) => n.id === "step1")!.engine!.short).toBe("Haiku 4.5");
+    expect(busy.nodes.find((n) => n.id === "step1")!.engine!.short).toBe("Sonnet 5.5");
+    const step1 = busy.nodes.find((n) => n.id === "step1")!.engine!;
+    expect(step1.kind === "model" && step1.why).toMatch(/test Claude Haiku 5\.5 here/);
     expect(bp(cases.chain).nodes.find((n) => n.id === "step1")!.engine!.short).toBe("Sonnet 5.5");
     expect(bp(cases.multi).nodes.find((n) => n.id === "coord")!.engine!.short).toBe("Open-weight, large");
   });

@@ -11,6 +11,9 @@ import type { Recommendation, Why } from "./rules";
 export type NodeKind = "start" | "ai" | "fixed" | "decision" | "human" | "tool" | "end";
 export type Gate = { kind: "human" | "stop"; text: string };
 
+/** The tool gate that means a person approves every change the agent makes. */
+export const OK_EVERY_ACTION = "You OK every action";
+
 export type BNode = {
   id: string;
   step: number;
@@ -28,6 +31,8 @@ export type BNode = {
   why: string;
   passes: string;
   rules: string[];
+  /** Knowledge-base chunks an AI-drafted step cites (see src/lib/design.ts). */
+  kb?: { id: string; title: string }[];
 };
 
 export type EdgeStyle = "flow" | "loop" | "assign";
@@ -59,9 +64,10 @@ export const KIND_LABEL: Record<NodeKind, string> = {
 const TOOL_SHORT: Record<string, string> = {
   n8n: "n8n",
   airflow: "Airflow",
-  cowork: "Claude Cowork",
+  cowork: "Claude",
   claude: "Claude",
   hermes: "Hermes Agent",
+  langgraph: "LangGraph",
   "n8n-agent": "n8n",
 };
 
@@ -127,6 +133,7 @@ function whyOf(r: Recommendation, ruleId: string): Why | undefined {
     ...r.topology.why,
     ...r.tools.flatMap((t) => t.why),
     r.hosting.why,
+    ...(r.hosting.also ?? []),
     ...r.autonomy.why,
     r.simpler.why,
   ];
@@ -149,6 +156,7 @@ function triggerEngine(a: Answers): Engine {
 function startNode(g: Graph, r: Recommendation, a: Answers, home: string): Draft {
   const t = a.trigger;
   // When Hermes runs the agent, n8n is what watches for events (rule TL9).
+  const customGraph = coreTool(r) === "langgraph";
   const watcher = coreTool(r) === "hermes" && has(r, "n8n") ? "n8n" : home;
   return g.add({
     id: "start",
@@ -159,9 +167,9 @@ function startNode(g: Graph, r: Recommendation, a: Answers, home: string): Draft
       t === "manual"
         ? `In ${home}`
         : t === "schedule"
-          ? `${home} schedule`
+          ? customGraph ? "Application scheduler" : `${home} schedule`
           : t === "event"
-            ? `${watcher} trigger`
+            ? customGraph ? "Authenticated event endpoint" : `${watcher} trigger`
             : coreTool(r) === "airflow" || has(r, "airflow")
               ? "Airflow dependency"
               : "Timed after imports",
@@ -215,7 +223,8 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
       track: bypass.length ? [0, Math.min(...bypass) - 1] : undefined,
       name: "You approve each result",
       label: level === 1 ? "A person does the work" : "Before anything goes out",
-      what: "A named person reviews every result before it leaves the system, and either approves it or sends it back.",
+      gates: a.risks?.includes("decides") ? [{ kind: "human", text: "Adverse outcomes confirmed" }] : [],
+      what: "A named person reviews every result with the checklist beside the source material and any item marked insufficient evidence, one case at a time, and approves it, changes it or sends it back. No batch approval.",
       why: `Autonomy starts at level ${level}. ${approvalWhy}`,
       passes: "Approved results only. Rejected ones go back with a note, and become test examples.",
       rules: r.autonomy.why.map((w) => w.ruleId),
@@ -266,18 +275,47 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
   g.link(skips, end);
 }
 
-/** The checker step from the generator-and-checker pattern. */
+/**
+ * A decision about a person: the fixed step, before any AI step, that builds
+ * the evidence packet and strips who the person is. An instruction to ignore
+ * a detail is intent; not seeing it is a mechanism (AU12).
+ */
+function evidenceStep(g: Graph, from: Draft): Draft {
+  g.next();
+  const packet = g.add({
+    id: "evidence",
+    kind: "fixed",
+    engine: algorithm("scripted"),
+    name: "Build the evidence packet",
+    label: "Strips who the person is",
+    gates: [
+      { kind: "stop", text: "Identity stripped first" },
+      { kind: "human", text: "Human review on request" },
+    ],
+    what: "A fixed step copies only what the decision may rest on (facts, history, requirements) into a packet, stripping the name, contact details, address, photo, school, age and anything else that stands in for who the person is. AI steps work from the packet only. Anyone who asks for a human review goes to a person.",
+    why: "An instruction to ignore a detail is intent, not a mechanism. A step that removes it is.",
+    passes: "The evidence packet. The person's identity is held back for the final record only.",
+    rules: ["AU12"],
+  });
+  g.link(from, packet);
+  return packet;
+}
+
+/** The checker step from the generator-and-checker pattern: fixed checks first, then a second model. */
 function evaluator(g: Graph, r: Recommendation, a: Answers, producer: Draft, track?: number | [number, number]): Draft {
   g.next();
   const check = g.add({
     id: "check",
     kind: "decision",
-    engine: pickModel("checker", a),
+    engine: pickModel("checker", a, r.modelPicks, producer.engine?.kind === "model" ? producer.engine.model : undefined),
     track,
     name: "Check against your checklist",
-    label: "Checker model",
-    gates: [{ kind: "stop", text: "3 tries, then a person" }],
-    what: "A second AI pass compares the work with your written checklist. If it fails, specific feedback goes back for a fix.",
+    label: "Checks, then a second model",
+    gates: [
+      { kind: "stop", text: "Quotes must match source" },
+      { kind: "stop", text: "3 tries, then a person" },
+    ],
+    what: "Fixed checks run first: every quoted span must appear word for word in the source, and every item on the checklist must be addressed. Then a second model, not the one that did the work, judges it against the checklist. If it fails, specific feedback goes back for a fix.",
     why: whyOf(r, "T11")?.text ?? `You said ${said(a, "quality")}.`,
     passes: "Work that passes the checklist. After three failed rounds, the case goes to a person instead.",
     rules: ["T11"],
@@ -296,7 +334,10 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
   const home = TOOL_SHORT[core];
   const addOns = r.topology.addOns;
   const level = r.autonomy.level;
-  const start = startNode(g, r, a, home);
+  const trigger = startNode(g, r, a, home);
+  // A decision about a person: before any AI step, a fixed step builds the evidence packet and strips who the person is (AU12).
+  const decides = !!a.risks?.includes("decides") && r.approach.id !== "automation";
+  const start = decides ? evidenceStep(g, trigger) : trigger;
 
   const aiWhere = core === "claude" || core === "hermes" ? (has(r, "skill") ? `${home} with your Skill` : home) : `AI step in ${home}`;
   const playbookNote = has(r, "skill")
@@ -393,6 +434,13 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       g.link(rules, actB, "no match");
       approvalAndEnd(g, r, a, [actA, actB]);
     }
+    if (a.requirements?.includes("approval") && a.systems === "act") {
+      for (const n of g.nodes.filter(n => n.kind === "fixed")) {
+        n.name = `Prepare: ${n.name}`;
+        n.what = "Prepare a proposed change only. Do not write to external systems here. Release or execute it only after the named reviewer approves. " + n.what;
+        (n.gates ??= []).push({ kind: "human", text: OK_EVERY_ACTION });
+      }
+    }
     return g.finish("recommended", r.approach.title, summaryOf(r, home), TOOLS[core].name);
   }
 
@@ -407,7 +455,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const router = g.add({
         id: "router",
         kind: "decision",
-        engine: pickModel("router", a),
+        engine: pickModel("router", a, r.modelPicks),
         name: "Sort by type",
         label: "Small, fast model",
         what: "A quick AI step reads each item and decides which type it is, so it can go down the right path.",
@@ -424,7 +472,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const typeA = g.add({
         id: "typeA",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         track: 0,
         name: "Most common type",
         label: routeLabel,
@@ -437,7 +485,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const typeB = g.add({
         id: "typeB",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         track: 1,
         name: "Other known types",
         label: routeLabel,
@@ -471,7 +519,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
         g.add({
           id: `part${x}`,
           kind: "ai",
-          engine: pickModel(voting ? "attempt" : "worker", a),
+          engine: pickModel(voting ? "attempt" : "worker", a, r.modelPicks),
           track: i,
           name: voting ? `Independent attempt ${x}` : `Section ${x}`,
           label: aiWhere,
@@ -506,7 +554,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const step1 = g.add({
         id: "step1",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         name: "First AI step",
         label: aiWhere,
         what: `The first part of the job, for example reading the input and producing a draft.${playbookNote}${refNote}`,
@@ -534,7 +582,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       const step2 = g.add({
         id: "step2",
         kind: "ai",
-        engine: pickModel("worker", a),
+        engine: pickModel("worker", a, r.modelPicks),
         name: "Second AI step",
         label: aiWhere,
         what: "The next part of the job builds on the checked draft, for example refining, translating or formatting it.",
@@ -567,7 +615,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
     entry = g.add({
       id: "router",
       kind: "decision",
-      engine: pickModel("router", a),
+      engine: pickModel("router", a, r.modelPicks),
       name: "Routine or open-ended?",
       label: "Small, fast model",
       what: "A quick AI step separates routine requests, which follow a fixed path, from the open-ended ones that need an agent.",
@@ -580,7 +628,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
 
   const toolGate: Gate[] =
     a.systems === "act" && level <= 3
-      ? [{ kind: "human", text: level <= 2 ? "You OK every action" : "You OK risky actions" }]
+      ? [{ kind: "human", text: level <= 2 ? OK_EVERY_ACTION : "You OK risky actions" }]
       : [];
   const toolNode = (track: number, stage?: number): Draft =>
     g.add({
@@ -629,7 +677,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       id: "agent",
       kind: "ai",
       track: offset,
-      engine: pickModel("agent", a),
+      engine: pickModel("agent", a, r.modelPicks),
       name: "Agent works the case",
       label: `Agent in ${home}`,
       gates: [{ kind: "stop", text: "Stops at goal or step limit" }],
@@ -647,7 +695,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
     const coord = g.add({
       id: "coord",
       kind: "ai",
-      engine: pickModel("coordinator", a),
+      engine: pickModel("coordinator", a, r.modelPicks),
       track: band(offset, offset + 2 - (routed ? 1 : 0)),
       name: "Coordinator plans",
       label: `Agent in ${home}`,
@@ -669,7 +717,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
       g.add({
         id: `spec${x}`,
         kind: "ai",
-        engine: pickModel("specialist", a),
+        engine: pickModel("specialist", a, r.modelPicks),
         track: offset + i,
         name: material ? `Covers area ${x}` : `Specialist ${x}`,
         label: material ? "Own slice of material" : "Own brief and tools",
@@ -686,7 +734,7 @@ export function buildBlueprint(r: Recommendation, raw: Answers): Blueprint {
     const combine = g.add({
       id: "combine",
       kind: "ai",
-      engine: pickModel("coordinator", a),
+      engine: pickModel("coordinator", a, r.modelPicks),
       track: band(offset, offset + count - 1),
       name: "Coordinator combines",
       label: `Agent in ${home}`,
@@ -764,7 +812,7 @@ export function buildSimplerBlueprint(r: Recommendation, raw: Answers): Blueprin
       id: "agent",
       kind: "ai",
       track: 0,
-      engine: pickModel("agent", a),
+      engine: pickModel("agent", a, r.modelPicks),
       name: "One agent, every role",
       label: `Agent in ${home}`,
       gates: [{ kind: "stop", text: "Stops at goal or step limit" }],
@@ -847,7 +895,7 @@ export function buildSimplerBlueprint(r: Recommendation, raw: Answers): Blueprin
     const prompt = g.add({
       id: "prompt",
       kind: "ai",
-      engine: pickModel("worker", a),
+      engine: pickModel("worker", a, r.modelPicks),
       name: id === "S3" ? "Claude follows your playbook" : "One well-written prompt",
       label: id === "S3" ? "Claude + written playbook" : "Claude, examples attached",
       what:

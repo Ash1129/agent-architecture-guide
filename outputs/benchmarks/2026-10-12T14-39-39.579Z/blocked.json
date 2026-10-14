@@ -1,0 +1,5 @@
+{
+  "error": "Error: Could not verify n8n execution result. Inspect /var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc/1-persistent-outage-n8n.log",
+  "completedTrials": 9,
+  "isolated": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-gT12Kc"
+}

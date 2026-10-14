@@ -1,0 +1,1054 @@
+{
+  "version": 2,
+  "authorship": "Externally sourced problems; assistant-authored scoped encodings and rubrics. User accepted source shortlist; expectations remain unreviewed. Not held out or independently benchmarked.",
+  "cases": [
+    {
+      "id": "bordr",
+      "company": "Bordr",
+      "source": {
+        "url": "https://n8n.io/case-studies/bordr/",
+        "publisher": "n8n customer story",
+        "section": "The solution",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "Orders connect Airtable, transactional email, partner tasks and PDF generation through branching workflows."
+        ]
+      },
+      "brief": "Process relocation orders, generate PDFs, create partner tasks and send transactional status emails.",
+      "answers": {
+        "task": "Process relocation orders, generate PDFs, create partner tasks and send transactional status emails.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "event",
+        "volume": "daily",
+        "risks": [
+          "personal",
+          "visible"
+        ],
+        "location": "open",
+        "team": "mid"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped to the listed order-processing workflows."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Listed actions use branching and conditional logic."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "The workflows create records, PDFs and emails."
+        },
+        "trigger": {
+          "kind": "assumption",
+          "note": "Order and document status changes drive the described business process. The exact trigger mechanism is not stated; events and polling schedules remain plausible.",
+          "evidenceIds": [
+            "bordr"
+          ],
+          "researchStatus": "partial"
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "The source reports growing order demand, without executions per day. Revenue is not run volume. The retained daily value means dozens/day and is only hypothetical.",
+          "evidenceIds": [
+            "bordr"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "risks": {
+          "kind": "source-interpretation",
+          "note": "Identity documents and customer emails support personal and visible flags. This is an engineering interpretation, not an exhaustive risk assessment.",
+          "evidenceIds": [
+            "bordr-docs",
+            "bordr"
+          ],
+          "researchStatus": "supported"
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "Reviewed the case and service privacy policy; neither establishes unrestricted workflow deployment. Third-party apps do not establish permission to use arbitrary hosting or model providers.",
+          "evidenceIds": [
+            "bordr",
+            "bordr-privacy"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "team": {
+          "kind": "assumption",
+          "note": "The founder ran a web design business and built multi-step integrations. This suggests technical comfort; the exact mid-level operator capability is not verified.",
+          "evidenceIds": [
+            "bordr"
+          ],
+          "researchStatus": "partial"
+        }
+      },
+      "observedStack": [
+        "n8n"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "automation"
+          ]
+        },
+        {
+          "kind": "noAI"
+        }
+      ],
+      "manualCriteria": [
+        "Check duplicate-order handling, safe email retries and recipient/document matching.",
+        "Verify whether operator skills and order triggers match the assumed answers."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "uncertaintyVariants": [
+        {
+          "field": "trigger",
+          "value": "schedule",
+          "reason": "The exact trigger mechanism is not stated; events and polling schedules remain plausible."
+        },
+        {
+          "field": "trigger",
+          "value": "manual",
+          "reason": "The exact trigger mechanism is not stated; events and polling schedules remain plausible."
+        },
+        {
+          "field": "volume",
+          "value": "occasional",
+          "reason": "Revenue is not run volume. The retained daily value means dozens/day and is only hypothetical."
+        },
+        {
+          "field": "volume",
+          "value": "high",
+          "reason": "Revenue is not run volume. The retained daily value means dozens/day and is only hypothetical."
+        },
+        {
+          "field": "location",
+          "value": "residency",
+          "reason": "Third-party apps do not establish permission to use arbitrary hosting or model providers."
+        },
+        {
+          "field": "location",
+          "value": "independence",
+          "reason": "Third-party apps do not establish permission to use arbitrary hosting or model providers."
+        },
+        {
+          "field": "team",
+          "value": "small",
+          "reason": "This suggests technical comfort; the exact mid-level operator capability is not verified."
+        },
+        {
+          "field": "team",
+          "value": "large",
+          "reason": "This suggests technical comfort; the exact mid-level operator capability is not verified."
+        }
+      ]
+    },
+    {
+      "id": "oversee",
+      "company": "Oversee",
+      "source": {
+        "url": "https://n8n.io/case-studies/oversee/",
+        "publisher": "n8n customer story",
+        "section": "Solution",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "AI gathers case information into structured reports; operations staff decide the next action. Autonomous customer communication is described as a future goal."
+        ]
+      },
+      "brief": "Gather service-request context across systems and produce a report for an operations person to decide the next action.",
+      "answers": {
+        "task": "Gather service-request context across systems and produce a report for an operations person to decide the next action.",
+        "shape": "judgement",
+        "systems": "read",
+        "trigger": "event",
+        "volume": "daily",
+        "risks": [
+          "personal"
+        ],
+        "location": "open",
+        "team": "large",
+        "kinds": "no",
+        "quality": "partly",
+        "knowledge": [
+          "reference"
+        ],
+        "split": "sequential"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped to current investigation support, excluding the future roadmap."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "The scoped workflow retrieves context and uses AI to assemble a report for staff. Judgement is a reasonable mapping of that bounded workflow; it is not the entire support process.",
+          "evidenceIds": [
+            "oversee"
+          ],
+          "researchStatus": "supported"
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Scoped to information gathering; staff decide subsequent actions."
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Workflow starts when a service request comes in."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Day-to-day use is reported, but not the count of investigation runs. Daily use does not prove dozens/day.",
+          "evidenceIds": [
+            "oversee"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "risks": {
+          "kind": "source-interpretation",
+          "note": "Support records include identity and contact information, supporting the personal flag. Exact fields accessible to the n8n workflow are not documented.",
+          "evidenceIds": [
+            "oversee-privacy",
+            "oversee"
+          ],
+          "researchStatus": "supported"
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "The service policy covers handling of customer information. It does not specify permissible n8n hosting or model processing locations.",
+          "evidenceIds": [
+            "oversee-privacy",
+            "oversee"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "The source says developers build workflows."
+        },
+        "kinds": {
+          "kind": "assumption",
+          "note": "The case describes investigation/reporting without a support request taxonomy. No is an unverified simplification, not proof that routing is unnecessary.",
+          "evidenceIds": [
+            "oversee"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "quality": {
+          "kind": "assumption",
+          "note": "Reports assemble case information, but a report acceptance rubric is unpublished. Partly means subjective quality in the UI. Publication silence does not establish subjectivity; retain only as a sensitivity baseline.",
+          "evidenceIds": [
+            "oversee"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "knowledge": {
+          "kind": "assumption",
+          "note": "The workflow consults a case database and historical context. Reference inputs are supported; reference-only sufficiency and absence of learned memory are not established.",
+          "evidenceIds": [
+            "oversee"
+          ],
+          "researchStatus": "partial"
+        },
+        "split": {
+          "kind": "assumption",
+          "note": "Context collection logically precedes delivery of the structured report. The article does not rule out parallel retrieval; sequential is a top-level abstraction.",
+          "evidenceIds": [
+            "oversee"
+          ],
+          "researchStatus": "partial"
+        }
+      },
+      "observedStack": [
+        "n8n"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "workflow",
+            "agent"
+          ]
+        },
+        {
+          "kind": "review",
+          "maxAutonomy": 2
+        }
+      ],
+      "manualCriteria": [
+        "Confirm reports preserve source context and do not send customer replies automatically."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "uncertaintyVariants": [
+        {
+          "field": "volume",
+          "value": "occasional",
+          "reason": "Daily use does not prove dozens/day."
+        },
+        {
+          "field": "volume",
+          "value": "high",
+          "reason": "Daily use does not prove dozens/day."
+        },
+        {
+          "field": "location",
+          "value": "residency",
+          "reason": "It does not specify permissible n8n hosting or model processing locations."
+        },
+        {
+          "field": "location",
+          "value": "independence",
+          "reason": "It does not specify permissible n8n hosting or model processing locations."
+        },
+        {
+          "field": "kinds",
+          "value": "yes",
+          "reason": "No is an unverified simplification, not proof that routing is unnecessary."
+        },
+        {
+          "field": "quality",
+          "value": "clear",
+          "reason": "Partly means subjective quality in the UI. Publication silence does not establish subjectivity; retain only as a sensitivity baseline."
+        },
+        {
+          "field": "quality",
+          "value": "no",
+          "reason": "Partly means subjective quality in the UI. Publication silence does not establish subjectivity; retain only as a sensitivity baseline."
+        },
+        {
+          "field": "knowledge",
+          "value": [
+            "reference",
+            "playbook"
+          ],
+          "reason": "Reference inputs are supported; reference-only sufficiency and absence of learned memory are not established."
+        },
+        {
+          "field": "knowledge",
+          "value": [
+            "reference",
+            "memory"
+          ],
+          "reason": "Reference inputs are supported; reference-only sufficiency and absence of learned memory are not established."
+        },
+        {
+          "field": "split",
+          "value": "sections",
+          "reason": "The article does not rule out parallel retrieval; sequential is a top-level abstraction."
+        }
+      ]
+    },
+    {
+      "id": "adyen",
+      "company": "Adyen",
+      "source": {
+        "url": "https://airflow.apache.org/use-cases/adyen/",
+        "publisher": "Apache Airflow customer account",
+        "section": "How did Apache Airflow help to solve this problem?",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "Teams author dependent Spark jobs, monitor logs and use custom access groups. A custom backfill plugin also clears generated data."
+        ]
+      },
+      "brief": "Schedule dependent ETL and Spark jobs with team ownership, monitoring and controlled backfills.",
+      "answers": {
+        "task": "Schedule dependent ETL and Spark jobs with team ownership, monitoring and controlled backfills.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "data",
+        "volume": "high",
+        "risks": [
+          "personal",
+          "visible",
+          "irreversible"
+        ],
+        "location": "residency",
+        "team": "large"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Paraphrases documented ETL, dependency, ownership and backfill needs."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "ETL orchestration is deterministic within this scope."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Jobs generate data and the custom backfill plugin clears generated data. Act describes writes and deletions, not just reads.",
+          "evidenceIds": [
+            "adyen"
+          ],
+          "researchStatus": "supported"
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Jobs have upstream dependencies."
+        },
+        "volume": {
+          "kind": "source-interpretation",
+          "note": "Thousands of regularly executing tasks support high aggregate orchestration volume. This mapping covers the described fleet, not the frequency of any single DAG.",
+          "evidenceIds": [
+            "adyen-reliability"
+          ],
+          "researchStatus": "corrected"
+        },
+        "risks": {
+          "kind": "source-interpretation",
+          "note": "Merchant-facing payment reports and destructive custom backfills support visible, confidential-data and costly-error risks. Flags are our interpretation of the scoped fleet; they do not imply every task performs a payment.",
+          "evidenceIds": [
+            "adyen-reliability",
+            "adyen"
+          ],
+          "researchStatus": "corrected"
+        },
+        "location": {
+          "kind": "source-interpretation",
+          "note": "The platform lineage required on-premise operation; infrastructure policy describes company-managed servers and payment-data locations. Residency is the closest available encoding of controlled deployment. Historical evidence and wider policy do not specify every current Airflow DAG.",
+          "evidenceIds": [
+            "adyen-platform",
+            "adyen-infra"
+          ],
+          "researchStatus": "corrected"
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Data scientists author DAGs and a platform team maintains extensions."
+        }
+      },
+      "observedStack": [
+        "airflow"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "automation"
+          ]
+        },
+        {
+          "kind": "noAI"
+        }
+      ],
+      "manualCriteria": [
+        "Check interval-aware backfills, retry idempotency and team permissions.",
+        "Data deletion is part of a custom plugin, not an assumed standard Airflow rollback capability."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null
+    },
+    {
+      "id": "adobe",
+      "company": "Adobe",
+      "source": {
+        "url": "https://airflow.apache.org/use-cases/adobe/",
+        "publisher": "Apache Airflow customer account",
+        "section": "What was the problem? / What are the results?",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "An orchestration service manages hierarchical Spark and non-Spark workflows, using custom operators and the Kubernetes executor."
+        ]
+      },
+      "brief": "Run sequential and parallel Spark and non-Spark data jobs with scheduling, monitoring and retries.",
+      "answers": {
+        "task": "Run sequential and parallel Spark and non-Spark data jobs with scheduling, monitoring and retries.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "data",
+        "volume": "daily",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Paraphrases the published orchestration problem."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Scoped to fixed job execution and dependencies."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "The service creates workflow files, updates metadata and launches jobs. These are write/execute operations.",
+          "evidenceIds": [
+            "adobe-engineering"
+          ],
+          "researchStatus": "supported"
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Data dependencies are one scoped mode; the article also describes schedules and external events."
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "The engineering account explicitly describes varying frequency and concurrency. Concurrent task capacity does not prove a daily execution count for this scoped workload.",
+          "evidenceIds": [
+            "adobe-engineering"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "Authentication, authorization and workload isolation are documented. These controls do not establish that all outputs are internal/easy to fix; none remains an unverified baseline.",
+          "evidenceIds": [
+            "adobe-engineering"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "The historical service runs on Azure with separated service clusters. Observed cloud deployment does not prove unrestricted deployment permission.",
+          "evidenceIds": [
+            "adobe-engineering"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Engineering teams built the orchestration service."
+        }
+      },
+      "observedStack": [
+        "airflow"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "automation"
+          ]
+        },
+        {
+          "kind": "noAI"
+        }
+      ],
+      "manualCriteria": [
+        "Check sequential/parallel dependencies, workload isolation and retry policy.",
+        "Repeat with schedule/event triggers before drawing conclusions about all Adobe workloads."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "uncertaintyVariants": [
+        {
+          "field": "volume",
+          "value": "occasional",
+          "reason": "Concurrent task capacity does not prove a daily execution count for this scoped workload."
+        },
+        {
+          "field": "volume",
+          "value": "high",
+          "reason": "Concurrent task capacity does not prove a daily execution count for this scoped workload."
+        },
+        {
+          "field": "risks",
+          "value": [
+            "personal"
+          ],
+          "reason": "These controls do not establish that all outputs are internal/easy to fix; none remains an unverified baseline."
+        },
+        {
+          "field": "risks",
+          "value": [
+            "irreversible"
+          ],
+          "reason": "These controls do not establish that all outputs are internal/easy to fix; none remains an unverified baseline."
+        },
+        {
+          "field": "risks",
+          "value": [
+            "personal",
+            "irreversible"
+          ],
+          "reason": "These controls do not establish that all outputs are internal/easy to fix; none remains an unverified baseline."
+        },
+        {
+          "field": "location",
+          "value": "residency",
+          "reason": "Observed cloud deployment does not prove unrestricted deployment permission."
+        },
+        {
+          "field": "location",
+          "value": "independence",
+          "reason": "Observed cloud deployment does not prove unrestricted deployment permission."
+        }
+      ]
+    },
+    {
+      "id": "remote",
+      "company": "Remote",
+      "source": {
+        "url": "https://www.langchain.com/blog/customers-remote",
+        "publisher": "Remote engineer guest post on LangChain",
+        "section": "The Solution / Why LangChain and LangGraph",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "The agent generates and runs Python in a WebAssembly sandbox, revises transformations and stores validated JSON."
+        ]
+      },
+      "brief": "Map varied customer HR and payroll files into an onboarding schema using iterative code execution and validation.",
+      "answers": {
+        "task": "Map varied customer HR and payroll files into an onboarding schema using iterative code execution and validation.",
+        "shape": "varies",
+        "systems": "act",
+        "trigger": "manual",
+        "volume": "daily",
+        "risks": [
+          "personal"
+        ],
+        "location": "open",
+        "team": "large",
+        "kinds": "no",
+        "quality": "clear",
+        "knowledge": [
+          "reference"
+        ],
+        "roles": "one"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped to the documented file migration agent."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "The agent iteratively revises code after inspecting outputs."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Code transforms data and stores the resulting file."
+        },
+        "trigger": {
+          "kind": "assumption",
+          "note": "Customers upload files and staff supply them to the migration agent. This does not settle whether execution begins with a manual request or an upload event.",
+          "evidenceIds": [
+            "remote"
+          ],
+          "researchStatus": "partial"
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "Customer and file counts are described without migration executions/day. Thousands of customers is not daily run volume.",
+          "evidenceIds": [
+            "remote"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "risks": {
+          "kind": "source-interpretation",
+          "note": "HR and payroll records establish personal-data handling."
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "The company describes governed third-party AI use and secure migration storage. Policy does not identify migration-specific locations or permit arbitrary providers.",
+          "evidenceIds": [
+            "remote-privacy",
+            "remote"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "A staff engineer describes an internally built agent service."
+        },
+        "kinds": {
+          "kind": "assumption",
+          "note": "The scoped goal is one migration outcome across CSV, Excel and SQL formats. Different formats may require routed parsing; a single goal does not prove one handling path.",
+          "evidenceIds": [
+            "remote"
+          ],
+          "researchStatus": "partial"
+        },
+        "quality": {
+          "kind": "source-interpretation",
+          "note": "An explicit destination schema and validated JSON support checklist-based acceptance. Schema validity alone does not prove semantic correctness; field/value reconciliation still needs testing.",
+          "evidenceIds": [
+            "remote"
+          ],
+          "researchStatus": "corrected"
+        },
+        "knowledge": {
+          "kind": "assumption",
+          "note": "The target onboarding schema supplies concrete reference material. Published details do not establish whether reference alone suffices or additional playbooks are used.",
+          "evidenceIds": [
+            "remote"
+          ],
+          "researchStatus": "partial"
+        },
+        "roles": {
+          "kind": "source-interpretation",
+          "note": "One Code Execution Agent is described."
+        }
+      },
+      "observedStack": [
+        "langchain",
+        "langgraph"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "agent",
+            "workflow"
+          ]
+        }
+      ],
+      "manualCriteria": [
+        "Verify sandbox permissions, schema validation, bounded retries and recoverable state.",
+        "Sensitive data and generated code still require validation; sandboxing is not proof that hallucinations disappear.",
+        "Trigger and deployment restrictions are unknown; test alternative encodings before selecting a platform."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "uncertaintyVariants": [
+        {
+          "field": "trigger",
+          "value": "event",
+          "reason": "This does not settle whether execution begins with a manual request or an upload event."
+        },
+        {
+          "field": "volume",
+          "value": "occasional",
+          "reason": "Thousands of customers is not daily run volume."
+        },
+        {
+          "field": "volume",
+          "value": "high",
+          "reason": "Thousands of customers is not daily run volume."
+        },
+        {
+          "field": "location",
+          "value": "residency",
+          "reason": "Policy does not identify migration-specific locations or permit arbitrary providers."
+        },
+        {
+          "field": "location",
+          "value": "independence",
+          "reason": "Policy does not identify migration-specific locations or permit arbitrary providers."
+        },
+        {
+          "field": "kinds",
+          "value": "yes",
+          "reason": "Different formats may require routed parsing; a single goal does not prove one handling path."
+        },
+        {
+          "field": "knowledge",
+          "value": [
+            "reference",
+            "playbook"
+          ],
+          "reason": "Published details do not establish whether reference alone suffices or additional playbooks are used."
+        }
+      ]
+    },
+    {
+      "id": "kensho",
+      "company": "Kensho",
+      "source": {
+        "url": "https://www.langchain.com/blog/customers-kensho",
+        "publisher": "Kensho guest post on LangChain",
+        "section": "Designing a Multi-Agent Framework / Key Learnings",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "A router delegates to domain retrieval agents and aggregates responses. Evaluation covers routing, data quality and answer completeness."
+        ]
+      },
+      "brief": "Route financial queries to domain-specific retrieval agents and combine answers with citations to verified datasets.",
+      "answers": {
+        "task": "Route financial queries to domain-specific retrieval agents and combine answers with citations to verified datasets.",
+        "shape": "varies",
+        "systems": "read",
+        "trigger": "manual",
+        "volume": "daily",
+        "risks": [
+          "visible"
+        ],
+        "location": "open",
+        "team": "large",
+        "kinds": "yes",
+        "quality": "clear",
+        "knowledge": [
+          "reference"
+        ],
+        "roles": "specialists"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Paraphrases the documented retrieval problem."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Query-dependent routing and decomposition are described."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Scoped to retrieval rather than financial transactions."
+        },
+        "trigger": {
+          "kind": "assumption",
+          "note": "Interactive and service-account API access are both documented. Manual is one scenario; calling applications can trigger retrieval automatically.",
+          "evidenceIds": [
+            "kensho-api",
+            "kensho-engineering"
+          ],
+          "researchStatus": "partial"
+        },
+        "volume": {
+          "kind": "assumption",
+          "note": "The articles/API guide do not publish absolute query executions per day. Enterprise scale and API availability are not traffic measurements.",
+          "evidenceIds": [
+            "kensho-engineering",
+            "kensho-api"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "risks": {
+          "kind": "source-interpretation",
+          "note": "Clients receive citation-backed financial answers, supporting visible output. The flag is not an exhaustive characterization of data licensing or confidentiality.",
+          "evidenceIds": [
+            "kensho-engineering"
+          ],
+          "researchStatus": "supported"
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "The API requires authentication and documents controlled dataset access. Access control does not establish geographic hosting or provider constraints.",
+          "evidenceIds": [
+            "kensho-api"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Multiple engineering/data teams own retrieval agents."
+        },
+        "kinds": {
+          "kind": "source-interpretation",
+          "note": "Queries span different financial data domains."
+        },
+        "quality": {
+          "kind": "source-interpretation",
+          "note": "Routing, exact-match retrieval and completeness are explicitly evaluated. That supports clear criteria; it does not prove complete coverage or perfect reliability.",
+          "evidenceIds": [
+            "kensho-engineering"
+          ],
+          "researchStatus": "corrected"
+        },
+        "knowledge": {
+          "kind": "assumption",
+          "note": "Verified datasets are essential retrieval references. The publications do not establish reference-only sufficiency or rule out additional playbooks.",
+          "evidenceIds": [
+            "kensho-engineering",
+            "kensho-api"
+          ],
+          "researchStatus": "partial"
+        },
+        "roles": {
+          "kind": "source-interpretation",
+          "note": "Separate dataset agents have explicit domain responsibilities."
+        }
+      },
+      "observedStack": [
+        "langgraph"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "multi"
+          ]
+        }
+      ],
+      "manualCriteria": [
+        "Check domain routing, citations, source access controls and aggregation accuracy.",
+        "Confirm separate ownership warrants the coordination cost; do not equate specialist count with quality."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "uncertaintyVariants": [
+        {
+          "field": "trigger",
+          "value": "event",
+          "reason": "Manual is one scenario; calling applications can trigger retrieval automatically."
+        },
+        {
+          "field": "volume",
+          "value": "occasional",
+          "reason": "Enterprise scale and API availability are not traffic measurements."
+        },
+        {
+          "field": "volume",
+          "value": "high",
+          "reason": "Enterprise scale and API availability are not traffic measurements."
+        },
+        {
+          "field": "location",
+          "value": "residency",
+          "reason": "Access control does not establish geographic hosting or provider constraints."
+        },
+        {
+          "field": "location",
+          "value": "independence",
+          "reason": "Access control does not establish geographic hosting or provider constraints."
+        },
+        {
+          "field": "knowledge",
+          "value": [
+            "reference",
+            "playbook"
+          ],
+          "reason": "The publications do not establish reference-only sufficiency or rule out additional playbooks."
+        },
+        {
+          "field": "knowledge",
+          "value": [
+            "reference",
+            "memory"
+          ],
+          "reason": "The publications do not establish reference-only sufficiency or rule out additional playbooks."
+        }
+      ]
+    },
+    {
+      "id": "discord",
+      "company": "Discord",
+      "source": {
+        "url": "https://discord.com/blog/how-discord-uses-open-source-tools-for-scalable-data-orchestration-transformation",
+        "publisher": "Discord engineering",
+        "section": "Dagster & dbt / Lessons learned / How users are benefiting",
+        "checkedOn": "2026-10-10",
+        "facts": [
+          "Discord chose Dagster and dbt using declarative automation, usability, Kubernetes and migration criteria. The article describes partition backfills and data-quality gates."
+        ]
+      },
+      "brief": "Manage dependent analytics tables with mixed time partitions, self-service backfills, quality gates and lineage.",
+      "answers": {
+        "task": "Manage dependent analytics tables with mixed time partitions, self-service backfills, quality gates and lineage.",
+        "shape": "rules",
+        "systems": "act",
+        "trigger": "data",
+        "volume": "high",
+        "risks": [
+          "none"
+        ],
+        "location": "open",
+        "team": "large"
+      },
+      "answerProvenance": {
+        "task": {
+          "kind": "source-interpretation",
+          "note": "Scoped paraphrase of documented analytics requirements."
+        },
+        "shape": {
+          "kind": "source-interpretation",
+          "note": "Data transformation and orchestration are deterministic in this scope."
+        },
+        "systems": {
+          "kind": "source-interpretation",
+          "note": "Table materializations and production merges write derived data. Act is appropriate for the scoped data operations.",
+          "evidenceIds": [
+            "discord"
+          ],
+          "researchStatus": "supported"
+        },
+        "trigger": {
+          "kind": "source-interpretation",
+          "note": "Dependencies include hourly-to-daily partitions."
+        },
+        "volume": {
+          "kind": "source-interpretation",
+          "note": "The article reports about 4,000 daily materializations. High applies to the described aggregate system, not necessarily one table.",
+          "evidenceIds": [
+            "discord"
+          ],
+          "researchStatus": "corrected"
+        },
+        "risks": {
+          "kind": "assumption",
+          "note": "The article describes production merge races and consistency-sensitive backfills. None is not supported. Precise cost/reversibility is unknown, so compare costly-error and confidential-data scenarios.",
+          "evidenceIds": [
+            "discord"
+          ],
+          "researchStatus": "partial"
+        },
+        "location": {
+          "kind": "assumption",
+          "note": "The system uses Kubernetes, BigQuery and Dagster hybrid cloud. Those choices do not disclose all location restrictions; cloud use is not unrestricted permission.",
+          "evidenceIds": [
+            "discord"
+          ],
+          "researchStatus": "unresolved"
+        },
+        "team": {
+          "kind": "source-interpretation",
+          "note": "Data engineers and a platform team build and operate the system."
+        }
+      },
+      "observedStack": [
+        "dagster",
+        "dbt"
+      ],
+      "checks": [
+        {
+          "kind": "approach",
+          "allowed": [
+            "automation"
+          ]
+        },
+        {
+          "kind": "noAI"
+        }
+      ],
+      "manualCriteria": [
+        "Compare asset-oriented orchestration, partitions, backfills, quality gates and lineage.",
+        "Dagster and dbt are outside the current guide catalog. Treat that as a coverage gap, not an automatic Airflow win or failure."
+      ],
+      "reviewStatus": "provisional",
+      "reviewer": null,
+      "uncertaintyVariants": [
+        {
+          "field": "risks",
+          "value": [
+            "irreversible"
+          ],
+          "reason": "None is not supported. Precise cost/reversibility is unknown, so compare costly-error and confidential-data scenarios."
+        },
+        {
+          "field": "risks",
+          "value": [
+            "personal"
+          ],
+          "reason": "None is not supported. Precise cost/reversibility is unknown, so compare costly-error and confidential-data scenarios."
+        },
+        {
+          "field": "risks",
+          "value": [
+            "personal",
+            "irreversible"
+          ],
+          "reason": "None is not supported. Precise cost/reversibility is unknown, so compare costly-error and confidential-data scenarios."
+        },
+        {
+          "field": "location",
+          "value": "residency",
+          "reason": "Those choices do not disclose all location restrictions; cloud use is not unrestricted permission."
+        },
+        {
+          "field": "location",
+          "value": "independence",
+          "reason": "Those choices do not disclose all location restrictions; cloud use is not unrestricted permission."
+        }
+      ]
+    }
+  ],
+  "assumptionAudit": "assumption-evidence.json"
+}

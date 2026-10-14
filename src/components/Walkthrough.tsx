@@ -2,7 +2,8 @@ import { ArrowCounterClockwise, CaretLeft, CaretRight, Cpu, Function as Function
 import { AnimatePresence, animate, m, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type BNode, type Blueprint, KIND_LABEL, outgoing } from "../lib/blueprint";
-import { ArchitectureMap, EngineChip, GateBadge, KIND_ICON, NODE_STYLE } from "./ArchitectureMap";
+import { ArchitectureMap, EngineChip, GateBadge, KIND_ICON, stepTone } from "./ArchitectureMap";
+import { ModelGuidance } from "./StepPanel";
 
 // A full-screen, self-running tour of the architecture. For each step the
 // camera zooms onto it and the step opens in place, flipping over to show
@@ -321,6 +322,7 @@ export function Walkthrough({ bp, onClose, startAt = 0 }: { bp: Blueprint; onClo
               ghost={node.id}
               expand={cam && openFor ? { id: openFor.id, w: openFor.w / cam.scale, h: openFor.h / cam.scale, t: openT } : null}
               onLayout={aim}
+              scroll={false}
             />
           </div>
         </div>
@@ -385,16 +387,15 @@ function FlipCard({
   // The front looks exactly like the step in the diagram it opens out of.
   const front = (
     <div
-      className={`absolute inset-0 flex flex-col items-start gap-1.5 rounded-2xl px-3.5 py-3 text-left ${NODE_STYLE[node.kind]}`}
-      style={{ backfaceVisibility: "hidden" }}
+      data-kind={node.kind}
+      className="flow-node absolute inset-0 flex flex-col items-start text-left"
+      style={{ backfaceVisibility: "hidden", ["--tone" as string]: stepTone(node.step, bp.nodes.length) }}
     >
       <span className="flex items-center gap-1.5">
-        <span className="flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-accent px-1 font-mono text-[11.5px] font-semibold text-accent-ink">
-          {node.step}
-        </span>
-        <Icon size={14} aria-hidden className="text-muted" />
+        <span className="flow-num">{node.step}</span>
+        <Icon size={15} weight={node.kind === "ai" ? "fill" : "regular"} aria-hidden className="flow-kind" />
       </span>
-      <span className="text-[14.5px] font-semibold leading-snug text-ink">{node.name}</span>
+      <span className="flow-name">{node.name}</span>
       {node.engine && node.kind !== "start" ? <EngineChip engine={node.engine} /> : <span className="text-[12.5px] text-muted">{node.label}</span>}
     </div>
   );
@@ -428,7 +429,7 @@ function FlipCard({
               {node.engine.kind === "model" ? node.engine.name.split(",")[0] : node.engine.name}
             </p>
             <p className="mt-1 text-[13.5px] leading-relaxed text-ink">{node.engine.kind === "model" ? node.engine.why : node.engine.how}</p>
-            {node.engine.kind === "model" && <p className="mt-1 text-[13px] leading-relaxed text-muted">{node.engine.prototype}</p>}
+            {node.engine.kind === "model" && <ModelGuidance engine={node.engine} className="mt-1 text-[13px] leading-relaxed" />}
           </div>
         )}
 

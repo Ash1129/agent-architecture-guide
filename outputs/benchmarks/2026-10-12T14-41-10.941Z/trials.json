@@ -1,0 +1,1364 @@
+[
+  {
+    "platform": "n8n",
+    "caseId": "approved-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1016.0535829999999,
+    "workMs": 163.83349999999973,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-approved-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approved-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1368.0504999999994,
+    "workMs": 235.39187500000025,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-approved-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "duplicate-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 881.8888340000003,
+    "workMs": 139.55787500000042,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-duplicate-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "duplicate-order",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1362.051458,
+    "workMs": 216.9127499999995,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-duplicate-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "approval-boundary",
+    "repetition": 1,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 873.6460420000003,
+    "workMs": 128.0081250000003,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-approval-boundary-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approval-boundary",
+    "repetition": 1,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 2169.173541,
+    "workMs": 762.0637920000008,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-approval-boundary-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "committed-response-lost",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1231.0204169999997,
+    "workMs": 277.19541700000264,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-committed-response-lost-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "committed-response-lost",
+    "repetition": 1,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1686.2584580000002,
+    "workMs": 338.4124579999989,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-committed-response-lost-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "persistent-outage",
+    "repetition": 1,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1199.3891669999975,
+    "workMs": 376.106832999998,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-persistent-outage-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "persistent-outage",
+    "repetition": 1,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1731.754417,
+    "workMs": 471.6892909999988,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/1-persistent-outage-airflow.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approved-order",
+    "repetition": 2,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1691.8861670000006,
+    "workMs": 406.8297079999975,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-approved-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "approved-order",
+    "repetition": 2,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 951.0742919999975,
+    "workMs": 142.41770800000086,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-approved-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "duplicate-order",
+    "repetition": 2,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1420.895708,
+    "workMs": 229.22933399999965,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-duplicate-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "duplicate-order",
+    "repetition": 2,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 937.6890419999982,
+    "workMs": 146.81895900000018,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-duplicate-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approval-boundary",
+    "repetition": 2,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 1497.0489579999994,
+    "workMs": 250.54133399999773,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-approval-boundary-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "approval-boundary",
+    "repetition": 2,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 932.4749589999992,
+    "workMs": 130.90120799999931,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-approval-boundary-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "committed-response-lost",
+    "repetition": 2,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1557.5980419999978,
+    "workMs": 361.4112079999977,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-committed-response-lost-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "committed-response-lost",
+    "repetition": 2,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1166.7934170000008,
+    "workMs": 284.7245000000039,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-committed-response-lost-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "persistent-outage",
+    "repetition": 2,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1729.835457999994,
+    "workMs": 498.82012499999837,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-persistent-outage-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "persistent-outage",
+    "repetition": 2,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1297.2033749999973,
+    "workMs": 392.3020830000023,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/2-persistent-outage-n8n.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "approved-order",
+    "repetition": 3,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 965.291959000002,
+    "workMs": 144.5081250000003,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-approved-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approved-order",
+    "repetition": 3,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1395.2196250000052,
+    "workMs": 210.62804199999664,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-approved-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "duplicate-order",
+    "repetition": 3,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 985.8714580000014,
+    "workMs": 140.35345800000505,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-duplicate-order-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "duplicate-order",
+    "repetition": 3,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1363.6402499999967,
+    "workMs": 224.656458999998,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-duplicate-order-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "approval-boundary",
+    "repetition": 3,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 903.7734159999964,
+    "workMs": 128.45695900000283,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-approval-boundary-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "approval-boundary",
+    "repetition": 3,
+    "completed": true,
+    "records": [],
+    "attempts": [],
+    "runtimeMs": 1460.0296249999956,
+    "workMs": 297.5911250000063,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": null,
+    "events": [],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-approval-boundary-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "committed-response-lost",
+    "repetition": 3,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1052.4329580000049,
+    "workMs": 283.8892500000002,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-committed-response-lost-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "committed-response-lost",
+    "repetition": 3,
+    "completed": true,
+    "records": [
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1488.7849580000038,
+    "workMs": 326.6132079999952,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": true,
+    "recoverySuccess": true,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": true,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 200,
+        "committed": false,
+        "duplicate": true
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-committed-response-lost-airflow.log"
+  },
+  {
+    "platform": "n8n",
+    "caseId": "persistent-outage",
+    "repetition": 3,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1174.1727090000059,
+    "workMs": 405.0112499999959,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-persistent-outage-n8n.log"
+  },
+  {
+    "platform": "airflow",
+    "caseId": "persistent-outage",
+    "repetition": 3,
+    "completed": false,
+    "records": [],
+    "attempts": [
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      },
+      {
+        "id": "A",
+        "amount": 25
+      }
+    ],
+    "runtimeMs": 1603.6838329999955,
+    "workMs": 454.6912919999959,
+    "apiCostUsd": 0,
+    "totalCostUsd": null,
+    "humanInterventions": null,
+    "outcomeCorrect": true,
+    "approvalPreserved": true,
+    "safeHandling": true,
+    "taskSuccess": false,
+    "recoverySuccess": null,
+    "events": [
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      },
+      {
+        "record": {
+          "id": "A",
+          "amount": 25
+        },
+        "status": 503,
+        "committed": false,
+        "duplicate": false
+      }
+    ],
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-fOqYOZ/3-persistent-outage-airflow.log"
+  }
+]

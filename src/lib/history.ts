@@ -9,6 +9,7 @@ import { TOOLS } from "./catalog";
 import { type Answers, isComplete } from "./questions";
 import { recommend } from "./rules";
 import { decodeAnswers, resultCode } from "./share";
+import { rememberedDecision } from "./designs";
 
 export type HistoryEntry = {
   id: string;
@@ -81,8 +82,9 @@ export function saveSessionId(id: string, s: Store | null = store()) {
   }
 }
 
+/** The entry's short facts, from the AI's decision when this visit has one, the rules' otherwise. */
 export function summarise(a: Answers): Omit<HistoryEntry, "id" | "createdAt" | "updatedAt"> {
-  const r = recommend(a);
+  const r = recommend(a, rememberedDecision(a));
   const bp = buildBlueprint(r, a);
   const plan = modelPlan(bp);
   return {
@@ -104,7 +106,8 @@ export function upsertHistory(id: string, a: Answers, s: Store | null = store(),
   const list = loadHistory(s);
   const existing = list.find((e) => e.id === id);
   const summary = summarise(a);
-  if (existing && existing.code === summary.code) return list;
+  // Unchanged answers and facts: nothing to save. The facts change when an AI decision arrives.
+  if (existing && JSON.stringify({ ...existing, id: 0, createdAt: 0, updatedAt: 0 }) === JSON.stringify({ ...existing, ...summary, id: 0, createdAt: 0, updatedAt: 0 })) return list;
   const entry: HistoryEntry = { ...summary, id, createdAt: existing?.createdAt ?? now, updatedAt: now };
   const next = [entry, ...list.filter((e) => e.id !== id)].slice(0, HISTORY_LIMIT);
   write(next, s);

@@ -1,0 +1,5 @@
+{
+  "error": "Error: Could not verify Airflow DAG completion. Inspect /var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-eQiec7/1-approved-order-airflow.log",
+  "completedTrials": 2,
+  "isolated": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-benchmark-eQiec7"
+}

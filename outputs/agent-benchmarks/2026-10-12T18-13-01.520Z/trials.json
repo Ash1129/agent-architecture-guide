@@ -1,0 +1,25 @@
+[
+  {
+    "name": "1-eligible-n8n",
+    "platform": "n8n",
+    "caseId": "eligible",
+    "repetition": 1,
+    "runtimeMs": 2026.2342089999997,
+    "response": "",
+    "completed": false,
+    "events": [],
+    "proposals": [],
+    "modelCalls": [],
+    "apiCostUsd": 0,
+    "budgetChargedUpperUsd": 0,
+    "responseCorrect": false,
+    "stateCorrect": false,
+    "approvalPreserved": true,
+    "researched": false,
+    "success": false,
+    "recovered": null,
+    "approvalRequests": 0,
+    "humanInterventions": null,
+    "logPath": "/var/folders/qy/kyrsp2bn37x8k7bfgdz_y_p00000gn/T/aag-agent-bench-xtcLkX/1-eligible-n8n.log"
+  }
+]
