@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-16, after the decided-approach fix (uncommitted). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-10-16, after the decided-approach fix (`e7f0fac`). Items are renumbered as they close; the Done section names what each commit covered.
 
 ## Next up
 
@@ -98,7 +98,7 @@ Most of this landed as general rules (see Done). What remains:
 
 ## Done
 
-- (uncommitted, 2026-10-16) **Advice follows the decided approach.** The
+- `e7f0fac` **Advice follows the decided approach.** The
   rules after the Approach group (models M1 to M10, checkpoints and guardrails
   AU9, AU10 and AU14, the simpler start S1 to S5, gotchas G1 to G19, first
   steps F1 to F3) read the draft's approach (`approachOf` in
