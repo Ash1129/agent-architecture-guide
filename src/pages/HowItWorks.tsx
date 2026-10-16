@@ -83,8 +83,9 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
               where it runs, how much it does on its own, the model for each step, and a shortlist. It decides from the knowledge
               base, weighing output quality, cost and speed, with what the {RULES.length} fixed rules below would choose as one input.
               The rules also set its limits: it can't pick a provider that isn't available where you operate, keep data anywhere it
-              mustn't go, or give the system more autonomy than your risks allow. Every result says where the AI departs from the
-              rules, and the rules' version is one click away.
+              mustn't go, or give the system more autonomy than your risks allow. The rules that come after the approach (the
+              model to look for, checkpoints, warnings, first steps and the simpler start) follow the approach the AI chose. Every
+              result says where the AI departs from the rules, and the rules' version is one click away.
             </>
           ) : (
             <>

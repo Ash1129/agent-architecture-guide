@@ -104,6 +104,9 @@ export type Rule = {
 const src = (...sources: SourceId[]): Basis => ({ kind: "source", sources });
 const design: Basis = { kind: "design" };
 
+// The answers' shape. The Approach, Topology, Tools, Hosting and autonomy-cap
+// rules read it: that is the rules' own choice, which an AI decision is
+// compared against, and the limits an AI decision stays within.
 const ai = (a: Answers) => a.shape === "judgement" || a.shape === "varies";
 const agentic = (a: Answers) => a.shape === "varies";
 const vendorFree = (a: Answers) => a.location === "restricted" || a.location === "independence";
@@ -113,6 +116,19 @@ const noRisks = (a: Answers) => !a.risks || a.risks.length === 0 || a.risks.incl
 const core = (d: Draft) => d.tools.find((t) => t.core)?.tool;
 const hasTool = (d: Draft, id: ToolId) => d.tools.some((t) => t.tool === id);
 const multi = (a: Answers) => agentic(a) && !!a.roles && a.roles !== "one";
+
+// The approach the draft has settled on. The Approach rules set it from the
+// answers' shape, and an AI decision replaces it before any later group runs,
+// so the rules after that group (models, checkpoints, the simpler start,
+// gotchas, first steps) read this rather than the shape: their advice follows
+// the approach actually chosen. Without a decision it follows the shape, as
+// does a scratch draft that no Approach rule has run on.
+const approachOf = (a: Answers, d: Draft): Approach =>
+  d.approach?.id ?? (a.shape === "rules" ? "automation" : a.shape === "judgement" ? "workflow" : multi(a) ? "multi" : "agent");
+const usesAi = (a: Answers, d: Draft) => approachOf(a, d) !== "automation";
+const isWorkflow = (a: Answers, d: Draft) => approachOf(a, d) === "workflow";
+const isAgent = (a: Answers, d: Draft) => approachOf(a, d) === "agent" || approachOf(a, d) === "multi";
+const isMulti = (a: Answers, d: Draft) => approachOf(a, d) === "multi";
 
 function addTool(d: Draft, tool: ToolId, role: string, why: Why, isCore = false) {
   const existing = d.tools.find((t) => t.tool === tool);
@@ -827,7 +843,7 @@ export const RULES: Rule[] = [
     then: "No AI model is needed.",
     basis: src("anthropic"),
     kb: ["F03"],
-    when: (a) => !ai(a),
+    when: (a, d) => !usesAi(a, d),
     apply: () => {},
   },
   {
@@ -837,7 +853,7 @@ export const RULES: Rule[] = [
     then: "Look for dependable instruction-following: it does what the brief says, in the format you asked for.",
     basis: src("openai"),
     kb: ["F04", "T06", "M01"],
-    when: (a) => ai(a),
+    when: (a, d) => usesAi(a, d),
     apply: (d, _a, why) => {
       d.models.capabilities.push({ title: "Follows instructions closely", body: "Sticks to your brief and output format, run after run.", why: why("Every AI step depends on this.") });
     },
@@ -849,12 +865,12 @@ export const RULES: Rule[] = [
     then: "Look for reliable tool use.",
     basis: src("openai", "anthropic"),
     kb: ["T01", "T02", "M01"],
-    when: (a, d) => agentic(a) || (ai(a) && a.systems !== "none" && ["claude", "hermes"].includes(core(d) ?? "")),
+    when: (a, d) => isAgent(a, d) || (usesAi(a, d) && a.systems !== "none" && ["claude", "hermes"].includes(core(d) ?? "")),
     apply: (d, a, why) => {
       d.models.capabilities.push({
         title: "Reliable tool use",
         body: "Calls the right tool with the right details, and notices when a call fails.",
-        why: why(agentic(a) ? "An agent acts through tools; weak tool use means weak actions." : `You said ${said(a, "systems")}.`),
+        why: why(isAgent(a, d) ? "An agent acts through tools; weak tool use means weak actions." : `You said ${said(a, "systems")}.`),
       });
     },
   },
@@ -865,9 +881,9 @@ export const RULES: Rule[] = [
     then: "Look for strong multi-step reasoning and planning.",
     basis: src("databricks", "anthropic"),
     kb: ["F06", "M01"],
-    when: (a) => agentic(a),
+    when: (a, d) => isAgent(a, d),
     apply: (d, a, why) => {
-      d.models.capabilities.push({ title: "Multi-step reasoning", body: "Plans ahead, notices when an approach isn't working, and changes course.", why: why(`You said ${said(a, "shape")}. The model has to work out the next step itself.`) });
+      d.models.capabilities.push({ title: "Multi-step reasoning", body: "Plans ahead, notices when an approach isn't working, and changes course.", why: why(a.shape === "varies" ? `You said ${said(a, "shape")}. The model has to work out the next step itself.` : "An agent has to work out the next step itself.") });
     },
   },
   {
@@ -877,7 +893,7 @@ export const RULES: Rule[] = [
     then: "Look for a large context window.",
     basis: src("notes"),
     kb: ["F07", "T06", "M01"],
-    when: (a) => ai(a) && (a.roles === "material" || a.roles === "both" || knows(a, "reference")),
+    when: (a, d) => usesAi(a, d) && (a.roles === "material" || a.roles === "both" || knows(a, "reference")),
     apply: (d, a, why) => {
       d.models.capabilities.push({
         title: "A large context window",
@@ -893,7 +909,7 @@ export const RULES: Rule[] = [
     then: "Look for a fast, low-cost model for routine steps.",
     basis: src("notes", "openai"),
     kb: ["M02", "M01"],
-    when: (a) => ai(a) && a.volume === "high",
+    when: (a, d) => usesAi(a, d) && a.volume === "high",
     apply: (d, a, why) => {
       d.models.capabilities.push({ title: "Low cost and fast responses", body: "For routine steps, a smaller model is often good enough and far cheaper at volume.", why: why(`You said ${said(a, "volume")}. Cost and speed per run add up quickly.`) });
     },
@@ -905,7 +921,7 @@ export const RULES: Rule[] = [
     then: "Use a small, fast model for the sorting step.",
     basis: src("openai"),
     kb: ["P01", "M02"],
-    when: (a) => ai(a) && a.kinds === "yes",
+    when: (a, d) => usesAi(a, d) && a.kinds === "yes",
     apply: (d, a, why) => {
       d.models.capabilities.push({ title: "A small model for sorting", body: "Classifying a request is a simple task. It rarely needs the most capable model. The guide starts with Sonnet 5.5 here; test a smaller model once your examples show it's enough.", why: why(`You said ${said(a, "kinds")}.`) });
     },
@@ -917,7 +933,7 @@ export const RULES: Rule[] = [
     then: "Look for open-weight models you can host or buy from several providers.",
     basis: src("mindstudio", "pabani"),
     kb: ["M03", "D01"],
-    when: (a) => ai(a) && (vendorFree(a) || a.location === "residency"),
+    when: (a, d) => usesAi(a, d) && (vendorFree(a) || a.location === "residency"),
     apply: (d, a, why) => {
       d.models.capabilities.push({ title: "Open-weight availability", body: "A model you can run yourself or buy from more than one provider keeps you in control of where data goes.", why: why(`You said ${said(a, "location")}.`) });
     },
@@ -929,7 +945,7 @@ export const RULES: Rule[] = [
     then: "Look for strong data controls: no training on your data, clear retention settings.",
     basis: src("anthropicDocs"),
     kb: ["D02"],
-    when: (a) => ai(a) && risk(a, "personal"),
+    when: (a, d) => usesAi(a, d) && risk(a, "personal"),
     apply: (d, _a, why) => {
       d.models.capabilities.push({ title: "Data protection terms", body: "Business terms that exclude your data from training and let you control how long it's kept. If nothing may be stored at all, ask for zero data retention, which Anthropic offers on its API but not on personal plans or in the Claude app, and which rules out Claude Fable 5.1.", why: why(`You said ${saidOption("risks", "personal")}.`) });
     },
@@ -941,7 +957,7 @@ export const RULES: Rule[] = [
     then: "Choose models by testing: start with the most capable, set a quality baseline, then try smaller models step by step, weighing quality, cost and speed.",
     basis: src("openai", "notes", "anthropicDocs", "epoch"),
     kb: ["M01", "G04"],
-    when: (a) => ai(a),
+    when: (a, d) => usesAi(a, d),
     apply: (d, a) => {
       d.models.needed = true;
       d.models.process = [
@@ -1066,14 +1082,14 @@ export const RULES: Rule[] = [
     apply: (d, a) => {
       const c = d.autonomy.checkpoints;
       c.push(
-        ai(a)
+        usesAi(a, d)
           ? "After a set number of failed attempts (start with 3), stop and hand the case to a person."
           : "If a run fails, stop and alert a named person rather than retrying silently.",
       );
-      if (agentic(a)) c.push("Cap the number of steps per task, so the agent stops and reports instead of looping.");
+      if (isAgent(a, d)) c.push("Cap the number of steps per task, so the agent stops and reports instead of looping.");
       if (risk(a, "irreversible")) c.push("Payments, deletions and commitments above an agreed threshold wait for approval.");
-      if (risk(a, "visible") && ai(a)) c.push("Customer-facing output is reviewed by a person until it has a proven track record.");
-      if (agentic(a) && knows(a, "reference")) c.push("If something isn't in your reference material, the agent asks rather than fills the gap.");
+      if (risk(a, "visible") && usesAi(a, d)) c.push("Customer-facing output is reviewed by a person until it has a proven track record.");
+      if (isAgent(a, d) && knows(a, "reference")) c.push("If something isn't in your reference material, the agent asks rather than fills the gap.");
       if ((d.autonomy.level ?? 4) < 4) c.push("Agree in advance what track record earns the next level, for example four weeks without a serious error.");
     },
   },
@@ -1084,7 +1100,7 @@ export const RULES: Rule[] = [
     then: "Layer simple, specialised guardrails rather than relying on one: rule-based checks always, plus checks for personal data, unsafe inputs and brand tone where they apply.",
     basis: src("openai", "notes"),
     kb: ["G01", "G02"],
-    when: (a) => ai(a),
+    when: (a, d) => usesAi(a, d),
     apply: (d, a) => {
       const g = d.autonomy.guardrails;
       g.push("Rule-based checks: input length limits, blocked words, and format checks on output.");
@@ -1104,7 +1120,7 @@ export const RULES: Rule[] = [
     then: "Start with one agent that plays every role in turn, and split only when it demonstrably loses track.",
     basis: src("openai", "notes"),
     kb: ["P03"],
-    when: (a) => multi(a),
+    when: (a, d) => isMulti(a, d),
     apply: (d, _a, why) => {
       d.simpler = { title: "One agent first", body: "Give a single agent all the roles, in sequence, with one clear brief. Split into specialists only when you can point to where it gets overwhelmed.", why: why("One employee is simpler and cheaper than a team; hire the second only when the first is clearly overloaded.") };
     },
@@ -1116,7 +1132,7 @@ export const RULES: Rule[] = [
     then: "Start with a fixed workflow for the most common case, and send everything else to a person.",
     basis: src("anthropic"),
     kb: ["F05", "F02"],
-    when: (a) => agentic(a) && a.roles === "one",
+    when: (a, d) => approachOf(a, d) === "agent",
     apply: (d, _a, why) => {
       d.simpler = { title: "Automate the common case only", body: "Map the path your most frequent case follows and build that as a fixed workflow. Unusual cases go to a person. Add the agent once you know which cases really need it.", why: why("The simplest system that works is usually the right first step; add complexity only when it is needed.") };
     },
@@ -1128,7 +1144,7 @@ export const RULES: Rule[] = [
     then: "Run the steps by hand in Claude with your playbook before automating anything.",
     basis: design,
     kb: ["F05", "A04"],
-    when: (a) => a.shape === "judgement" && a.trigger !== "manual",
+    when: (a, d) => isWorkflow(a, d) && a.trigger !== "manual",
     apply: (d, _a, why) => {
       d.simpler = { title: "Do it by hand with AI first", body: "Paste real examples into Claude (or another assistant) with your written playbook, one at a time. When results are consistently good, wire the same steps into n8n.", why: why("You learn what the instructions need to say before paying to automate them.") };
     },
@@ -1140,7 +1156,7 @@ export const RULES: Rule[] = [
     then: "Start with one well-written prompt and no extra tools.",
     basis: design,
     kb: ["F05"],
-    when: (a) => a.shape === "judgement" && a.trigger === "manual",
+    when: (a, d) => isWorkflow(a, d) && a.trigger === "manual",
     apply: (d, _a, why) => {
       d.simpler = { title: "One good prompt", body: "Before splitting the task into steps, try a single well-written prompt with your examples attached. Break it up only where that prompt keeps failing.", why: why("A single prompt is often enough, and its failures show you exactly which step needs its own treatment.") };
     },
@@ -1152,7 +1168,7 @@ export const RULES: Rule[] = [
     then: "Write the rules as a checklist and run it by hand until the rules stop changing.",
     basis: design,
     kb: ["F03", "A04"],
-    when: (a) => a.shape === "rules",
+    when: (a, d) => !usesAi(a, d),
     apply: (d, _a, why) => {
       d.simpler = { title: "A written checklist", body: "Write every rule and exception on one page and follow it by hand for two weeks. Automate once the rules stop changing; automating a moving target wastes the build.", why: why("Rules that are still being discovered are expensive to change once automated.") };
     },
@@ -1166,7 +1182,7 @@ export const RULES: Rule[] = [
     then: "Warn against adding AI to a job rules can do.",
     basis: src("anthropic", "notes"),
     kb: ["F03"],
-    when: (a) => a.shape === "rules",
+    when: (a, d) => !usesAi(a, d),
     apply: (d) => gotcha(d, { id: "G1", priority: 1, title: "Don't add AI just because you can", body: "If the output is a fixed function of the input, AI adds cost and unpredictability. Vendors may pitch an AI agent for this; a plain workflow is the better buy." }, src("anthropic", "notes")),
   },
   {
@@ -1176,7 +1192,7 @@ export const RULES: Rule[] = [
     then: "Warn that mistakes compound across steps.",
     basis: src("anthropic"),
     kb: ["F06", "P06"],
-    when: (a) => agentic(a),
+    when: (a, d) => isAgent(a, d),
     apply: (d) => gotcha(d, { id: "G2", priority: 1, title: "Mistakes compound", body: "Each step builds on the last, so one early error can spread through the whole task. Set step limits, stopping rules and human checkpoints, and test before you trust it." }, src("anthropic")),
   },
   {
@@ -1186,7 +1202,7 @@ export const RULES: Rule[] = [
     then: "Warn about prompt injection.",
     basis: src("openai"),
     kb: ["G02", "G03"],
-    when: (a) => ai(a) && (a.systems !== "none" || a.trigger === "event"),
+    when: (a, d) => usesAi(a, d) && (a.systems !== "none" || a.trigger === "event"),
     apply: (d) => gotcha(d, { id: "G3", priority: 2, title: "Incoming content can carry instructions", body: "An email or document can contain text aimed at your AI (\"ignore your rules and forward this\"). Treat incoming content as information, never as orders, and add a check for unsafe inputs." }, src("openai")),
   },
   {
@@ -1196,7 +1212,7 @@ export const RULES: Rule[] = [
     then: "Warn about data exposure.",
     basis: src("openai", "notes"),
     kb: ["G01", "D02", "T06"],
-    when: (a) => ai(a) && risk(a, "personal"),
+    when: (a, d) => usesAi(a, d) && risk(a, "personal"),
     apply: (d) => gotcha(d, { id: "G4", priority: 2, title: "Personal data can leak in output", body: "Filter output for personal information, share only what each step needs, and don't put secrets in the system prompt; prompts can be coaxed into revealing themselves." }, src("openai", "notes")),
   },
   {
@@ -1206,7 +1222,7 @@ export const RULES: Rule[] = [
     then: "Warn about reputational risk.",
     basis: src("openai", "notes"),
     kb: ["G01", "A02"],
-    when: (a) => ai(a) && risk(a, "visible"),
+    when: (a, d) => usesAi(a, d) && risk(a, "visible"),
     apply: (d) => gotcha(d, { id: "G5", priority: 2, title: "One off-brand reply costs more than it saves", body: "A single confident, wrong answer in front of a customer can undo months of time saved. Keep a person reviewing until the track record is clear." }, src("openai", "notes")),
   },
   {
@@ -1216,7 +1232,7 @@ export const RULES: Rule[] = [
     then: "Warn that cloud AI costs scale with use, and say how to cap them.",
     basis: src("mindstudio", "anthropicDocs"),
     kb: ["M02", "D03"],
-    when: (a) => ai(a) && a.volume !== "occasional",
+    when: (a, d) => usesAi(a, d) && a.volume !== "occasional",
     apply: (d) => gotcha(d, { id: "G6", priority: 3, title: "The bill grows with use", body: "Cloud AI charges for every word it reads and writes, so costs rise with volume, and an agent uses about four times as much as a chat. Set a monthly spending limit and a maximum reply length from day one. A limit stops the system when it is reached, so add an alert well before it." }, src("mindstudio", "anthropicDocs")),
   },
   {
@@ -1256,7 +1272,7 @@ export const RULES: Rule[] = [
     then: "Point out that MCP isn't needed.",
     basis: design,
     kb: ["T03", "L01"],
-    when: (a) => a.shape === "rules" && a.systems !== "none",
+    when: (a, d) => !usesAi(a, d) && a.systems !== "none",
     apply: (d) => gotcha(d, { id: "G10", priority: 4, title: "You don't need MCP here", body: "MCP is how an AI discovers and uses tools. A workflow without AI uses the workflow tool's normal app connections, which are simpler to set up and audit." }, design),
   },
   {
@@ -1316,7 +1332,7 @@ export const RULES: Rule[] = [
     then: "Warn about coordination cost.",
     basis: src("notes", "openai"),
     kb: ["P03", "P05", "P06"],
-    when: (a) => multi(a),
+    when: (a, d) => isMulti(a, d),
     apply: (d) => gotcha(d, { id: "G16", priority: 2, title: "More agents, more handoffs", body: "Each agent adds cost, and agents wait on each other. Every handoff is a place for information to get lost, so give each one a precise brief of what it receives and returns." }, src("notes", "openai")),
   },
   {
@@ -1336,7 +1352,7 @@ export const RULES: Rule[] = [
     then: "Warn that what can't be described can't be measured.",
     basis: src("openai", "notes"),
     kb: ["G04", "P02"],
-    when: (a) => ai(a) && a.quality === "no",
+    when: (a, d) => usesAi(a, d) && a.quality === "no",
     apply: (d) => gotcha(d, { id: "G18", priority: 1, title: "If you can't describe good, you can't measure it", body: "Without a definition of good, there's no way to tell whether a change helped. Collect ten good and ten bad past examples and write down what separates them." }, src("openai", "notes")),
   },
   {
@@ -1346,7 +1362,7 @@ export const RULES: Rule[] = [
     then: "Warn that the smartest model isn't automatically the best.",
     basis: src("notes", "openai"),
     kb: ["M01", "M02"],
-    when: (a) => ai(a),
+    when: (a, d) => usesAi(a, d),
     apply: (d) => gotcha(d, { id: "G19", priority: 5, title: "The smartest model isn't always the best fit", body: "Top models are slower and cost more, and for simple steps they don't do better. Let your test examples decide, not the leaderboard." }, src("notes", "openai")),
   },
   {
@@ -1393,9 +1409,9 @@ export const RULES: Rule[] = [
     when: () => true,
     apply: (d, a) => {
       d.firstSteps.push(
-        a.shape === "rules"
-          ? "Write every step, rule and exception on one page, and check it against 20 recent real cases."
-          : "Collect 10 to 20 real past examples of this task, each with what a good result looked like. These become your test set.",
+        usesAi(a, d)
+          ? "Collect 10 to 20 real past examples of this task, each with what a good result looked like. These become your test set."
+          : "Write every step, rule and exception on one page, and check it against 20 recent real cases.",
       );
     },
   },
@@ -1410,12 +1426,13 @@ export const RULES: Rule[] = [
     apply: (d, a) => {
       const home = d.tools.find((t) => t.core)?.tool;
       const where = home === "langgraph" ? "LangGraph" : home === "airflow" ? "Airflow" : home === "hermes" ? "Hermes" : home === "cowork" || home === "claude" ? "Claude" : "n8n";
+      const approach = approachOf(a, d);
       const step =
-        a.shape === "rules"
+        approach === "automation"
           ? `Build it in ${where} with a manual start button, and run it alongside the current process for two weeks before switching over.`
-          : a.shape === "judgement"
+          : approach === "workflow"
             ? `Write the playbook in plain language and run it in ${home === "claude" || home === "hermes" ? where : "Claude"} on your examples with the most capable model. Score each result against what good looked like.`
-            : multi(a)
+            : approach === "multi"
               ? `Pilot a single agent in ${where} on your examples, read-only, and note exactly where it loses track. Those points tell you where to split roles.`
               : `Write the agent's brief (its goal, the tools it may use, and when it must stop and ask) and pilot it in ${where} on your examples with read-only access.`;
       d.firstSteps.push(step);
@@ -1431,7 +1448,7 @@ export const RULES: Rule[] = [
     when: () => true,
     apply: (d, a) => {
       d.firstSteps.push(
-        a.shape === "rules"
+        !usesAi(a, d)
           ? "Name the person who gets the alert when a run fails, and who updates the rules when the business changes."
           : `Name one owner who reviews results at the starting level (${AUTONOMY[d.autonomy.level ?? 2].name.toLowerCase()}) and decide what track record would earn the next level.`,
       );
@@ -1539,7 +1556,7 @@ export const RULES: Rule[] = [
     basis: src("mcp", "n8nDocs"),
     kb: ["T04", "N03", "G01"],
     late: true,
-    when: (a, d) => ai(a) && a.systems === "act" && (d.autonomy.level ?? 4) <= 3,
+    when: (a, d) => usesAi(a, d) && a.systems === "act" && (d.autonomy.level ?? 4) <= 3,
     apply: (d) => {
       d.autonomy.guardrails.push(
         "The credential the AI steps use is read-only (free/busy for calendars) and cannot perform the approved action itself. The action step runs under a separate credential, only after approval.",
