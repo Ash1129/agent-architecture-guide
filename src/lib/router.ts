@@ -27,7 +27,7 @@ export function parseHash(hash: string): Route {
   const parts = path.split("/").filter(Boolean);
   if (parts[0] === "guide" && parts[1] === "details") return { name: "details" };
   if (parts[0] === "guide" && parts[1] === "review") return { name: "review" };
-  if (parts[0] === "guide" && parts[1] === "split") return { name: "split" };
+  if (parts[0] === "guide" && parts[1] === "jobs") return { name: "split" };
   if (parts[0] === "guide" && parts[1] && parts[1] in QUESTION_BY_ID) {
     return { name: "guide", q: parts[1] as QuestionId };
   }
@@ -55,7 +55,7 @@ export function href(route: Route): string {
     case "review":
       return "#/guide/review";
     case "split":
-      return "#/guide/split";
+      return "#/guide/jobs";
     case "process":
       return route.code ? `#/process?p=${route.code}` : "#/process";
     case "result": {
