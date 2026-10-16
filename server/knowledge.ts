@@ -3,12 +3,15 @@
 // relevance comes from the rules that shaped this design: chunks behind the
 // rules on its steps count double, chunks behind any other rule that fired
 // count once. P01, the catalogue of workflow patterns, is always included
-// because every design is built from those patterns.
+// because every design is built from those patterns. The quality-control and
+// reliability chunks (Q01 to Q03) are reserved for designs without AI, and for
+// any task whose own words are about measurements, defects or failures.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Blueprint } from "../src/lib/blueprint";
 import type { KbChunk } from "../src/lib/design";
+import type { Answers } from "../src/lib/questions";
 import { MODEL_RULES } from "../src/lib/models";
 import { RULES, type Recommendation } from "../src/lib/rules";
 import { fingerprint } from "../src/lib/tailored";
@@ -23,7 +26,22 @@ export const AIRFLOW_ENGINEERING = ["R01", "R02", "R03"];
 export const HERMES_ENGINEERING = ["H01", "H02", "H03"];
 export const LANGGRAPH_ENGINEERING = ["J01", "J02", "J03"];
 export const AI_QUALITY = ["O01", "O02"];
-const RETRIEVAL_VERSION = "platform-engineering-4";
+/** The statistical methods a monitoring, inspection or failure task runs without AI: control charts, capability, reliability. */
+export const QUALITY_METHODS = ["Q01", "Q02", "Q03"];
+const RETRIEVAL_VERSION = "quality-methods-5";
+
+const QUALITY_WORDS =
+  /\b(monitor\w*|quality|defect\w*|reliab\w*|fail\w*|fault\w*|inspect\w*|yield|downtime|outage\w*|toleranc\w*|specification\w*|capacit\w*|overload\w*|maintenance|calibrat\w*|sensor\w*|measurement\w*|control chart\w*|six sigma|breakdown\w*|wear)\b/i;
+
+/** Whether a task's own words say it watches measurements, defects or failures. */
+export function statisticalTask(text = ""): boolean {
+  return QUALITY_WORDS.test(text);
+}
+
+/** The task and its task-specific details as one text, for retrieval. */
+export function taskText(a: Answers): string {
+  return [a.task ?? "", ...(a.details ?? []).map((d) => `${d.q} ${d.a}`)].join(" ");
+}
 
 let cache: Map<string, Chunk> | undefined;
 
@@ -48,7 +66,7 @@ export function knowledgeFingerprint(all = loadChunks()): string {
 }
 
 /** The chunks most relevant to this design, most relevant first. */
-export function selectChunks(r: Recommendation, baseline: Blueprint, all = loadChunks(), max = MAX_CHUNKS, always = ALWAYS): Chunk[] {
+export function selectChunks(r: Recommendation, baseline: Blueprint, all = loadChunks(), max = MAX_CHUNKS, always = ALWAYS, task = ""): Chunk[] {
   const score = new Map<string, number>();
   const add = (ids: string[], w: number) => ids.forEach((id) => score.set(id, (score.get(id) ?? 0) + w));
   const ruleKb = (id: string) => RULES.find((x) => x.id === id)?.kb ?? [];
@@ -73,6 +91,10 @@ export function selectChunks(r: Recommendation, baseline: Blueprint, all = loadC
     LANGGRAPH_ENGINEERING.forEach((id, i) => add([id], 500 - i));
   }
   if (r.models.needed) AI_QUALITY.forEach((id, i) => add([id], 450 - i));
+  // A design without AI runs on methods, so it always sees the statistical ones;
+  // a design with AI sees them when the task itself is about measurements or failures.
+  if (!r.models.needed) QUALITY_METHODS.forEach((id, i) => add([id], 440 - i));
+  else if (statisticalTask(task)) QUALITY_METHODS.forEach((id, i) => add([id], 400 - i));
   return [...score]
     .filter(([id]) => all.has(id))
     .sort(([x, a], [y, b]) => b - a || x.localeCompare(y))

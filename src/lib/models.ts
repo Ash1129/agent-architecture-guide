@@ -206,6 +206,10 @@ export const ALGORITHMS = {
   vote: { name: "Majority vote", how: "Compares the attempts; the answer most attempts agree on wins, and ties go to a person." },
   validate: { name: "Validation rules", how: "Schema, required-field and pattern (regex) checks on the output." },
   keyword: { name: "Keyword and field rules", how: "Simple matches on fields or words decide the path." },
+  spc: { name: "Control chart", how: "Plots each period's measurement, rate or count against limits set from the process's own stable variation (centre plus or minus three standard errors) and applies the run rules. A point outside the limits or a run pattern is a real change; everything else is noise. The chart follows the data: X-bar and S for measurements in subgroups, individuals and moving range for one value a period, p or np for pass/fail, c or u for defect counts." },
+  capability: { name: "Capability index", how: "Compares a stable process with its specification or rating: Cp for whether the spread fits, Cpk for the nearer limit as the process actually sits, Pp and Ppk with the total spread including drift. Reported with a confidence interval; read only once the control chart shows stability." },
+  reliability: { name: "Reliability model", how: "Fits a lifetime distribution to failure and survival records (exponential while the hazard is flat, Weibull once wear-out is plausible) to give each unit's probability of failing in the next period and its mean time to failure, and combines units in series or parallel, with shared parts as common causes, for a system." },
+  rpn: { name: "Risk ranking (FMEA)", how: "Scores each failure mode for severity, occurrence and detection, 1 to 10 each, and orders them by the product (the risk priority number) with high severity flagged on its own. An ordering of what to fix first, not a probability." },
 } as const;
 
 export type AlgorithmId = keyof typeof ALGORITHMS;

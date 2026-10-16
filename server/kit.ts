@@ -18,7 +18,7 @@ import { fingerprint } from "../src/lib/tailored";
 import { type Complete, extractJson, openAIComplete } from "./ai";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
-import { type Chunk, MAX_CHUNKS, knowledgeFingerprint, selectChunks } from "./knowledge";
+import { type Chunk, MAX_CHUNKS, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
 
 export type KitEnv = { apiKey?: string; model?: string; cache?: Cache };
 export type KitResult = { status: number; body: Record<string, unknown> };
@@ -61,7 +61,7 @@ function contextFor(answers: Answers, env: KitEnv) {
   const r = decidedRecommendation(answers, env);
   const ai = cachedDesign(answers, env);
   const bp = ai ?? buildBlueprint(r, answers);
-  const chunks = selectChunks(r, bp, undefined, MAX_CHUNKS, KIT_CHUNKS);
+  const chunks = selectChunks(r, bp, undefined, MAX_CHUNKS, KIT_CHUNKS, taskText(answers));
   const lead = bp.nodes.find((n) => n.engine?.kind === "model" && n.engine.role === "coordinator");
   const briefIds = r.approach.id === "multi" ? bp.nodes.filter((n) => n === lead || (n.engine?.kind === "model" && n.engine.role === "specialist")).map((n) => n.id) : [];
   return { r, bp, design: (ai ? "ai" : "rules") as KitResponse["design"], chunks, ctx: { r, bp, chunks: chunks.map(({ id, title }) => ({ id, title })), briefIds } };

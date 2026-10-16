@@ -132,3 +132,13 @@ Official documentation (tier C), with guide recommendations distinguished from d
 | --- | --- | --- |
 | O01 | [Repeatable AI evaluations with Promptfoo](chunks/13-testing-and-observability/O01-evaluations-and-release-gates.md) | Implementation boundaries and acceptance checks. |
 | O02 | [Tracing, privacy and cost with Langfuse](chunks/13-testing-and-observability/O02-tracing-privacy-and-cost.md) | Implementation boundaries and acceptance checks. |
+
+## 14 Quality control and reliability
+
+Course materials (tier E): the statistical methods a monitoring, inspection or failure-prevention task runs without AI.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| Q01 | [Control charts tell noise from a real change](chunks/14-quality-and-reliability/Q01-control-charts-and-run-rules.md) | Limits from the process (x̿ ± 3σ/√n), which chart for which data (X-bar/S, I-MR, p/np, c/u), why three sigma, run rules. |
+| Q02 | [Process capability, Cp and Cpk, once the process is stable](chunks/14-quality-and-reliability/Q02-process-capability.md) | Cp, Cpk, Pp, Ppk; stability first; reading Cpk; which fix first (re-centre, remove drift, tighten); confidence intervals and bootstrap. |
+| Q03 | [Reliability models, system structure and failure ranking](chunks/14-quality-and-reliability/Q03-reliability-and-failure-analysis.md) | F, R, f and hazard; exponential and MTTF; Weibull for wear-out; bathtub; series, parallel and common causes; FMEA and RPN. |

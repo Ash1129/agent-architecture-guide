@@ -50,8 +50,8 @@ export const ROLES_FOR: Record<Approach, Role[]> = {
 };
 /** AI steps that end in a choice of path: sorting work, or judging it against a checklist. */
 export const DECISION_ROLES: Role[] = ["router", "checker"];
-export const DECISION_METHODS: AlgorithmId[] = ["table", "keyword", "vote", "validate"];
-export const FIXED_METHODS: AlgorithmId[] = ["scripted", "merge", "validate", "table", "keyword", "dag"];
+export const DECISION_METHODS: AlgorithmId[] = ["table", "keyword", "vote", "validate", "spc", "capability"];
+export const FIXED_METHODS: AlgorithmId[] = ["scripted", "merge", "validate", "table", "keyword", "dag", "spc", "capability", "reliability", "rpn"];
 const LIMITS = { id: 24, name: 48, label: 40, what: 320, why: 320, passes: 220, gate: 60, edgeLabel: 24, title: 80, summary: 320 };
 
 const text = (v: unknown, max: number): string | undefined => {

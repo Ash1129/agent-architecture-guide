@@ -13,7 +13,7 @@ import type { Recommendation } from "../src/lib/rules";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
-import { type Chunk, knowledgeFingerprint, selectChunks } from "./knowledge";
+import { type Chunk, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
 import { type Complete, extractJson, openAIComplete } from "./ai";
 import { decidedRecommendation, decisionTag } from "./decide";
 
@@ -52,7 +52,7 @@ export const designKey = (answers: Answers, model: string, env: DesignEnv = {}) 
 function contextFor(answers: Answers, env: DesignEnv = {}) {
   const r = decidedRecommendation(answers, env);
   const baseline = buildBlueprint(r, answers);
-  const chunks = selectChunks(r, baseline);
+  const chunks = selectChunks(r, baseline, undefined, undefined, undefined, taskText(answers));
   return { r, baseline, chunks, ctx: { r, a: answers, baseline, chunks: chunks.map(({ id, title }) => ({ id, title })) } };
 }
 
@@ -79,6 +79,7 @@ function limitsFor(r: Recommendation, baseline: Blueprint): string[] {
       : "- This design needs no AI: no \"ai\" steps and no roles. Use fixed steps and decisions with a method.",
     `- Methods for fixed steps: ${FIXED_METHODS.map((m) => `${m} (${ALGORITHMS[m].name})`).join(", ")}.`,
     `- Methods for decisions without AI: ${DECISION_METHODS.map((m) => `${m} (${ALGORITHMS[m].name})`).join(", ")}.`,
+    '- A step that works on measurements over time, pass/fail or defect counts, equipment lifetimes or failure modes uses the statistical method for that data (spc, capability, reliability, rpn) rather than a generic validation rule, and its "what" names the chart, index or model (for example "X-bar and S chart per machine", "Cpk against the rated limit", "Weibull probability of failure in the next 90 days").',
     `- Keep exactly these start steps, by id: ${starts.join(", ")}. They come from how the owner said the work starts; you may rename and reword them.`,
     ...(count("human") ? [`- Keep at least ${count("human")} "human" step${count("human") > 1 ? "s" : ""}.`] : []),
     ...(count("tool") ? [`- Keep at least ${count("tool")} "tool" step${count("tool") > 1 ? "s" : ""}.`] : []),

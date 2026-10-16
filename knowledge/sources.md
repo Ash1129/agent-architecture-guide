@@ -208,3 +208,9 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | promptfoo-2026-assertions | Official product documentation. https://www.promptfoo.dev/docs/configuration/expected-outputs/ | C | 2026-10-10 |
 | langfuse-2026-overview | Official product documentation. https://langfuse.com/docs | C | 2026-10-10 |
 | langfuse-2026-masking | Official product documentation. https://langfuse.com/docs/observability/features/masking | C | 2026-10-10 |
+
+## Quality control and reliability: course materials read on 2026-10-16
+
+| ID | Source | Tier | Read |
+| --- | --- | --- | --- |
+| sysen-2026-5300-notes | SYSEN 5300, Systems Engineering and Six Sigma for Design and Operation of Reliable Systems (Cornell University, 2026). Course preparation notes provided by the owner: reliability functions, series and parallel systems, FMEA, control charts and run rules, process capability, bootstrap confidence intervals. Cited by section number (§1 course map to §10 ggplot). | E | 2026-10-16 |

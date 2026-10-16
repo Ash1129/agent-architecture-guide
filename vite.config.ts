@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
+import { configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import type { IncomingMessage } from "node:http";
@@ -104,5 +105,7 @@ export default defineConfig({
   resolve: { preserveSymlinks: true },
   // Honour PORT when a tool assigns one (for example, a preview runner); otherwise use Vite's default.
   // The AI cache is written while the server runs; it must never trigger a reload.
-  server: { watch: { ignored: ["**/ai-cache.nosync/**"] }, ...(process.env.PORT ? { port: Number(process.env.PORT), strictPort: true } : {}) },
+  server: { watch: { ignored: ["**/ai-cache.nosync/**", "**/.claude/worktrees/**"] }, ...(process.env.PORT ? { port: Number(process.env.PORT), strictPort: true } : {}) },
+  // The desktop app keeps its worktrees inside the repo; their copies of the tests must not run here.
+  test: { exclude: [...configDefaults.exclude, ".claude/worktrees/**"] },
 });

@@ -21,7 +21,7 @@ import { APPROACH_NAME, type Recommendation, approachOption, hostingOption, reco
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
-import { type Chunk, knowledgeFingerprint, loadChunks, selectChunks } from "./knowledge";
+import { type Chunk, knowledgeFingerprint, loadChunks, selectChunks, taskText } from "./knowledge";
 import { type Complete, extractJson, openAIComplete } from "./ai";
 
 export type DecideEnv = { apiKey?: string; model?: string; cache?: Cache };
@@ -57,7 +57,7 @@ const MAX_DECIDE_CHUNKS = 22;
 export const decideKey = (answers: Answers, model: string) => `${DECIDE_VERSION}:${knowledgeFingerprint()}:${model}:${resultCode(answers)}`;
 
 function chunksFor(r: Recommendation, answers: Answers): Chunk[] {
-  return selectChunks(r, buildBlueprint(r, answers), loadChunks(), MAX_DECIDE_CHUNKS, DECIDE_CHUNKS);
+  return selectChunks(r, buildBlueprint(r, answers), loadChunks(), MAX_DECIDE_CHUNKS, DECIDE_CHUNKS, taskText(answers));
 }
 
 /**

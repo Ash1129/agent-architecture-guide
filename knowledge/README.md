@@ -31,7 +31,9 @@ recommendations include R01–R03 (dependencies, recovery, operation), including
 Airflow used only as the upstream scheduler. Hermes recommendations include
 H01–H03 (tool boundaries, learning review, unattended recovery). LangGraph
 recommendations include J01–J03 (state, persistence, review). Every AI design
-includes O01–O02 (evaluation and observability). Design and starter-kit prompts
+includes O01–O02 (evaluation and observability). Designs without AI include
+Q01–Q03 (control charts, capability, reliability), as does any design whose
+task is about measurements, defects or failures. Design and starter-kit prompts
 retain mandatory context within the seventeen-chunk ceiling, accommodating
 four platform sets and shared AI guidance. Only relevant chunks are selected. Knowledge
 content and retrieval policy participate in AI cache keys.
