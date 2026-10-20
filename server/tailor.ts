@@ -171,7 +171,7 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
   if (hit) return { status: 200, body: { workflow: hit.value, model: env.model, cached: true } };
 
   const model = env.model;
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model });
+  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model, task: "tailor" });
   const input = buildInput(answers, bp, template.content);
   return singleFlight(`tailor:${key}`, async (): Promise<TailorResult> => {
     try {

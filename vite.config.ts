@@ -31,6 +31,14 @@ function aiApi(): Plugin {
     configureServer(server) {
       const env = loadEnv(server.config.mode, process.cwd(), "");
       const cachePath = `${process.cwd()}/ai-cache.nosync/cache.json`;
+      // Revenium metering is optional: on only when REVENIUM_METERING_API_KEY is set (see server/metering.ts).
+      const metering = server
+        .ssrLoadModule("/server/metering.ts")
+        .then(({ configureMetering }) =>
+          configureMetering({ apiKey: env.REVENIUM_METERING_API_KEY, baseUrl: env.REVENIUM_METERING_BASE_URL, email: env.REVENIUM_SUBSCRIBER_EMAIL }),
+        )
+        .then((on) => on && server.config.logger.info("Revenium metering is on for the AI endpoints."))
+        .catch((e) => server.config.logger.warn(`Revenium metering is off: ${(e as Error).message}`));
       const routes: Record<string, (body: unknown) => Promise<{ status: number; body: unknown }>> = {
         "/api/tailor": async (body) => {
           const [{ handleTailor }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/tailor.ts"), server.ssrLoadModule("/server/cache.ts")]);
@@ -80,6 +88,7 @@ function aiApi(): Plugin {
           // A failure here (for example the server restarting mid-request) must
           // answer the browser, not crash the dev server with an unhandled rejection.
           try {
+            await metering;
             const out = await handle(body);
             res.statusCode = out.status;
             res.end(JSON.stringify(out.body));

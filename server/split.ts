@@ -43,7 +43,7 @@ export async function handleSplit(body: unknown, env: SplitEnv, deps: { complete
   if (hit) return { status: 200, body: { ...hit.value, source: "cache" } };
 
   return singleFlight(`split:${key}`, async () => {
-    const run = deps.complete ?? openAIComplete({ apiKey: env.apiKey!, model: env.model! });
+    const run = deps.complete ?? openAIComplete({ apiKey: env.apiKey!, model: env.model!, task: "split" });
     try {
       const split = validateSplit(extractJson(await run(INSTRUCTIONS, `DESCRIPTION:\n${description}`)), description);
       const out: SplitResponse = { split, source: "ai", model: env.model };

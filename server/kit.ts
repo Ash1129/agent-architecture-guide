@@ -121,7 +121,7 @@ export async function handleKit(body: unknown, env: KitEnv, complete?: Complete)
     if (done) return { status: 200, body: { ...done, design: c.design, source: "cache", model } satisfies KitResponse };
   }
 
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model });
+  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model, task: "kit" });
   return singleFlight(`kit:${key}`, async (): Promise<KitResult> => {
     try {
       const draft = extractJson(await run(INSTRUCTIONS, buildKitInput(answers, c.r, c.bp, c.chunks, c.ctx.briefIds)));

@@ -123,7 +123,7 @@ export async function handleDesign(body: unknown, env: DesignEnv, complete?: Com
 async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete): Promise<DesignResult> {
   const respond = (r: DesignResponse): DesignResult => ({ status: 200, body: r });
   const { r, baseline, chunks, ctx } = contextFor(answers, env);
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model });
+  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model, task: "design" });
   const input = buildDesignInput(answers, r, baseline, chunks);
   try {
     let text = await run(INSTRUCTIONS, input);

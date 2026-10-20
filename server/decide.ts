@@ -166,7 +166,7 @@ export async function handleDecide(body: unknown, env: DecideEnv, complete?: Com
 async function decide(answers: Answers, env: ReadyEnv, complete?: Complete): Promise<DecideResult> {
   const r = recommend(answers);
   const chunks = chunksFor(r, answers);
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model });
+  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model, task: "decide" });
   const input = buildDecideInput(answers, r, chunks);
   try {
     let text = await run(INSTRUCTIONS, input);

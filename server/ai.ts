@@ -1,6 +1,7 @@
 // The model call and reply parsing shared by every AI endpoint.
 
 import OpenAI from "openai";
+import { meteredResponses } from "./metering";
 
 /** Sends instructions and input to a model and returns its text. Swappable for tests. */
 export type Complete = (instructions: string, input: string) => Promise<string>;
@@ -9,10 +10,12 @@ export type Complete = (instructions: string, input: string) => Promise<string>;
 // a timeout would only double the wait, so a call gets one long window and is not retried.
 export const CALL_TIMEOUT_MS = 360_000;
 
-export function openAIComplete(env: { apiKey: string; model: string }): Complete {
+/** `task` names the endpoint, so Revenium (when metering is on) can show cost per step. */
+export function openAIComplete(env: { apiKey: string; model: string; task?: string }): Complete {
   const client = new OpenAI({ apiKey: env.apiKey, timeout: CALL_TIMEOUT_MS, maxRetries: 0 });
+  const create = meteredResponses(client, env.task ?? "complete");
   return async (instructions, input) => {
-    const response = await client.responses.create({ model: env.model, instructions, input, max_output_tokens: 32_000 });
+    const response = await create({ model: env.model, instructions, input, max_output_tokens: 32_000 });
     return response.output_text;
   };
 }

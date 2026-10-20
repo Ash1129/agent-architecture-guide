@@ -12,6 +12,7 @@ import { ADAPTABLE, type InterviewPlan, type InterviewResponse, MAX_DESCRIPTION,
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Complete, extractJson, openAIComplete } from "./ai";
+import { meteredEmbeddings } from "./metering";
 
 export type Embed = (text: string) => Promise<number[]>;
 export type InterviewEnv = { apiKey?: string; model?: string; embeddingModel?: string; cache?: Cache };
@@ -62,7 +63,8 @@ export const PLAN_VERSION = fingerprint(INSTRUCTIONS + JSON.stringify(questionBa
 
 export function openAIEmbed(env: { apiKey: string; model: string }): Embed {
   const client = new OpenAI({ apiKey: env.apiKey, timeout: 20_000, maxRetries: 1 });
-  return async (text) => (await client.embeddings.create({ model: env.model, input: text })).data[0].embedding;
+  const create = meteredEmbeddings(client, "interview-match");
+  return async (text) => (await create({ model: env.model, input: text })).data[0].embedding;
 }
 
 export function buildInterviewInput(task: string, reference?: { task: string; plan: InterviewPlan }): string {
@@ -122,7 +124,7 @@ async function adapt(task: string, key: string, env: InterviewEnv & { apiKey: st
     return respond(reused);
   }
 
-  const run = deps.complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model });
+  const run = deps.complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model, task: "interview" });
   const reference = near && near.score >= REFERENCE_SIMILARITY && near.entry.label ? { task: near.entry.label, plan: near.entry.value.plan } : undefined;
   try {
     const plan = validatePlan(extractJson(await run(INSTRUCTIONS, buildInterviewInput(task, reference))));
