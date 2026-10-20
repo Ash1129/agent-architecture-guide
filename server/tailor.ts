@@ -4,7 +4,7 @@
 // model to tailor the generated workflow, and checks the result before
 // returning it. It cannot be used as a general-purpose chat proxy.
 
-import { APIConnectionTimeoutError } from "openai";
+import { APIConnectionTimeoutError } from "@anthropic-ai/sdk";
 import { decidedRecommendation } from "./decide";
 import { type Blueprint, OK_EVERY_ACTION, buildBlueprint, outgoing } from "../src/lib/blueprint";
 import { detailLines } from "../src/lib/interview";
@@ -12,14 +12,15 @@ import { type Answers, QUESTIONS, isComplete, said } from "../src/lib/questions"
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { MODEL_API_ID, buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
-import { CALL_TIMEOUT_MS, type Complete, extractJson, openAIComplete } from "./ai";
+import { CALL_TIMEOUT_MS, type Complete, claudeComplete, extractJson, firstDraft } from "./ai";
+import { modelFor, startingModels } from "./models";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
 import { cachedKitText } from "./kit";
 
-export { type Complete, extractJson, openAIComplete } from "./ai";
+export { type Complete, extractJson, claudeComplete } from "./ai";
 
-export type TailorEnv = { apiKey?: string; model?: string; cache?: Cache };
+export type TailorEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
 export type TailorResult = { status: number; body: Record<string, unknown> };
 const MAX_BODY_CHARS = 20_000;
 
@@ -149,7 +150,7 @@ export function checkWorkflow(wf: unknown, bp: Blueprint): string[] {
 
 export async function handleTailor(body: unknown, env: TailorEnv, complete?: Complete): Promise<TailorResult> {
   if (!env.apiKey || !env.model) {
-    return { status: 503, body: { error: "AI tailoring isn't set up on this site. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
+    return { status: 503, body: { error: "AI tailoring isn't set up on this site. Add ANTHROPIC_API_KEY and ANTHROPIC_MODEL to .env and restart." } };
   }
   if (JSON.stringify(body ?? "").length > MAX_BODY_CHARS) return { status: 413, body: { error: "Request too large." } };
 
@@ -166,20 +167,23 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
 
   // The same design, starting workflow, instructions and model always give an
   // equivalent workflow, so a repeat is served from the shared cache.
-  const key = [fingerprint(INSTRUCTIONS), env.model, fingerprint(template.content), resultCode(answers)].join(":");
+  // Tailoring starts on the escalation model (see server/models.ts).
+  const models = startingModels("tailor", { model: env.model, escalationModel: env.escalationModel });
+  const key = [fingerprint(INSTRUCTIONS), models.model, fingerprint(template.content), resultCode(answers)].join(":");
   const hit = env.cache?.get<unknown>("tailor", key);
-  if (hit) return { status: 200, body: { workflow: hit.value, model: env.model, cached: true } };
+  if (hit) return { status: 200, body: { workflow: hit.value, model: models.model, cached: true } };
 
-  const model = env.model;
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model, task: "tailor" });
+  const model = models.model;
+  const run = complete ?? claudeComplete({ apiKey: env.apiKey, ...models, workspaceId: env.workspaceId, task: "tailor" });
   const input = buildInput(answers, bp, template.content);
   return singleFlight(`tailor:${key}`, async (): Promise<TailorResult> => {
     try {
-      let text = await run(INSTRUCTIONS, input);
+      let { text, failure } = await firstDraft("tailor", run, INSTRUCTIONS, input);
       for (let attempt = 0; attempt < 2; attempt++) {
         let problems: string[];
         let wf: unknown = null;
         try {
+          if (failure) throw new Error(failure);
           wf = extractJson(text);
           problems = checkWorkflow(wf, bp);
         } catch (e) {
@@ -187,16 +191,21 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
         }
         if (!problems.length) {
           env.cache?.put("tailor", { key, label: answers.task, value: wf });
-          return { status: 200, body: { workflow: wf, model } };
+          return { status: 200, body: { workflow: wf, model: modelFor(models, attempt === 0 ? "first" : "retry") } };
         }
         if (attempt === 1) {
           return { status: 502, body: { error: "The AI's workflow didn't pass the checks. Try again.", problems: problems.slice(0, 8) } };
         }
-        // One repair round: show the model exactly what failed.
-        text = await run(
-          INSTRUCTIONS,
-          `${input}\n\nYOUR PREVIOUS ANSWER FAILED THESE CHECKS. Fix every one and return the complete corrected workflow JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS ANSWER:\n${text.slice(0, 60_000)}`,
-        );
+        // One repair round, on the escalation model: show it exactly what failed.
+        // A first reply that never finished is asked for again from scratch.
+        text = failure
+          ? await run(INSTRUCTIONS, input, "retry")
+          : await run(
+              INSTRUCTIONS,
+              `${input}\n\nYOUR PREVIOUS ANSWER FAILED THESE CHECKS. Fix every one and return the complete corrected workflow JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS ANSWER:\n${text.slice(0, 60_000)}`,
+              "retry",
+            );
+        failure = undefined;
       }
       return { status: 500, body: { error: "Unexpected tailoring state." } };
     } catch (e) {
@@ -205,7 +214,7 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
       if (e instanceof APIConnectionTimeoutError) {
         return { status: 504, body: { error: `The AI took longer than ${CALL_TIMEOUT_MS / 60_000} minutes. Try again.` } };
       }
-      const message = err.status === 401 ? "OpenAI rejected the API key. Check OPENAI_API_KEY in .env." : err.status === 404 ? `OpenAI doesn't recognise the model "${model}". Check OPENAI_MODEL in .env.` : err.message ?? "The AI request failed.";
+      const message = err.status === 401 ? "Anthropic rejected the API key. Check ANTHROPIC_API_KEY in .env." : err.status === 404 ? `Anthropic doesn't recognise the model "${model}". Check ANTHROPIC_MODEL in .env.` : err.message ?? "The AI request failed.";
       return { status: 502, body: { error: message } };
     }
   });

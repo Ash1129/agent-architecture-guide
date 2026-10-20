@@ -11,11 +11,13 @@ import OpenAI from "openai";
 import { ADAPTABLE, type InterviewPlan, type InterviewResponse, MAX_DESCRIPTION, normaliseTask, validatePlan } from "../src/lib/interview";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
-import { type Complete, extractJson, openAIComplete } from "./ai";
+import { type Complete, extractJson, claudeComplete, withEscalation } from "./ai";
+import { modelFor } from "./models";
 import { meteredEmbeddings } from "./metering";
 
 export type Embed = (text: string) => Promise<number[]>;
-export type InterviewEnv = { apiKey?: string; model?: string; embeddingModel?: string; cache?: Cache };
+/** `embeddingApiKey` is an OpenAI key: Claude has no embedding model, so matching earlier tasks is optional. */
+export type InterviewEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; embeddingApiKey?: string; embeddingModel?: string; cache?: Cache };
 export type InterviewResult = { status: number; body: Record<string, unknown> };
 
 /** Above this, an earlier task is close enough to reuse its plan as is. */
@@ -88,7 +90,7 @@ export async function handleInterview(
   env: InterviewEnv,
   deps: { complete?: Complete; embed?: Embed } = {},
 ): Promise<InterviewResult> {
-  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI questions aren't set up. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
+  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI questions aren't set up. Add ANTHROPIC_API_KEY and ANTHROPIC_MODEL to .env and restart." } };
   const raw = (body as { task?: unknown })?.task;
   const task = typeof raw === "string" ? raw.replace(/\s+/g, " ").trim().slice(0, MAX_DESCRIPTION) : "";
   if (task.length < 3) return { status: 400, body: { error: "Send the task as a short sentence." } };
@@ -107,7 +109,7 @@ async function adapt(task: string, key: string, env: InterviewEnv & { apiKey: st
   const respond = (r: InterviewResponse): InterviewResult => ({ status: 200, body: r });
 
   // Meaning-based lookup. An embedding failure only means no reuse.
-  const embed = deps.embed ?? (env.embeddingModel ? openAIEmbed({ apiKey: env.apiKey, model: env.embeddingModel }) : undefined);
+  const embed = deps.embed ?? (env.embeddingApiKey && env.embeddingModel ? openAIEmbed({ apiKey: env.embeddingApiKey, model: env.embeddingModel }) : undefined);
   let embedding: number[] | undefined;
   let near: { entry: { label?: string; value: InterviewResponse }; score: number } | undefined;
   if (env.cache && embed) {
@@ -124,17 +126,21 @@ async function adapt(task: string, key: string, env: InterviewEnv & { apiKey: st
     return respond(reused);
   }
 
-  const run = deps.complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model, task: "interview" });
+  const run = deps.complete ?? claudeComplete({ apiKey: env.apiKey, model: env.model, escalationModel: env.escalationModel, workspaceId: env.workspaceId, task: "interview" });
   const reference = near && near.score >= REFERENCE_SIMILARITY && near.entry.label ? { task: near.entry.label, plan: near.entry.value.plan } : undefined;
   try {
-    const plan = validatePlan(extractJson(await run(INSTRUCTIONS, buildInterviewInput(task, reference))));
-    if (!Object.keys(plan.questions).length) return { status: 502, body: { error: "The AI's questions didn't fit the guide, so the standard questions are used." } };
-    const out: InterviewResponse = { plan, source: "ai", model: env.model };
+    // A reply with no usable questions gets one retry on the escalation model.
+    const { value: plan, attempt } = await withEscalation("interview", async (attempt) => {
+      const p = validatePlan(extractJson(await run(INSTRUCTIONS, buildInterviewInput(task, reference), attempt)));
+      if (!Object.keys(p.questions).length) throw new Error("No adapted question fitted the guide.");
+      return p;
+    });
+    const out: InterviewResponse = { plan, source: "ai", model: modelFor(env, attempt) };
     env.cache?.put(ns, { key, label: task, value: out, embedding });
     return respond(out);
   } catch (e) {
     const err = e as { status?: number; message?: string };
-    const message = err.status === 401 ? "OpenAI rejected the API key." : err.status === 404 ? `OpenAI doesn't recognise the model "${env.model}".` : "The AI couldn't adapt the questions, so the standard questions are used.";
+    const message = err.status === 401 ? "Anthropic rejected the API key." : err.status === 404 ? `Anthropic doesn't recognise the model "${env.model}".` : (e as Error).message === "No adapted question fitted the guide." ? "The AI's questions didn't fit the guide, so the standard questions are used." : "The AI couldn't adapt the questions, so the standard questions are used.";
     return { status: 502, body: { error: message } };
   }
 }

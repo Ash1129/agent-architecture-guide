@@ -216,4 +216,15 @@ describe("decision endpoint", () => {
     expect(stubborn.calls).toHaveLength(2);
     expect(decidedRecommendation(support, { ...env, cache }).approach.id).toBe("agent");
   });
+
+  it("sends the repair to the escalation model and reports the model that answered", async () => {
+    const tries: (string | undefined)[] = [];
+    const replies = [aiDecision({ autonomy: 4 }), aiDecision()];
+    const complete = async (_i: string, _input: string, attempt?: "first" | "retry") => (tries.push(attempt), JSON.stringify(replies[tries.length - 1]));
+    const models = { apiKey: "test-key", model: "claude-haiku-5-5", escalationModel: "claude-sonnet-5-5" };
+    const out = await handleDecide({ answers: support }, { ...models, cache: memoryCache() }, complete);
+    expect(out.status).toBe(200);
+    expect(out.body).toMatchObject({ source: "ai", model: "claude-sonnet-5-5" });
+    expect(tries).toEqual(["first", "retry"]);
+  });
 });

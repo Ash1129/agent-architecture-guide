@@ -15,12 +15,13 @@ import type { Recommendation } from "../src/lib/rules";
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
-import { type Complete, extractJson, openAIComplete } from "./ai";
+import { type Complete, extractJson, claudeComplete, withEscalation } from "./ai";
+import { modelFor } from "./models";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
 import { type Chunk, MAX_CHUNKS, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
 
-export type KitEnv = { apiKey?: string; model?: string; cache?: Cache };
+export type KitEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
 export type KitResult = { status: number; body: Record<string, unknown> };
 
 /** Chunks about the kit's own subjects: system prompts, testing, and Skills. */
@@ -106,8 +107,10 @@ export function buildKitInput(a: Answers, r: Recommendation, bp: Blueprint, chun
   ].join("\n");
 }
 
+const KIT_CHECKS_FAILED = "The kit text didn't pass the kit checks.";
+
 export async function handleKit(body: unknown, env: KitEnv, complete?: Complete): Promise<KitResult> {
-  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI kit writing isn't set up. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
+  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI kit writing isn't set up. Add ANTHROPIC_API_KEY and ANTHROPIC_MODEL to .env and restart." } };
   const raw = (body as { answers?: unknown })?.answers;
   const answers = raw && typeof raw === "object" ? decodeAnswers(encodeAnswers(raw as Answers)) : null;
   if (!answers || !isComplete(answers)) return { status: 400, body: { error: "Send a complete set of answers from the guide." } };
@@ -121,17 +124,21 @@ export async function handleKit(body: unknown, env: KitEnv, complete?: Complete)
     if (done) return { status: 200, body: { ...done, design: c.design, source: "cache", model } satisfies KitResponse };
   }
 
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model, task: "kit" });
+  const run = complete ?? claudeComplete({ apiKey: env.apiKey, model, escalationModel: env.escalationModel, workspaceId: env.workspaceId, task: "kit" });
   return singleFlight(`kit:${key}`, async (): Promise<KitResult> => {
     try {
-      const draft = extractJson(await run(INSTRUCTIONS, buildKitInput(answers, c.r, c.bp, c.chunks, c.ctx.briefIds)));
-      const done = assemble(draft, answers, c);
-      if (!done) return { status: 502, body: { error: "The AI's kit text didn't pass the kit checks, so the template kit is used." } };
-      env.cache?.put("kit", { key, label: answers.task, value: draft });
-      return { status: 200, body: { ...done, design: c.design, source: "ai", model } satisfies KitResponse };
+      // Kit text that fails the kit checks gets one retry on the escalation model.
+      const { value, attempt } = await withEscalation("kit", async (attempt) => {
+        const draft = extractJson(await run(INSTRUCTIONS, buildKitInput(answers, c.r, c.bp, c.chunks, c.ctx.briefIds), attempt));
+        const done = assemble(draft, answers, c);
+        if (!done) throw new Error(KIT_CHECKS_FAILED);
+        return { draft, done };
+      });
+      env.cache?.put("kit", { key, label: answers.task, value: value.draft });
+      return { status: 200, body: { ...value.done, design: c.design, source: "ai", model: modelFor({ model, escalationModel: env.escalationModel }, attempt) } satisfies KitResponse };
     } catch (e) {
       const err = e as { status?: number };
-      const message = err.status === 401 ? "OpenAI rejected the API key." : err.status === 404 ? `OpenAI doesn't recognise the model "${model}".` : "The AI couldn't write the kit text, so the template kit is used.";
+      const message = err.status === 401 ? "Anthropic rejected the API key." : err.status === 404 ? `Anthropic doesn't recognise the model "${model}".` : (e as Error).message === KIT_CHECKS_FAILED ? "The AI's kit text didn't pass the kit checks, so the template kit is used." : "The AI couldn't write the kit text, so the template kit is used.";
       return { status: 502, body: { error: message } };
     }
   });

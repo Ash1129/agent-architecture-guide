@@ -22,9 +22,10 @@ import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, loadChunks, selectChunks, taskText } from "./knowledge";
-import { type Complete, extractJson, openAIComplete } from "./ai";
+import { type Complete, claudeComplete, extractJson, firstDraft } from "./ai";
+import { modelFor } from "./models";
 
-export type DecideEnv = { apiKey?: string; model?: string; cache?: Cache };
+export type DecideEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
 type ReadyEnv = DecideEnv & { apiKey: string; model: string };
 export type DecideResult = { status: number; body: Record<string, unknown> };
 
@@ -152,7 +153,7 @@ export function buildDecideInput(a: Answers, r: Recommendation, chunks: Chunk[])
 }
 
 export async function handleDecide(body: unknown, env: DecideEnv, complete?: Complete): Promise<DecideResult> {
-  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI decisions aren't set up. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
+  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI decisions aren't set up. Add ANTHROPIC_API_KEY and ANTHROPIC_MODEL to .env and restart." } };
   const raw = (body as { answers?: unknown })?.answers;
   const answers = raw && typeof raw === "object" ? decodeAnswers(encodeAnswers(raw as Answers)) : null;
   if (!answers || !isComplete(answers)) return { status: 400, body: { error: "Send a complete set of answers from the guide." } };
@@ -166,15 +167,16 @@ export async function handleDecide(body: unknown, env: DecideEnv, complete?: Com
 async function decide(answers: Answers, env: ReadyEnv, complete?: Complete): Promise<DecideResult> {
   const r = recommend(answers);
   const chunks = chunksFor(r, answers);
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model, task: "decide" });
+  const run = complete ?? claudeComplete({ apiKey: env.apiKey, model: env.model, escalationModel: env.escalationModel, workspaceId: env.workspaceId, task: "decide" });
   const input = buildDecideInput(answers, r, chunks);
   try {
-    let text = await run(INSTRUCTIONS, input);
+    let { text, failure } = await firstDraft("decide", run, INSTRUCTIONS, input);
     for (let attempt = 0; attempt < 2; attempt++) {
       let problems: string[];
       let decision: Decision | undefined;
       let raw: unknown;
       try {
+        if (failure) throw new Error(failure);
         raw = extractJson(text);
         ({ decision, problems } = checkDecision(raw, answers, chunks));
       } catch (e) {
@@ -182,19 +184,24 @@ async function decide(answers: Answers, env: ReadyEnv, complete?: Complete): Pro
       }
       if (decision) {
         env.cache?.put("decide", { key: decideKey(answers, env.model), label: answers.task, value: raw });
-        return { status: 200, body: { decision, source: "ai", model: env.model } satisfies DecisionResponse };
+        return { status: 200, body: { decision, source: "ai", model: modelFor(env, attempt === 0 ? "first" : "retry") } satisfies DecisionResponse };
       }
       console.warn(`[decide] "${answers.task}" decision ${attempt + 1} rejected:\n${problems.map((x) => `  - ${x}`).join("\n")}`);
       if (attempt === 1) return { status: 502, body: { error: "The AI's decision broke the guide's limits, so the rules' recommendation is shown.", problems: problems.slice(0, 8) } };
-      text = await run(
-        INSTRUCTIONS,
-        `${input}\n\nYOUR PREVIOUS DECISION BROKE THESE LIMITS. Fix every one and return the complete corrected decision JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS DECISION:\n${text.slice(0, 20_000)}`,
-      );
+      // A first reply that never finished is asked for again from scratch.
+      text = failure
+        ? await run(INSTRUCTIONS, input, "retry")
+        : await run(
+            INSTRUCTIONS,
+            `${input}\n\nYOUR PREVIOUS DECISION BROKE THESE LIMITS. Fix every one and return the complete corrected decision JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS DECISION:\n${text.slice(0, 20_000)}`,
+            "retry",
+          );
+      failure = undefined;
     }
     return { status: 500, body: { error: "Unexpected decision state." } };
   } catch (e) {
     const err = e as { status?: number };
-    const message = err.status === 401 ? "OpenAI rejected the API key." : err.status === 404 ? `OpenAI doesn't recognise the model "${env.model}".` : "The AI couldn't make a decision, so the rules' recommendation is shown.";
+    const message = err.status === 401 ? "Anthropic rejected the API key." : err.status === 404 ? `Anthropic doesn't recognise the model "${env.model}".` : "The AI couldn't make a decision, so the rules' recommendation is shown.";
     return { status: 502, body: { error: message } };
   }
 }

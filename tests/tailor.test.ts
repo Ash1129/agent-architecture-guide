@@ -1,4 +1,4 @@
-import { APIConnectionTimeoutError } from "openai";
+import { APIConnectionTimeoutError } from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
 import { buildBlueprint } from "../src/lib/blueprint";
 import type { Answers } from "../src/lib/questions";
@@ -70,6 +70,38 @@ describe("AI tailoring endpoint", () => {
     expect(f.calls[0].input).toMatch(/TASK: Answer routine customer emails/);
     expect(f.calls[0].input).toMatch(/"step": 4/);
     expect(f.calls[0].input).toMatch(/STARTING WORKFLOW/);
+  });
+
+  it("starts on the escalation model, so a first answer that passes is Sonnet's", async () => {
+    const { wf } = approved(emails);
+    const models = { apiKey: "test-key", model: "claude-haiku-5-5", escalationModel: "claude-sonnet-5-5" };
+    const out = await handleTailor({ answers: emails }, models, fake(JSON.stringify(wf)).complete);
+    expect(out.status).toBe(200);
+    expect(out.body.model).toBe("claude-sonnet-5-5");
+  });
+
+  it("asks afresh when the first reply never finished", async () => {
+    const { wf } = approved(emails);
+    const models = { apiKey: "test-key", model: "claude-haiku-5-5", escalationModel: "claude-sonnet-5-5" };
+    const tries: [string | undefined, boolean][] = [];
+    const runaway: Complete = async (_i, input, attempt) => {
+      tries.push([attempt, input.includes("PREVIOUS ANSWER")]);
+      if (attempt !== "retry") throw new Error("The reply ran past the output limit.");
+      return JSON.stringify(wf);
+    };
+    const out = await handleTailor({ answers: emails }, models, runaway);
+    expect(out.status).toBe(200);
+    expect(out.body.model).toBe("claude-sonnet-5-5");
+    expect(tries).toEqual([["first", false], ["retry", false]]);
+
+    // An API error is not retried: another model won't fix a bad key.
+    let calls = 0;
+    const rejected: Complete = async () => {
+      calls++;
+      throw Object.assign(new Error("invalid x-api-key"), { status: 401 });
+    };
+    expect((await handleTailor({ answers: emails }, models, rejected)).status).toBe(502);
+    expect(calls).toBe(1);
   });
 
   it("asks once for a repair when the first answer fails the checks", async () => {

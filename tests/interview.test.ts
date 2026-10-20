@@ -223,6 +223,22 @@ describe("interview endpoint", () => {
     expect(cache.get("interview", `${PLAN_VERSION}:${normaliseTask("Answer routine customer emails")}`)).toBeDefined();
   });
 
+  it("retries a plan with no usable questions on the escalation model", async () => {
+    const tries: (string | undefined)[] = [];
+    const complete: Complete = async (_i, _input, attempt) => (tries.push(attempt), attempt === "retry" ? JSON.stringify(goodPlan()) : JSON.stringify({ summary: "x", questions: [] }));
+    const models = { apiKey: "test-key", model: "claude-haiku-5-5", escalationModel: "claude-sonnet-5-5" };
+    const out = await handleInterview({ task: "Answer routine customer emails" }, { ...models, cache: memoryCache() }, { complete });
+    expect(out.status).toBe(200);
+    expect(out.body).toMatchObject({ source: "ai", model: "claude-sonnet-5-5" });
+    expect(tries).toEqual(["first", "retry"]);
+
+    // If the retry has nothing usable either, the standard questions are used, as before.
+    const empty: Complete = async () => JSON.stringify({ summary: "x", questions: [] });
+    const fallback = await handleInterview({ task: "Answer routine customer emails" }, { ...models, cache: memoryCache() }, { complete: empty });
+    expect(fallback.status).toBe(502);
+    expect(fallback.body.error).toMatch(/didn't fit the guide/);
+  });
+
   it("serves a repeat of the same task from the cache, with no model or embedding call", async () => {
     const cache = memoryCache();
     const f = fakeModel(JSON.stringify(goodPlan()));

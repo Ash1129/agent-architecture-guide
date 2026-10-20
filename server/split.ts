@@ -8,9 +8,10 @@ import { MAX_JOBS, MAX_JOB_DESCRIPTION, MAX_PROCESS_DESCRIPTION, type SplitRespo
 import { normaliseTask } from "../src/lib/interview";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
-import { type Complete, extractJson, openAIComplete } from "./ai";
+import { type Complete, extractJson, claudeComplete, withEscalation } from "./ai";
+import { modelFor } from "./models";
 
-export type SplitEnv = { apiKey?: string; model?: string; cache?: Cache };
+export type SplitEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
 export type SplitResult = { status: number; body: Record<string, unknown> };
 
 export const INSTRUCTIONS = `You read a business owner's description of a problem and decide whether it is one job or several separate jobs. Each job you return will be designed as its own system (an automation, an AI workflow or an AI agent), so split only where separate systems make sense.
@@ -32,7 +33,7 @@ Return only the JSON object. No prose, no code fences.`;
 export const SPLIT_VERSION = fingerprint(INSTRUCTIONS);
 
 export async function handleSplit(body: unknown, env: SplitEnv, deps: { complete?: Complete } = {}): Promise<SplitResult> {
-  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI isn't set up. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
+  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI isn't set up. Add ANTHROPIC_API_KEY and ANTHROPIC_MODEL to .env and restart." } };
   const raw = (body as { description?: unknown })?.description;
   const description = typeof raw === "string" ? raw.replace(/\s+/g, " ").trim().slice(0, MAX_PROCESS_DESCRIPTION) : "";
   if (description.length < 3) return { status: 400, body: { error: "Send the description as a few sentences." } };
@@ -43,15 +44,18 @@ export async function handleSplit(body: unknown, env: SplitEnv, deps: { complete
   if (hit) return { status: 200, body: { ...hit.value, source: "cache" } };
 
   return singleFlight(`split:${key}`, async () => {
-    const run = deps.complete ?? openAIComplete({ apiKey: env.apiKey!, model: env.model!, task: "split" });
+    const run = deps.complete ?? claudeComplete({ apiKey: env.apiKey!, model: env.model!, escalationModel: env.escalationModel, workspaceId: env.workspaceId, task: "split" });
     try {
-      const split = validateSplit(extractJson(await run(INSTRUCTIONS, `DESCRIPTION:\n${description}`)), description);
-      const out: SplitResponse = { split, source: "ai", model: env.model };
+      // An unreadable reply gets one retry on the escalation model.
+      const { value: split, attempt } = await withEscalation("split", async (attempt) =>
+        validateSplit(extractJson(await run(INSTRUCTIONS, `DESCRIPTION:\n${description}`, attempt)), description),
+      );
+      const out: SplitResponse = { split, source: "ai", model: modelFor({ model: env.model!, escalationModel: env.escalationModel }, attempt) };
       env.cache?.put(ns, { key, label: description.slice(0, 200), value: out });
       return { status: 200, body: out };
     } catch (e) {
       const err = e as { status?: number };
-      const message = err.status === 401 ? "OpenAI rejected the API key." : err.status === 404 ? `OpenAI doesn't recognise the model "${env.model}".` : "The AI couldn't read the description into jobs.";
+      const message = err.status === 401 ? "Anthropic rejected the API key." : err.status === 404 ? `Anthropic doesn't recognise the model "${env.model}".` : "The AI couldn't read the description into jobs.";
       return { status: 502, body: { error: message } };
     }
   });

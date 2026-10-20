@@ -16,6 +16,7 @@
     "benchmark:agents": "node scripts/benchmarks/agents.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
     "@fontsource-variable/geist": "^5.3.0",
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@fontsource-variable/work-sans": "^5.3.0",

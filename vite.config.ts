@@ -3,10 +3,11 @@ import { configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import type { IncomingMessage } from "node:http";
+import { resolveModels } from "./server/models.ts";
 
 /**
- * Serves the AI endpoints during local development, reading the OpenAI key
- * from .env on the server side only:
+ * Serves the AI endpoints during local development, reading the Anthropic key
+ * (and, optionally, an OpenAI key for embeddings) from .env on the server side only:
  *   POST /api/interview  adapts the guide's questions to a task
  *   POST /api/split      reads a described problem into one or more jobs
  *   POST /api/decide     makes the main choices for a finished set of answers
@@ -30,6 +31,10 @@ function aiApi(): Plugin {
     name: "ai-api",
     configureServer(server) {
       const env = loadEnv(server.config.mode, process.cwd(), "");
+      // Haiku first, Sonnet for a retry after a failed check; any other model stops the server (see server/models.ts).
+      const models = resolveModels({ model: env.ANTHROPIC_MODEL, escalationModel: env.ANTHROPIC_ESCALATION_MODEL });
+      // The key, the workspace it belongs to (needed when the key isn't scoped to one) and the models.
+      const claude = { apiKey: env.ANTHROPIC_API_KEY, workspaceId: env.ANTHROPIC_WORKSPACE_ID || undefined, ...models };
       const cachePath = `${process.cwd()}/ai-cache.nosync/cache.json`;
       // Revenium metering is optional: on only when REVENIUM_METERING_API_KEY is set (see server/metering.ts).
       const metering = server
@@ -42,30 +47,31 @@ function aiApi(): Plugin {
       const routes: Record<string, (body: unknown) => Promise<{ status: number; body: unknown }>> = {
         "/api/tailor": async (body) => {
           const [{ handleTailor }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/tailor.ts"), server.ssrLoadModule("/server/cache.ts")]);
-          return handleTailor(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+          return handleTailor(body, { ...claude, cache: sharedCache(cachePath) });
         },
         "/api/decide": async (body) => {
           const [{ handleDecide }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/decide.ts"), server.ssrLoadModule("/server/cache.ts")]);
-          return handleDecide(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+          return handleDecide(body, { ...claude, cache: sharedCache(cachePath) });
         },
         "/api/design": async (body) => {
           const [{ handleDesign }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/design.ts"), server.ssrLoadModule("/server/cache.ts")]);
-          return handleDesign(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+          return handleDesign(body, { ...claude, cache: sharedCache(cachePath) });
         },
         "/api/kit": async (body) => {
           const [{ handleKit }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/kit.ts"), server.ssrLoadModule("/server/cache.ts")]);
-          return handleKit(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+          return handleKit(body, { ...claude, cache: sharedCache(cachePath) });
         },
         "/api/split": async (body) => {
           const [{ handleSplit }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/split.ts"), server.ssrLoadModule("/server/cache.ts")]);
-          return handleSplit(body, { apiKey: env.OPENAI_API_KEY, model: env.OPENAI_MODEL, cache: sharedCache(cachePath) });
+          return handleSplit(body, { ...claude, cache: sharedCache(cachePath) });
         },
         "/api/interview": async (body) => {
           const [{ handleInterview }, { sharedCache }] = await Promise.all([server.ssrLoadModule("/server/interview.ts"), server.ssrLoadModule("/server/cache.ts")]);
           return handleInterview(body, {
-            apiKey: env.OPENAI_API_KEY,
-            // Adapting questions is a small job: use the faster model when one is set.
-            model: env.OPENAI_FAST_MODEL || env.OPENAI_MODEL,
+            ...claude,
+            // Recognising earlier tasks needs embeddings, which Claude doesn't offer:
+            // on only when an OpenAI key is set.
+            embeddingApiKey: env.OPENAI_API_KEY,
             embeddingModel: env.OPENAI_EMBEDDING_MODEL || "text-embedding-3-small",
             cache: sharedCache(cachePath),
           });

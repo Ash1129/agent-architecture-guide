@@ -14,10 +14,11 @@ import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
-import { type Complete, extractJson, openAIComplete } from "./ai";
+import { type Complete, claudeComplete, extractJson, firstDraft } from "./ai";
+import { modelFor } from "./models";
 import { decidedRecommendation, decisionTag } from "./decide";
 
-export type DesignEnv = { apiKey?: string; model?: string; cache?: Cache };
+export type DesignEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
 type ReadyEnv = DesignEnv & { apiKey: string; model: string };
 export type DesignResult = { status: number; body: Record<string, unknown> };
 
@@ -108,7 +109,7 @@ export function buildDesignInput(a: Answers, r: Recommendation, baseline: Bluepr
 }
 
 export async function handleDesign(body: unknown, env: DesignEnv, complete?: Complete): Promise<DesignResult> {
-  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI design isn't set up. Add OPENAI_API_KEY and OPENAI_MODEL to .env and restart." } };
+  if (!env.apiKey || !env.model) return { status: 503, body: { error: "AI design isn't set up. Add ANTHROPIC_API_KEY and ANTHROPIC_MODEL to .env and restart." } };
   const raw = (body as { answers?: unknown })?.answers;
   const answers = raw && typeof raw === "object" ? decodeAnswers(encodeAnswers(raw as Answers)) : null;
   if (!answers || !isComplete(answers)) return { status: 400, body: { error: "Send a complete set of answers from the guide." } };
@@ -123,15 +124,16 @@ export async function handleDesign(body: unknown, env: DesignEnv, complete?: Com
 async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete): Promise<DesignResult> {
   const respond = (r: DesignResponse): DesignResult => ({ status: 200, body: r });
   const { r, baseline, chunks, ctx } = contextFor(answers, env);
-  const run = complete ?? openAIComplete({ apiKey: env.apiKey, model: env.model, task: "design" });
+  const run = complete ?? claudeComplete({ apiKey: env.apiKey, model: env.model, escalationModel: env.escalationModel, workspaceId: env.workspaceId, task: "design" });
   const input = buildDesignInput(answers, r, baseline, chunks);
   try {
-    let text = await run(INSTRUCTIONS, input);
+    let { text, failure } = await firstDraft("design", run, INSTRUCTIONS, input);
     for (let attempt = 0; attempt < 2; attempt++) {
       let problems: string[];
       let blueprint: Blueprint | undefined;
       let draft: unknown;
       try {
+        if (failure) throw new Error(failure);
         draft = extractJson(text);
         ({ blueprint, problems } = checkDesign(draft, ctx));
       } catch (e) {
@@ -139,20 +141,25 @@ async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete)
       }
       if (blueprint) {
         env.cache?.put("design", { key: designKey(answers, env.model, env), label: answers.task, value: draft });
-        return respond({ blueprint, source: "ai", model: env.model });
+        return respond({ blueprint, source: "ai", model: modelFor(env, attempt === 0 ? "first" : "retry") });
       }
       // Rejections are logged on the dev server so failures can be diagnosed.
       console.warn(`[design] "${answers.task}" draft ${attempt + 1} rejected:\n${problems.map((x) => `  - ${x}`).join("\n")}`);
       if (attempt === 1) return { status: 502, body: { error: "The AI's design didn't pass the guide's checks, so the rules' design is shown.", problems: problems.slice(0, 8) } };
-      text = await run(
-        INSTRUCTIONS,
-        `${input}\n\nYOUR PREVIOUS DESIGN FAILED THESE CHECKS. Fix every one and return the complete corrected design JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS DESIGN:\n${text.slice(0, 40_000)}`,
-      );
+      // A first reply that never finished is asked for again from scratch.
+      text = failure
+        ? await run(INSTRUCTIONS, input, "retry")
+        : await run(
+            INSTRUCTIONS,
+            `${input}\n\nYOUR PREVIOUS DESIGN FAILED THESE CHECKS. Fix every one and return the complete corrected design JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS DESIGN:\n${text.slice(0, 40_000)}`,
+            "retry",
+          );
+      failure = undefined;
     }
     return { status: 500, body: { error: "Unexpected design state." } };
   } catch (e) {
     const err = e as { status?: number };
-    const message = err.status === 401 ? "OpenAI rejected the API key." : err.status === 404 ? `OpenAI doesn't recognise the model "${env.model}".` : "The AI couldn't draft a design, so the rules' design is shown.";
+    const message = err.status === 401 ? "Anthropic rejected the API key." : err.status === 404 ? `Anthropic doesn't recognise the model "${env.model}".` : "The AI couldn't draft a design, so the rules' design is shown.";
     return { status: 502, body: { error: message } };
   }
 }

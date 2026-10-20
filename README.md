@@ -77,8 +77,8 @@ With AI on, an AI model makes the guide's decisions, with the rules and the know
 Setup:
 
 - `.env.development` holds the switch, `VITE_AI_TAILORING=true`. Vite reads that file only in development, so `npm run build` leaves the AI features, their request code and their privacy wording out of the bundle.
-- `.env` holds `OPENAI_API_KEY`, `OPENAI_MODEL` (set to `gpt-6-luna`) and optionally `OPENAI_FAST_MODEL` and `OPENAI_EMBEDDING_MODEL` (see `.env.example`). They are read only by the dev server and never reach the browser.
-- Both files are git-ignored. There is no deployable endpoint, so a published copy cannot spend your OpenAI credit.
+- `.env` holds `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` (`claude-haiku-5-5`) and `ANTHROPIC_ESCALATION_MODEL` (`claude-sonnet-5-5`), plus `ANTHROPIC_WORKSPACE_ID` when the key isn't scoped to a workspace. Every AI step except tailoring answers first on Haiku; tailoring starts on Sonnet, since Haiku's long workflows ran away. An answer that fails the step's checks gets one retry on Sonnet, then the rules' version is used. No other model is accepted (see `server/models.ts`). An optional `OPENAI_API_KEY` and `OPENAI_EMBEDDING_MODEL` turn on recognising earlier tasks by meaning, since Claude has no embedding model. Optional `REVENIUM_*` values report each call's usage to Revenium (see `.env.example`). All are read only by the dev server and never reach the browser.
+- Both files are git-ignored. There is no deployable endpoint, so a published copy cannot spend your API credit.
 
 To try it: add your key to `.env`, then restart `npm run dev`.
 

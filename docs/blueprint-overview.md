@@ -60,7 +60,7 @@ npm install
 npm run dev
 ```
 
-AI features need `OPENAI_API_KEY` and `OPENAI_MODEL` in `.env`; without them, Blueprint runs on its rules alone.
+AI features need `ANTHROPIC_API_KEY` in `.env`; without it, Blueprint runs on its rules alone. Each step answers first on Claude Haiku 5.5 (tailoring starts on Claude Sonnet 5.5) and retries once on Sonnet when the answer fails its checks. An optional `OPENAI_API_KEY` adds recognising earlier tasks by meaning.
 
 ## Where it's going
 
