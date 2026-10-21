@@ -14,7 +14,7 @@ import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
-import { type Complete, claudeComplete, extractJson, firstDraft } from "./ai";
+import { type Complete, OUTPUT_LIMIT, RUNAWAY_NOTE, claudeComplete, extractJson, firstDraft } from "./ai";
 import { modelFor } from "./models";
 import { decidedRecommendation, decisionTag } from "./decide";
 
@@ -148,7 +148,7 @@ async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete)
       if (attempt === 1) return { status: 502, body: { error: "The AI's design didn't pass the guide's checks, so the rules' design is shown.", problems: problems.slice(0, 8) } };
       // A first reply that never finished is asked for again from scratch.
       text = failure
-        ? await run(INSTRUCTIONS, input, "retry")
+        ? await run(INSTRUCTIONS, failure === OUTPUT_LIMIT ? `${input}\n\n${RUNAWAY_NOTE}` : input, "retry")
         : await run(
             INSTRUCTIONS,
             `${input}\n\nYOUR PREVIOUS DESIGN FAILED THESE CHECKS. Fix every one and return the complete corrected design JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS DESIGN:\n${text.slice(0, 40_000)}`,

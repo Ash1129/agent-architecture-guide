@@ -22,7 +22,7 @@ import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { fingerprint } from "../src/lib/tailored";
 import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, loadChunks, selectChunks, taskText } from "./knowledge";
-import { type Complete, claudeComplete, extractJson, firstDraft } from "./ai";
+import { type Complete, OUTPUT_LIMIT, RUNAWAY_NOTE, claudeComplete, extractJson, firstDraft } from "./ai";
 import { modelFor } from "./models";
 
 export type DecideEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
@@ -190,7 +190,7 @@ async function decide(answers: Answers, env: ReadyEnv, complete?: Complete): Pro
       if (attempt === 1) return { status: 502, body: { error: "The AI's decision broke the guide's limits, so the rules' recommendation is shown.", problems: problems.slice(0, 8) } };
       // A first reply that never finished is asked for again from scratch.
       text = failure
-        ? await run(INSTRUCTIONS, input, "retry")
+        ? await run(INSTRUCTIONS, failure === OUTPUT_LIMIT ? `${input}\n\n${RUNAWAY_NOTE}` : input, "retry")
         : await run(
             INSTRUCTIONS,
             `${input}\n\nYOUR PREVIOUS DECISION BROKE THESE LIMITS. Fix every one and return the complete corrected decision JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS DECISION:\n${text.slice(0, 20_000)}`,

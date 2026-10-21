@@ -18,30 +18,61 @@ export type Complete = (instructions: string, input: string, attempt?: Attempt) 
 export const CALL_TIMEOUT_MS = 360_000;
 
 /** Room for the longest reply (a tailored n8n workflow) and the model's thinking before it. */
-const MAX_TOKENS = 32_000;
+export const MAX_TOKENS = 32_000;
+
+/** How hard the model thinks before answering. */
+export type Effort = "low" | "medium" | "high";
+
+/** The message a reply that ran past the output limit throws, so its retry can be told why. */
+export const OUTPUT_LIMIT = "The reply ran past the output limit.";
+
+/** Added to the retry after a reply ran past the output limit, so the retry isn't the same request again. */
+export const RUNAWAY_NOTE =
+  "YOUR PREVIOUS REPLY RAN PAST THE OUTPUT LIMIT AND WAS CUT OFF. Think briefly, then return only the JSON object: no explanation before or after it, and keep every text field as short as the instructions allow.";
+
+type ClaudeEnv = ModelChoice & { apiKey: string; workspaceId?: string; task?: string; effort?: Effort };
+
+/** The request for one try: its model, effort and output room, the cached instructions, and the Revenium tag. */
+export function messageParams(env: ClaudeEnv, instructions: string, input: string, attempt: Attempt = "first") {
+  return {
+    model: modelFor(env, attempt),
+    max_tokens: MAX_TOKENS,
+    output_config: { effort: env.effort ?? "medium" },
+    // Each endpoint's instructions are the same on every call, so they are cached between calls.
+    system: [{ type: "text" as const, text: instructions, cache_control: { type: "ephemeral" as const } }],
+    messages: [{ role: "user" as const, content: input }],
+    ...meteringTag(env.task ?? "complete", attempt),
+  };
+}
+
+/** One line for the server log when a reply runs past the output limit: where its tokens went, and how it ended. */
+export function runawayReport(task: string, message: Pick<Anthropic.Message, "model" | "usage" | "content">): string {
+  const usage = message.usage as Anthropic.Usage & { output_tokens_details?: { thinking_tokens?: number } };
+  const thinking = usage.output_tokens_details?.thinking_tokens;
+  const text = message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("");
+  const tail = text.slice(-200).replace(/\s+/g, " ");
+  return (
+    `[${task}] ${message.model} ran past the ${MAX_TOKENS}-token output limit: ${usage.output_tokens} output tokens, ` +
+    `${thinking ?? "unknown"} of them thinking, ${text.length} characters of reply. Reply ends: "${tail}"`
+  );
+}
 
 /**
  * `task` names the endpoint, so Revenium (when metering is on) can show cost per step.
+ * `effort` sets how hard the model thinks; most steps use medium.
  * `workspaceId` is needed when the API key isn't scoped to a workspace: it's sent
  * as the anthropic-workspace-id header on every request.
  */
-export function claudeComplete(env: ModelChoice & { apiKey: string; workspaceId?: string; task?: string }): Complete {
+export function claudeComplete(env: ClaudeEnv): Complete {
   const client = new Anthropic(clientOptions(env));
   return async (instructions, input, attempt = "first") => {
-    // Streamed, so a long reply never runs into an HTTP timeout. Each endpoint's
-    // instructions are the same on every call, so they are cached between calls.
-    const message = await client.messages
-      .stream({
-        model: modelFor(env, attempt),
-        max_tokens: MAX_TOKENS,
-        output_config: { effort: "medium" },
-        system: [{ type: "text", text: instructions, cache_control: { type: "ephemeral" } }],
-        messages: [{ role: "user", content: input }],
-        ...meteringTag(env.task ?? "complete", attempt),
-      })
-      .finalMessage();
+    // Streamed, so a long reply never runs into an HTTP timeout.
+    const message = await client.messages.stream(messageParams(env, instructions, input, attempt)).finalMessage();
     if (message.stop_reason === "refusal") throw new Error("The model declined this request.");
-    if (message.stop_reason === "max_tokens") throw new Error("The reply ran past the output limit.");
+    if (message.stop_reason === "max_tokens") {
+      console.warn(runawayReport(env.task ?? "complete", message));
+      throw new Error(OUTPUT_LIMIT);
+    }
     return message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("");
   };
 }

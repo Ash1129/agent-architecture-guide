@@ -12,7 +12,7 @@ import { type Answers, QUESTIONS, isComplete, said } from "../src/lib/questions"
 import { decodeAnswers, encodeAnswers, resultCode } from "../src/lib/share";
 import { MODEL_API_ID, buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
-import { CALL_TIMEOUT_MS, type Complete, claudeComplete, extractJson, firstDraft } from "./ai";
+import { CALL_TIMEOUT_MS, type Complete, OUTPUT_LIMIT, RUNAWAY_NOTE, claudeComplete, extractJson, firstDraft } from "./ai";
 import { modelFor, startingModels } from "./models";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
@@ -174,7 +174,9 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
   if (hit) return { status: 200, body: { workflow: hit.value, model: models.model, cached: true } };
 
   const model = models.model;
-  const run = complete ?? claudeComplete({ apiKey: env.apiKey, ...models, workspaceId: env.workspaceId, task: "tailor" });
+  // Low effort: tailoring edits a starting workflow that fixed checks then verify, and at
+  // medium effort its thinking ran past the output limit (see server/models.ts).
+  const run = complete ?? claudeComplete({ apiKey: env.apiKey, ...models, workspaceId: env.workspaceId, task: "tailor", effort: "low" });
   const input = buildInput(answers, bp, template.content);
   return singleFlight(`tailor:${key}`, async (): Promise<TailorResult> => {
     try {
@@ -199,7 +201,7 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
         // One repair round, on the escalation model: show it exactly what failed.
         // A first reply that never finished is asked for again from scratch.
         text = failure
-          ? await run(INSTRUCTIONS, input, "retry")
+          ? await run(INSTRUCTIONS, failure === OUTPUT_LIMIT ? `${input}\n\n${RUNAWAY_NOTE}` : input, "retry")
           : await run(
               INSTRUCTIONS,
               `${input}\n\nYOUR PREVIOUS ANSWER FAILED THESE CHECKS. Fix every one and return the complete corrected workflow JSON only:\n${problems.map((x) => `- ${x}`).join("\n")}\n\nPREVIOUS ANSWER:\n${text.slice(0, 60_000)}`,

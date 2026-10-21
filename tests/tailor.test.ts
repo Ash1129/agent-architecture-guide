@@ -83,16 +83,17 @@ describe("AI tailoring endpoint", () => {
   it("asks afresh when the first reply never finished", async () => {
     const { wf } = approved(emails);
     const models = { apiKey: "test-key", model: "claude-haiku-5-5", escalationModel: "claude-sonnet-5-5" };
-    const tries: [string | undefined, boolean][] = [];
+    const tries: [string | undefined, boolean, boolean][] = [];
     const runaway: Complete = async (_i, input, attempt) => {
-      tries.push([attempt, input.includes("PREVIOUS ANSWER")]);
+      tries.push([attempt, input.includes("PREVIOUS ANSWER"), input.includes("RAN PAST THE OUTPUT LIMIT")]);
       if (attempt !== "retry") throw new Error("The reply ran past the output limit.");
       return JSON.stringify(wf);
     };
     const out = await handleTailor({ answers: emails }, models, runaway);
     expect(out.status).toBe(200);
     expect(out.body.model).toBe("claude-sonnet-5-5");
-    expect(tries).toEqual([["first", false], ["retry", false]]);
+    // The retry is the same request plus a note saying why, so it isn't simply repeated.
+    expect(tries).toEqual([["first", false, false], ["retry", false, true]]);
 
     // An API error is not retried: another model won't fix a bad key.
     let calls = 0;

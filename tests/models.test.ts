@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Attempt, clientOptions, withEscalation } from "../server/ai";
+import { type Attempt, MAX_TOKENS, clientOptions, messageParams, runawayReport, withEscalation } from "../server/ai";
 import { ALLOWED_MODELS, ESCALATION_MODEL, FAST_MODEL, modelFor, resolveModels, startingModels } from "../server/models";
 import { handleSplit } from "../server/split";
 
@@ -46,6 +46,27 @@ describe("Claude client settings", () => {
 
   it("keeps one long timeout and no SDK retries", () => {
     expect(clientOptions({ apiKey: "test-key" })).toMatchObject({ timeout: 360_000, maxRetries: 0 });
+  });
+});
+
+describe("Claude requests", () => {
+  const env = { apiKey: "test-key", model: FAST_MODEL, escalationModel: ESCALATION_MODEL };
+
+  it("thinks at medium effort unless a step asks for less, and caches the instructions", () => {
+    const params = messageParams({ ...env, task: "decide" }, "Do the thing.", "Input.");
+    expect(params).toMatchObject({ model: FAST_MODEL, max_tokens: MAX_TOKENS, output_config: { effort: "medium" } });
+    expect(params.system[0]).toMatchObject({ text: "Do the thing.", cache_control: { type: "ephemeral" } });
+    expect(messageParams({ ...env, task: "tailor", effort: "low" }, "i", "x", "retry")).toMatchObject({ model: ESCALATION_MODEL, output_config: { effort: "low" } });
+  });
+
+  it("reports where a runaway reply's tokens went, and how it ended", () => {
+    const line = runawayReport("tailor", {
+      model: ESCALATION_MODEL,
+      usage: { input_tokens: 13_000, output_tokens: 32_000, output_tokens_details: { thinking_tokens: 29_500 } } as never,
+      content: [{ type: "text", text: '{"nodes": [ {"name": "1. Start"},\n  {"name": "2. Read' } as never],
+    });
+    expect(line).toMatch(/^\[tailor\] claude-sonnet-5-5 ran past the 32000-token output limit: 32000 output tokens, 29500 of them thinking/);
+    expect(line).toMatch(/Reply ends: ".*2\. Read"$/);
   });
 });
 
