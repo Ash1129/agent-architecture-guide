@@ -228,3 +228,79 @@ describe("decision endpoint", () => {
     expect(tries).toEqual(["first", "retry"]);
   });
 });
+
+describe("advice follows the decided approach, not the answers' shape", () => {
+  /** Rules: a workflow with AI steps in n8n; it reads the owner's systems and handles personal data. */
+  const readings: Answers = {
+    task: "Flag readings over a threshold", shape: "judgement", kinds: "no", split: "sequential", quality: "clear", knowledge: ["playbook"],
+    systems: "read", trigger: "event", volume: "daily", risks: ["personal"], location: "open", team: "small",
+  };
+  /** The AI disagrees: the thresholds are fixed, so plain automation will do. */
+  const automation = checkDecision(
+    aiDecision({
+      summary: "The thresholds are fixed, so a plain workflow checks each reading and alerts; no AI is needed.",
+      approach: "automation",
+      topology: { primary: "pipeline", addOns: [] },
+      tools: [{ tool: "n8n", role: "Runs the checks and sends the alerts." }, { tool: "integrations", role: "Reads the readings." }],
+      autonomy: 3,
+      models: {},
+      shortlist: [{ tool: "n8n", reason: "Visual and quick to build.", tradeoff: "Less control over recovery." }],
+      reasons: { ...aiDecision().reasons, approach: reason("Each reading is compared with a fixed threshold: no judgement is involved."), models: reason("No AI steps, so no models.") },
+    }),
+    readings,
+    chunks,
+  ).decision as Decision;
+  const ids = (r: ReturnType<typeof recommend>) => r.gotchas.map((g) => g.id);
+
+  it("drops the AI-only warnings, steps and guardrails when the AI chooses plain automation", () => {
+    const rules = recommend(readings);
+    const ai = recommend(readings, automation);
+    expect(rules.approach.id).toBe("workflow");
+    expect(ids(rules)).toEqual(expect.arrayContaining(["G3", "G4", "G19"]));
+    expect(rules.firstSteps[1]).toMatch(/Claude/);
+    expect(rules.firstSteps[1]).toMatch(/most capable model/);
+
+    expect(ai.approach.id).toBe("automation");
+    for (const g of ["G3", "G4", "G19"]) expect(ids(ai)).not.toContain(g);
+    expect(ids(ai)).toEqual(expect.arrayContaining(["G1", "G10"]));
+    expect(ai.firstSteps[1]).not.toMatch(/Claude|model/i);
+    expect(ai.firstSteps[1]).toMatch(/manual start button/);
+    expect(ai.firstSteps[0]).toMatch(/every step, rule and exception/);
+    expect(ai.firstSteps[2]).toMatch(/alert when a run fails/);
+    expect(ai.models.needed).toBe(false);
+    expect(ai.models.capabilities).toEqual([]);
+    expect(ai.autonomy.guardrails).toEqual([]);
+    expect(ai.autonomy.checkpoints[0]).toMatch(/If a run fails, stop and alert/);
+    expect(ai.simpler.title).toBe("A written checklist");
+    expect(ai.fired).toContain("S5");
+    expect(ai.fired).not.toContain("S3");
+  });
+
+  it("adds them when the AI chooses AI steps for rules-shaped answers", () => {
+    const fixed: Answers = { task: "Send overdue invoice reminders", shape: "rules", systems: "act", trigger: "schedule", volume: "daily", risks: ["personal"], location: "open", team: "small" };
+    const workflow = checkDecision(
+      aiDecision({ topology: { primary: "chain", addOns: [] }, tools: [{ tool: "n8n", role: "Runs the workflow." }, { tool: "system-prompt", role: "The brief." }], autonomy: 3, models: { worker: "sonnet" } }),
+      fixed,
+      chunks,
+    ).decision as Decision;
+    const rules = recommend(fixed);
+    const ai = recommend(fixed, workflow);
+    expect(rules.approach.id).toBe("automation");
+    expect(ids(rules)).toEqual(expect.arrayContaining(["G1", "G10"]));
+    expect(ids(rules)).not.toContain("G19");
+
+    expect(ai.approach.id).toBe("workflow");
+    expect(ids(ai)).toEqual(expect.arrayContaining(["G3", "G4", "G19"]));
+    for (const g of ["G1", "G10"]) expect(ids(ai)).not.toContain(g);
+    expect(ai.firstSteps[1]).toMatch(/playbook/);
+    expect(ai.firstSteps[0]).toMatch(/real past examples/);
+    expect(ai.models.needed).toBe(true);
+    expect(ai.models.capabilities.map((c) => c.title)).toContain("Follows instructions closely");
+    expect(ai.autonomy.guardrails.length).toBeGreaterThan(0);
+    expect(ai.simpler.title).toBe("Do it by hand with AI first");
+  });
+
+  it("leaves the rules' own result unchanged when there is no decision", () => {
+    expect(recommend(readings).fired).toEqual(expect.arrayContaining(["A2", "S3", "G3", "G4", "G19", "M10", "AU10"]));
+  });
+});
