@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-16, after merging the decided-approach fix (`e7f0fac`). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-10-25, after running the second Kushim brief (a multi-agent tax-draft system) through the guide and building the system from its output (items 23 to 29). Items are renumbered as they close; the Done section names what each commit covered.
 
 ## Next up
 
@@ -102,6 +102,63 @@ Most of this landed as general rules (see Done). What remains:
     checker; an AI-drafted design's checker step is picked without knowing
     the producer, so it can coincide. Pass the producer into `pickModel` in
     `src/lib/design.ts` as `evaluator()` does.
+
+## From running a long, prescriptive brief through the guide (2026-10-25)
+
+A second course brief was run end to end: the guide's result, then a working
+system built from it (its run record and both kits are kept with that
+project). The brief was 8,500 characters and prescribed its own architecture.
+What that showed, kept general; none of it is a rule about that domain:
+
+23. **"Keep it as one job" designs from a 1,000-character slice.** When the
+    brief is longer than `MAX_DESCRIPTION` (`src/lib/interview.ts`) and the
+    user keeps it as one job, `onKeepOne` (`src/App.tsx`) carries job 1's
+    short text, not the brief, so the interview, decision and kit read a
+    fraction of what was pasted. A 994-character rewrite of the same brief
+    was the workaround. Pass the full text (or a summary made from all of
+    it) when the user keeps one job.
+24. **Stuck "reading" overlay after keep-as-one.** The interview request
+    returned 200 but a duplicate was aborted and the overlay never cleared; a
+    reload recovered it. Clear the overlay on the first completed request.
+25. **Honour a stated architecture, or say why not.** The brief said in so
+    many words that the system must be N separate agents on a named
+    framework, with roles that may not be merged. The decision (`server/decide.ts`)
+    recommended a workflow tool and no agent, and the rules' version a chat
+    app, with no mention of the mandate. When a brief states a framework, a
+    topology or a role split as a requirement, the decision should either
+    take it as a constraint or name it and explain the deviation. A
+    requirements option ("the architecture is prescribed: ...") would carry
+    it into the rules too.
+26. **Conversations with end users are not designed.** A task where one
+    component talks to the public (one question at a time, plain language,
+    resumable sessions, tolerance for drift, honest "I don't know") got no
+    design for that conversation: no slot for who speaks to the user, what
+    they may and may not ask, or how a session resumes. Add an intake/
+    conversation section to the design when a job's input is a dialogue.
+27. **Scope gates and escalation conditions as first-class output.** The
+    brief listed the cases that must stop for a person (out of scope,
+    conflicting sources, advice requests, ambiguity, signals of abuse). The
+    kit has AU-rule checkpoints but no place that lists *this system's*
+    stop conditions with a reason and a citation each. The build needed
+    that list on day one; the kit could draft it from the brief and the
+    requirements answers.
+28. **Bounded cycles and loop guards.** The rulebook says a checker must not
+    fix (kept, and it held up in the build), but says nothing about bounding
+    a review-then-revise cycle or guarding against two components handing
+    work back and forth. The build needed a maximum number of rounds, a
+    handoff ceiling, a pattern detector and a test that trips it. Add this
+    to the gotchas for any design with a checker that can send work back
+    (`src/lib/rules.ts`, G-series) and to the kit's test list.
+29. **Measured context strategies.** The kit recommends keeping prompts
+    small but does not ask for a measurement. A with/without run over a
+    batch of items (tokens per item, both curves) was a one-page document
+    and the most convincing evidence in the deliverable. Ask for it in the
+    kit's evaluation section when a job processes a sequence of items in one
+    thread.
+
+What held up without change: numbers from deterministic tools only, the
+provenance record per value, an independent checker on a different model,
+and the human gate as an interrupt rather than a waiting step.
 
 ## Done
 
