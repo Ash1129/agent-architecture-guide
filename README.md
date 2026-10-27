@@ -93,7 +93,7 @@ To try it: add your key to `.env`, then restart `npm run dev`.
 
 ## Privacy
 
-There are no accounts, analytics or server calls. Progress is kept in the visitor's browser storage, and a shared result link carries the answers (including the task description) inside the link itself.
+There are no accounts. The only thing the published site sends anywhere is an anonymous page-view count, through Vercel Web Analytics (no cookies, no cross-site tracking): it records the page route, such as `/guide/review` or `/result`, and never the answers or the task description (`src/lib/analytics.ts`). Progress is kept in the visitor's browser storage, and a shared result link carries the answers (including the task description) inside the link itself, in a part of the link that is never sent.
 
 ## Recommendation-quality evaluation
 

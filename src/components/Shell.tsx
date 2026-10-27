@@ -160,7 +160,7 @@ export function Footer() {
             </a>
           </li>
           <li className="text-muted">
-            No account, no tracking. Your answers stay in your browser{AI_ENABLED ? " unless you choose Tailor with AI" : ""}.
+            No account, no cookies. Page views are counted anonymously; your answers stay in your browser{AI_ENABLED ? " unless you choose Tailor with AI" : ""}.
           </li>
         </ul>
       </div>
