@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-25, after running the second Kushim brief (a multi-agent tax-draft system) through the guide and building the system from its output (items 23 to 29). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-10-27, after running a third brief (a B2B lead-scoring and routing system in a CRM) through the guide as three jobs and building the system from its output (items 30 to 38). Items are renumbered as they close; the Done section names what each commit covered.
 
 ## Next up
 
@@ -159,6 +159,80 @@ What that showed, kept general; none of it is a rule about that domain:
 What held up without change: numbers from deterministic tools only, the
 provenance record per value, an independent checker on a different model,
 and the human gate as an interrupt rather than a waiting step.
+
+## From running a lead-scoring brief through the guide as three jobs (2026-10-27)
+
+A third brief was run end to end: a system that scores incoming sales leads in
+a CRM, routes them to a capacity-limited team and learns from outcomes. The
+split gave three jobs (score, route, learn), which was right, and the system
+was built from the three kits (run record and kits kept with that project).
+What it showed, kept general; none of it is a rule about sales or CRMs:
+
+30. **No learned-model method.** When the answers say "memory of past work, so
+    it improves over time" and the task is to predict an outcome from
+    structured fields, the guide turns the memory into a reference library of
+    examples for a prompt and the learning into a hand-tuned rules table. The
+    catalog's no-AI methods are control chart, capability index, reliability
+    model and risk ranking (`FIXED_METHODS`, `src/lib/design.ts`); there is no
+    "trained statistical model" (logistic regression, gradient boosting) with
+    calibration, a time-ordered validation split and retraining. For a
+    prediction task the result is a better-governed version of the points
+    model the owner already has. Add the method to the catalog and let the
+    decision and design reach it when the task is a prediction with outcome
+    labels; a gotcha that an LLM rubric cannot learn from outcomes.
+31. **"Likelihood" is a probability, not points.** A task that asks for a
+    likelihood, a probability or one number two teams share needs a
+    calibrated probability; a 0-100 points total can't be compared with the
+    observed rate. The kit should say so where the output format is defined.
+32. **Capacity cut-offs in the brief should reach the design.** "We can only
+    work N of M" is the quantity that decides what good looks like (precision
+    in the top N) and where the review band sits. The result's rank was "a
+    saved view sorted by score" and no metric was named. When a brief states
+    a capacity, carry it into the quality checklist, the metric in the
+    evaluation section, and the routing step.
+33. **Selection bias in feedback loops.** When outcomes exist only for the
+    items a person chose to act on, a model trained on them learns the
+    person's past preferences. The design and kit had no holdout, exploration
+    slice or "not acted on is unlabelled, not negative". Add a gotcha for any
+    design with a learning loop where a human selects what gets an outcome.
+34. **Label delay.** A scheduled learning job compared this period's early
+    outcome (a booking, days) and late outcome (a close, months) as one feed.
+    Where outcomes mature at different speeds, the design should name the
+    maturity window per label and exclude immature items rather than count
+    them as failures.
+35. **Invented required fields.** The AI design for the routing job required a
+    "territory or region" value and flagged leads without one, although the
+    answers said "round-robin only" and the brief said no geographic
+    restriction; every record would have been flagged incomplete. `checkDesign`
+    could compare a validation step's required fields against the answers and
+    the task text, or the design prompt could forbid requiring fields the
+    task doesn't mention.
+36. **Numbers drift in the split.** The split rewrote "12 reps work about 500
+    a month" as "each rep can work about 500 a month" and the error travelled
+    into the routing job's description and reasoning. The split could be
+    told to copy figures verbatim, and the jobs page could show the brief's
+    numbers beside each job for the owner to check.
+37. **"About a person" not ticked for a ranking of people.** The adaptive
+    interview did not tick "decides or recommends something about a person"
+    for a system that ranks identifiable contacts for a sales call (seen
+    before on the tax brief). The interview prompt could ask the question
+    whenever the subject of the task is a person, and let the owner untick.
+38. **Kit copied mid-tailoring, and advice that doesn't fit a numeric task.**
+    BUILD.md copied before tailoring finished embedded "n8n/workflow.json:
+    not included yet" without saying so at the top; the "first steps" told
+    the owner to "run the playbook in Claude on your examples", which fits a
+    reading task, not a scoring model. Block or label the copy while a
+    section is pending, and vary the first steps by the kind of work (F-series).
+
+Seen again: the stuck "reading" overlay after an interview retry (item 24;
+reload recovered it), and the requirements options in engineering jargon
+(item 3). What held up: routing by the CRM's own source fields; a bounded AI
+adjustment with quoted evidence checked by code; idempotent writes keyed by
+record and version; the warning that a write can re-fire the trigger;
+compare-and-set before assigning; an assignment counts only when owner and
+alert both exist; a held queue that is someone's named job; a control chart
+with a minimum group before a weight moves; one approver per team, one
+version at a time, no batch approval; no individual named in a proposal.
 
 ## Done
 
