@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-27, after running a third brief (a B2B lead-scoring and routing system in a CRM) through the guide as three jobs and building the system from its output (items 30 to 38). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-10-28, after running a third brief (a B2B lead-scoring and routing system in a CRM) through the guide as three jobs, building the system from its output, and folding in the owner's answers to follow-up questions (items 30 to 39). Items are renumbered as they close; the Done section names what each commit covered.
 
 ## Next up
 
@@ -223,6 +223,18 @@ What it showed, kept general; none of it is a rule about sales or CRMs:
     the owner to "run the playbook in Claude on your examples", which fits a
     reading task, not a scoring model. Block or label the copy while a
     section is pending, and vary the first steps by the kind of work (F-series).
+
+39. **Questions the interview never asked.** After the build, the owner was
+    asked nine questions by email, and four answers changed the design: how
+    complete each source's records are (~40% missing a key field,
+    concentrated in the best sources), how fast work is picked up today (a
+    3-day median, with a 2x effect inside a day), how long an outcome takes
+    to arrive (a 30-day cycle), and what a win looks like at the review date
+    (more output, faster, same headcount). None of them is specific to
+    sales. Any task that ranks or routes work and learns from outcomes
+    depends on them. The interview could ask them whenever "memory of past
+    work" or a capacity limit is in the answers, and the design's quality
+    checklist could carry the stated win as its first measure.
 
 Seen again: the stuck "reading" overlay after an interview retry (item 24;
 reload recovered it), and the requirements options in engineering jargon
