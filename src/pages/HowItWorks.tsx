@@ -117,7 +117,7 @@ export function HowItWorks({ cta }: { cta: { label: string; to: Route } }) {
           <p className="mt-2 text-[15px] leading-relaxed text-muted">
             {AI_ENABLED
               ? "There's no account. Your description and answers go to OpenAI through this site's server to read the description (and split it into jobs), word the questions, draft the design, write the starter kit and tailor the n8n workflow. Your history stays in your browser, and a shared link carries the answers inside the link itself."
-              : "Everything runs in your browser. There's no account and nothing is sent anywhere. A shared link carries the answers inside the link itself."}
+              : "Everything runs in your browser. There's no account, and the only thing sent anywhere is an anonymous page-view count (Vercel Web Analytics: no cookies, no cross-site tracking) that records which page you're on, never your answers or task description. A shared link carries the answers inside the link itself."}
           </p>
         </div>
       </div>
