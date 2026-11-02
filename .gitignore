@@ -15,3 +15,6 @@ __pycache__/
 # Raw per-trial benchmark records: large and new on every run. Reports
 # (report.md, report.json), the budget ledger and blocked/status files stay in git.
 outputs/**/trials.json
+
+# Vercel build output (scripts/build-vercel.mjs)
+.vercel/
