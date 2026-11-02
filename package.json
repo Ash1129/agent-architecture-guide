@@ -13,7 +13,8 @@
     "eval:guide": "node scripts/evaluate-guide.mjs",
     "eval:guide:external": "node scripts/evaluate-external-guide.mjs",
     "benchmark:local": "node scripts/benchmarks/run.mjs",
-    "benchmark:agents": "node scripts/benchmarks/agents.mjs"
+    "benchmark:agents": "node scripts/benchmarks/agents.mjs",
+    "build:vercel": "tsc --noEmit && node scripts/build-vercel.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.129.0",
