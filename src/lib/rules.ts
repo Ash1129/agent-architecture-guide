@@ -1661,6 +1661,27 @@ export const RULES: Rule[] = [
         design,
       ),
   },
+  {
+    id: "G38",
+    group: "Gotchas",
+    if: "AI is used and a person reviews its output (level 3 or below)",
+    then: "Warn that the review screen decides whether the review catches anything, and point to the kit's screens brief.",
+    basis: design,
+    kb: ["U02", "U01", "A03"],
+    late: true,
+    when: (a, d) => usesAi(a, d) && (d.autonomy.level ?? 4) <= 3,
+    apply: (d) =>
+      gotcha(
+        d,
+        {
+          id: "G38",
+          priority: 2,
+          title: "The review screen decides whether the review works",
+          body: "In experiments, reviewers shown an AI's answer with a persuasive explanation accepted more wrong answers, not fewer. Put the source first with the passages the AI relied on highlighted, so checking is quicker than redoing the work. Keep the AI's verdict beside the buttons, make rejecting as quick as approving, and show no bare confidence percentage. The kit's ui/SCREENS.md lays the screens out.",
+        },
+        design,
+      ),
+  },
 ];
 
 

@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-11-16, after reading how the lead-scoring system built from the guide's output changed between its first working version and its final form (77 commits), and building the general lessons into the guide (items 40 to 47 are what is left). Items are renumbered as they close; the Done section keeps the record.
+Last updated: 2026-11-17, after adding the screens people use to the starter kit: a screens brief and a prompt each for Lovable and Claude Design, built on six researched knowledge chunks (items 48 to 53 are what is left). Items are renumbered as they close; the Done section keeps the record.
 
 ## Next up
 
@@ -285,6 +285,10 @@ Done). What the guide still doesn't do with them:
     step in. The build needed, for each point, which role it is, what that
     role sees and decides, and its words for it; five roles became three once
     that was written down.
+    *Partly done:* the kit's screens brief names a reviewer and an owner and
+    what each sees and decides, in the task's words when the AI kit step
+    supplies them (Done, "The screens people use"). Still open: more than
+    two roles, and showing them on the system map.
 45. **No demo mode in the kit.** Showing the build to its stakeholders needed
     a stand-in for the system of record with buttons for what the other
     system would do, a clock that could be moved to today, demo accounts per
@@ -303,8 +307,65 @@ The learned-model gap (item 30) stands, and the build's evaluation fixes
 (one role per period, no refit, ranges over seeds) are what that method's
 kit section should say when it is added.
 
+## From adding the screens people use (2026-11-17)
+
+Of the 77 commits that took the lead-scoring build from its first version to
+its final one, 47 were about pages, layout and wording, and the kit had said
+nothing about any of it. The kit now carries a screens brief and a short
+prompt each for Lovable and Claude Design (see Done). Checked against the
+build's final pages, the brief produces its queue, lead page, held queue,
+overview and decisions page. What it does not do:
+
+48. **One brief per job, not per system.** The build ended as one app for
+    three roles across all three jobs. A system split into jobs gets a
+    screens brief in each job's kit; nothing combines them into one app with
+    the roles from every job.
+49. **The screens are only in the kit.** The result page shows the two copy
+    buttons under "what to build" but never shows the screens themselves.
+    A short "who steps in and what they see" section belongs beside the
+    design.
+50. **No "Open in Lovable" link.** Lovable's docs describe a link that opens
+    it with a prompt filled in (it never starts the build). The kit copies
+    the prompt instead; the link's exact form was not read.
+51. **Two lists in the queue.** The build split the queue into items waiting
+    for the person and items the person had acted on and was waiting to hear
+    back about. The brief has one list.
+52. **"Changed since you looked" rests on one build.** No source read covers
+    an item changing while someone reviews it; the rule comes from the build
+    record (B02). It needs its own evidence.
+53. **A03 says more than the experiments support.** A03 advises having the
+    person form a view before seeing the AI's on important decisions. The
+    experiments in U02 support that for a few high-stakes items only: it
+    catches more AI errors, but people also discard correct advice and like
+    the tool less. The brief applies it only where a mistake cannot be undone
+    or the task decides about a person; A03 and AU13 should be reworded to
+    match. Two of U02's layout points (the verdict beside the buttons,
+    confidence in frequency words) follow the authors' warnings, not tested
+    layouts.
+
+The demo mode (item 45) is still open: the Lovable prompt starts on sample
+data, which covers the screens but not a stand-in for the other system.
+
 ## Done
 
+- `4ede738` **The screens people use.** The starter kit now carries
+  `ui/SCREENS.md` (each point where a person starts, checks, approves or
+  steps in: the screen, who uses it, what it shows, what they can do, and
+  its empty, loading, partial, failed and changed states, with the rules
+  for all screens), `ui/lovable-prompt.md` with `ui/lovable-follow-ups.md`,
+  and `ui/claude-design-prompt.md`, each with a copy button under "what to
+  build". `src/lib/screens.ts` derives them from the recommendation and the
+  answers without an AI call; the AI kit step supplies the task's own words
+  (`screens` in `src/lib/kittext.ts`, checked as one to three plain words).
+  The prompts follow each tool's documentation: Lovable gets one screen on
+  sample data and is asked to ask, with the rest one prompt at a time;
+  Claude Design gets the whole flow as a clickable prototype and takes its
+  look from a design system. Both are capped at 2,400 characters and tested
+  on every path. Six knowledge chunks back it in
+  `knowledge/chunks/16-interfaces-for-people/` (U01 to U06, 47 sources), and
+  G38 tells any design where a person reviews AI output that the screen
+  decides whether the review works. Checked in the app and, with AI on, on
+  a new brief. Tested in `tests/screens.test.ts`.
 - `925c4ab` **Lessons from a built system.** The lead-scoring service built
   from the guide's result was read from its first working version to its
   final form (77 commits) and the general lessons built in. Five knowledge

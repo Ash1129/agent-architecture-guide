@@ -40,7 +40,8 @@ Return one JSON object with any of these keys (leave out a key if you have nothi
  "ownerAsks": up to 5 more things to ask the owner for, beyond the ones listed,
  "watchOut": up to 4 pitfalls specific to this task: [{"title" (up to 70 characters), "body" (up to 300), "kb": [ids of the KNOWLEDGE chunks that support it]}],
  "examples": 3 to 8 illustrative test cases: [{"input", "good", "notes"}], realistic for this task, short, with no real personal data,
- "skillDescription": one line saying when the Skill should be used
+ "skillDescription": one line saying when the Skill should be used,
+ "screens": the task's own words for the screens people use, each one to three plain lower-case words: {"item": one unit of the work (for example "invoice"), "items": its plural, "reviewer": the job title of whoever checks or acts on results, "owner": the job title of whoever is answerable for the system}
 }
 
 Rules:
