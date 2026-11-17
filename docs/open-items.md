@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-28, after running a third brief (a B2B lead-scoring and routing system in a CRM) through the guide as three jobs, building the system from its output, and folding in the owner's answers to follow-up questions (items 30 to 39). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-11-16, after reading how the lead-scoring system built from the guide's output changed between its first working version and its final form (77 commits), and building the general lessons into the guide (items 40 to 47 are what is left). Items are renumbered as they close; the Done section keeps the record.
 
 ## Next up
 
@@ -235,6 +235,9 @@ What it showed, kept general; none of it is a rule about sales or CRMs:
     depends on them. The interview could ask them whenever "memory of past
     work" or a capacity limit is in the answers, and the design's quality
     checklist could carry the stated win as its first measure.
+    *Partly done:* the interview now asks them (Done, "Lessons from a
+    built system"). Still open: the design's quality checklist carrying
+    the stated win as its first measure.
 
 Seen again: the stuck "reading" overlay after an interview retry (item 24;
 reload recovered it), and the requirements options in engineering jargon
@@ -245,6 +248,60 @@ compare-and-set before assigning; an assignment counts only when owner and
 alert both exist; a held queue that is someone's named job; a control chart
 with a minimum group before a weight moves; one approver per team, one
 version at a time, no batch approval; no individual named in a proposal.
+
+## From the final form of the lead-scoring build (2026-11-16)
+
+The system built from the three-job result (items 30 to 39) was reworked into
+its final form over 77 commits. Read end to end, the changes fall into five
+groups, none of them about sales: the people's time is the capacity and most
+of the building went into the work after the hand-off; rules written for one
+large run broke when jobs ran every minute; approvals turned into rule-based
+recommendations in the approver's words, then into an automatic sign-off with
+an off switch; several reported numbers did not survive a second look; and
+every generated text got a code check, a template fallback and a label. Those
+are now knowledge chunks B01 to B05, four gotchas (G34 to G37), an approval
+checkpoint (AU15) and new guidance for the interview's extra questions (see
+Done). What the guide still doesn't do with them:
+
+40. **"People act on the output" isn't an answer the guide has.** G34
+    (people's minutes are the capacity) fires only when a person reviews the
+    output (level 3 or below). A job that hands work to people and runs at
+    level 4, as the routing job did, doesn't get it. Either add the question
+    to the bank, or let a detail answer about who acts on the output reach
+    the rules.
+41. **The split stops at the decision.** The brief's jobs ended at the
+    hand-off; drafting, following up, answering and booking came later and
+    became most of the system. When a job hands work to people, the split
+    could ask whether their follow-on work should be a job of its own.
+42. **Capacity isn't in the cost section.** `src/lib/cost.ts` estimates the
+    running cost of the system. It says nothing about the people's time, the
+    capacity arithmetic (people × hours ÷ minutes per item), or the minutes
+    each AI step returns, which is how the build ended up judging every step.
+43. **No operations table.** G35 warns that rules depend on run frequency.
+    The design and the kit still don't lay out, per job, how often it runs,
+    how long one run may take, what happens on overlap and what a failure
+    stops.
+44. **Who steps in, by role.** The system map counts the points where people
+    step in. The build needed, for each point, which role it is, what that
+    role sees and decides, and its words for it; five roles became three once
+    that was written down.
+45. **No demo mode in the kit.** Showing the build to its stakeholders needed
+    a stand-in for the system of record with buttons for what the other
+    system would do, a clock that could be moved to today, demo accounts per
+    role and a script for each. The kit's first steps don't mention any of it.
+46. **What unlocks the next level isn't generated.** F3 asks the owner to
+    decide what earns more autonomy. The build's concrete form was a switch
+    that is off by default, the count of checked outcomes that unlocks it, a
+    comparison group left alone, and the name of whoever throws it. AU15
+    covers approvals; the general line per design isn't written.
+47. **The cost estimate is never compared with the meter.** The build
+    metered every model call and reported cost per result; its first figures
+    were assumptions. The result's monthly range could be shown beside the
+    metered cost once the telemetry page lands.
+
+The learned-model gap (item 30) stands, and the build's evaluation fixes
+(one role per period, no refit, ranges over seeds) are what that method's
+kit section should say when it is added.
 
 ## Done
 

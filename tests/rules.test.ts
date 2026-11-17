@@ -250,6 +250,46 @@ describe("decision paths", () => {
   });
 });
 
+describe("what a built system changed (knowledge chunks B01 to B05)", () => {
+  const gotchas = (a: Answers) => recommend(a).gotchas.map((g) => g.id);
+
+  it("high-volume work a person reviews is told that people's minutes are the capacity", () => {
+    const reviewed: Answers = { ...customerSupport, volume: "high" };
+    expect(recommend(reviewed).autonomy.level).toBeLessThanOrEqual(3);
+    expect(gotchas(reviewed)).toContain("G34");
+    // A few times a week leaves the people time to spare.
+    expect(gotchas({ ...resumeOptimizer, quality: "no" })).not.toContain("G34");
+    // Unreviewed automation hands nothing to a person.
+    expect(recommend(invoiceReminders).autonomy.level).toBe(4);
+    expect(gotchas(invoiceReminders)).not.toContain("G34");
+  });
+
+  it("unattended work that takes actions is warned about rules that depend on run size", () => {
+    expect(gotchas(invoiceReminders)).toContain("G35");
+    expect(gotchas({ ...invoiceReminders, trigger: "manual" })).not.toContain("G35");
+    expect(gotchas({ ...invoiceReminders, systems: "read" })).not.toContain("G35");
+  });
+
+  it("work that learns from the past is told to test on what it hasn't seen", () => {
+    expect(gotchas(marketResearch)).toContain("G36");
+    expect(gotchas(resumeOptimizer)).not.toContain("G36");
+  });
+
+  it("AI text that customers see or that feeds an action needs a fallback and a label", () => {
+    expect(gotchas(customerSupport)).toContain("G37");
+    expect(gotchas(resumeOptimizer)).not.toContain("G37");
+    expect(gotchas(invoiceReminders)).not.toContain("G37"); // no AI writes anything
+  });
+
+  it("an approval of every result comes with a rule-based recommendation and a login", () => {
+    const approved = recommend({ ...resumeOptimizer, quality: "no" });
+    expect(approved.autonomy.level).toBe(2);
+    expect(approved.autonomy.checkpoints.some((c) => /recommendation from fixed rules/.test(c))).toBe(true);
+    expect(approved.autonomy.checkpoints.some((c) => /from a login/.test(c))).toBe(true);
+    expect(recommend(invoiceReminders).autonomy.checkpoints.some((c) => /recommendation from fixed rules/.test(c))).toBe(false);
+  });
+});
+
 function problems(a: Answers): string[] {
   const r = recommend(a);
   const p: string[] = [];
