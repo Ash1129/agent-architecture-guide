@@ -144,3 +144,14 @@ Course materials (tier E), a statistics handbook (tier C) and one field build (t
 | Q03 | [Reliability models, system structure and failure ranking](chunks/14-quality-and-reliability/Q03-reliability-and-failure-analysis.md) | F, R, f and hazard; exponential and MTTF; Weibull for wear-out; bathtub; series, parallel and common causes; FMEA and RPN. |
 | Q04 | [What a control chart or capability index assumes before its number is trusted](chunks/14-quality-and-reliability/Q04-what-statistical-checks-assume.md) | NIST handbook (tier C): capability needs stability, normal and independent values and enough of them; one-sided indices and their interval; false alarms once in 371 points, once in 92 with run rules; when limits are recalculated; what p and c charts assume. |
 | Q05 | [What building a statistical monitor from a design had to fix](chunks/14-quality-and-reliability/Q05-building-a-statistical-monitor.md) | One field build (tier E): units, unchecked assumptions, a wrong interval, degenerate data, thresholds in two places; window and run-rule slips; population charts removed; the plain limit rule first; graded queue; known-answer tests; modelled values marked; follow-up after disposition. |
+
+## 17 Evidence and verification
+
+Official documentation (tier C) and peer-reviewed papers (tier A): what makes a value read by AI checkable, why a model's own reasons and confidence are not evidence, and how many cases a claim about a rate needs. (Topics 15 and 16 are on the published branch.)
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| V01 | [Values an AI reads from documents - quote, locate, then check in code](chunks/17-evidence-and-verification/V01-values-read-from-documents.md) | Quote first, cite each claim, retract what has no quote; Citations returns guaranteed pointers but not into images, and not with structured output; a pointer is not a correct reading, so check form and totals in code. |
+| V02 | [A model's stated reasons and stated confidence are not measurements](chunks/17-evidence-and-verification/V02-stated-reasons-and-stated-confidence.md) | Explanations omit what really drove the answer (Turpin et al.); stated confidence runs high (Xiong et al.); show the checks that ran, and send work to a person on what code can see. |
+| V03 | [How many cases a target rate needs, and what unreviewed cases hide](chunks/17-evidence-and-verification/V03-enough-cases-and-unreviewed-cases.md) | Zero errors in n cases still allows 3/n; Wilson and exact intervals (NIST); selective labels: outcomes exist only for what people saw (Lakkaraju et al.); sample the lane nobody reviews. |
+

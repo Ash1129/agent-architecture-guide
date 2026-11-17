@@ -34,7 +34,10 @@ recommendations include J01–J03 (state, persistence, review). Every AI design
 includes O01–O02 (evaluation and observability). Designs without AI include
 Q01–Q05 (control charts, capability, reliability, what those methods assume,
 and what a build of one had to fix), as does any design whose task is about
-measurements, defects or failures. Design and starter-kit prompts
+measurements, defects or failures. V01 to V03 (values read from documents,
+stated reasons and confidence, how many cases a target needs) are not reserved:
+they reach a design through the rules that cite them (TL14, AU7, AU9, AU10, F1).
+Design and starter-kit prompts
 retain mandatory context within the seventeen-chunk ceiling, accommodating
 four platform sets and shared AI guidance. Only relevant chunks are selected. Knowledge
 content and retrieval policy participate in AI cache keys.

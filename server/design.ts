@@ -40,6 +40,8 @@ Return one JSON object:
 - kb: the ids of the KNOWLEDGE chunks that support the step. Every "ai", "decision" and "human" step must cite at least one. Cite only the chunks given, and make "why" reflect what the chunk says.
 - edges: "flow" for the normal path, "assign" for a coordinator handing work to specialists, "loop" only for going back to an earlier step. Label the branches out of a decision.
 - The forward connections (flow and assign) must not form a cycle. Every step must be reachable from a start step, every step except an end must lead somewhere, and end steps lead nowhere.
+- When an AI step reads values out of documents or messages that later steps rely on, follow it with a "fixed" step (method "validate") that checks each value against its source and its expected form in code. Anything worked out from those values (a total, an average, a rate) is a "fixed" step, never an "ai" step.
+- Base the branch that sends a case to a person on something a check can see (a value that is missing or failed its check, sources that disagree), not on how sure an AI step says it is.
 - name up to 48 characters, label up to 40, what and why up to 320, passes up to 220, gate text up to 60, edge label up to 24. At most ${MAX_STEPS} steps.
 Return only the JSON object. No prose, no code fences.`;
 

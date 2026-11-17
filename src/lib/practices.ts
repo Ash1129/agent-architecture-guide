@@ -9,7 +9,9 @@
 // is about (a person who approves, several agents, a loop, personal data, a
 // step that computes a statistic, a decision), and each names a test that would
 // fail without it. P1 to P12 came from a multi-agent system that talks to the
-// public; P13 to P16 from a scheduled monitor with no AI in its decisions.
+// public; P13 to P16 from a scheduled monitor with no AI in its decisions;
+// P17 to P23 from a brief for a system that reads documents and decides, and
+// the research on it (knowledge chunks V01 to V03).
 //
 // They are written into BUILD.md (src/lib/starter.ts) and nowhere else: they
 // do not change the recommendation, the design or the rules that fired.
@@ -46,6 +48,11 @@ export function hasLoop({ bp }: Ctx): boolean {
 export function hasCalculation({ bp }: Ctx): boolean {
   const names: string[] = [ALGORITHMS.spc.name, ALGORITHMS.capability.name, ALGORITHMS.reliability.name, ALGORITHMS.rpn.name];
   return bp.nodes.some((n) => n.engine?.kind === "algorithm" && names.includes(n.engine.name));
+}
+
+/** The design has a step that chooses between outcomes or paths. */
+export function hasDecision({ bp }: Ctx): boolean {
+  return bp.nodes.some((n) => n.kind === "decision");
 }
 
 const ALL: (Practice & { when: (c: Ctx) => boolean })[] = [
@@ -176,6 +183,62 @@ const ALL: (Practice & { when: (c: Ctx) => boolean })[] = [
     build:
       "Label every figure a person sees as measured, calculated by a stated rule, modelled from assumptions, or sample data. A modelled or sample figure never feeds a decision. Where the data a method needs does not exist (no failure records for a lifetime model, no outcomes for a prediction), say so and leave the method out. When rules or settings change, a saved result keeps the version it was made with and says so; it is not silently recalculated or shown as current.",
     test: "Search every decision's inputs for a modelled or sample value. Change a setting, reopen a saved result and confirm it names the version it was made under.",
+  },
+  {
+    id: "P17",
+    title: "AI reads, code checks and computes",
+    when: ({ r }) => r.models.needed,
+    build:
+      "An AI step reads; it does not calculate and it does not vouch for itself. Every value it takes from a document or message is stored with the document, the place in it and the exact words it was read from. Code then confirms those words are in the source and that the value has the right form: a date is a date, parts add up to their total, a figure agrees with the same figure elsewhere in the document. A value that fails is unknown. Every sum, average, rate or conversion made from those values is done in code from written rules. Measure reading accuracy per field against labeled documents, not as one overall score.",
+    test: "Change one figure in a source document and confirm the stored value no longer passes its check. Ask for a value the document does not contain and get unknown. Work one calculation by hand and get the same number from the code.",
+  },
+  {
+    id: "P18",
+    title: "The reasons shown are the checks that ran",
+    when: (c) => hasDecision(c) && (hasPersonStep(c) || risk(c.a, "decides") || risk(c.a, "irreversible")),
+    build:
+      "Where a decision has to be explained or audited, build the explanation from the record of the decision: each rule that was evaluated, the values it looked at, where each value came from, and the result. Do not ask a model afterwards why the outcome was what it was; that gives a plausible account, not the actual one. A model may reword the recorded reasons for the reader, and code checks that it added none. Show which checks ran and passed as well as which failed, so that nothing found is not read as checked and cleared.",
+    test: "For a sample of decisions, trace every reason shown to a recorded check and its inputs. Change one input, run again and confirm the reason shown changes with it.",
+  },
+  {
+    id: "P19",
+    title: "Send work to a person on what code can see",
+    when: (c) => c.r.models.needed && hasPersonStep(c),
+    build:
+      "Decide which cases reach a person with conditions code can evaluate: a required value is unknown, a value failed its check, two sources disagree, two reads of the same material disagree, or the case is of a kind not seen in testing. Do not rely on an AI step saying how sure it is; stated confidence runs high. If a score is used, measure it against labeled cases first, set the cut-off from that measurement and measure again after any change of model or prompt.",
+    test: "Feed cases that are wrong but stated with full confidence and confirm the conditions still send them to a person. Before trusting a cut-off, show the score against actual results on labeled cases.",
+  },
+  {
+    id: "P20",
+    title: "Say what passes without a person, and sample it",
+    when: (c) => hasPersonStep(c) && c.a.volume === "high",
+    build:
+      "At this volume nobody can look at everything, so write down which results pass without a person. A result with nothing adverse in it may pass only when every check in code passed; anything adverse, unclear or flagged waits for a person. Then send a random share of the passed results to the same reviewers, unmarked, so the error rate of what nobody looks at is measured and corrections come from both sides. Set that share from the reviewers' minutes, and count it as a running total across runs.",
+    test: "Run a day's volume and confirm the queue fits the reviewers' time. Plant wrong results among the passed ones and confirm the sample finds them at the expected rate.",
+  },
+  {
+    id: "P21",
+    title: "A target needs enough cases to show it",
+    when: (c) => c.r.models.needed || hasPersonStep(c),
+    build:
+      "For each target the owner states (accuracy, a catch rate, time or cost per case), name the test set that will show it, how many cases it holds and how they split by type. Twenty clean cases only show an error rate under about 15%; showing under 5% takes about 60 with no errors, and more once errors occur, so quote every rate with its count and range. Count the two kinds of error separately (wrongly passed, wrongly stopped) and ask the owner which costs more. Keep a set that is never used for tuning. Where the cases are made up, whatever builds them must not share its recipe with the part being tested, every kind of fault is planted in known numbers with some kinds held back until the end, and the results are labeled as coming from made-up cases. Compare time and cost per case with how the work is done today, counting the minutes people still spend.",
+    test: "For each stated target, show the cases, the count per type and the range. Run the held-back kinds of fault once, at the end, and report that result as it comes.",
+  },
+  {
+    id: "P22",
+    title: "Whoever sends the input may want a particular answer",
+    when: ({ a }) => risk(a, "decides") || risk(a, "irreversible"),
+    build:
+      "Where the person or company supplying the input gains from one outcome, treat what they send as possibly prepared to get it. Check each document against itself (totals, dates, formats), against the other material in the case, and where possible against a source the sender does not control. Compare names, addresses and amounts in code: normalise them first, set how close counts as a match in the settings file, and return match, mismatch or cannot tell. Details that identify a person are used for this matching only; AI steps that judge the case get the result, not the details. A second submission with changed figures is itself a signal. A suspicion is not a finding: it goes to a person with its evidence, never straight to a refusal, and the sender is not told which check caught it.",
+    test: "Submit a case with one altered figure, one with a mismatched name, and a resubmission with changes. Each must reach a person with its evidence, and none may be refused automatically.",
+  },
+  {
+    id: "P23",
+    title: "Corrections change the rules through a gate",
+    when: (c) => hasPersonStep(c) && (c.r.models.needed || hasDecision(c)),
+    build:
+      "When a reviewer overrules the system, record the reason from a short fixed list plus a note, and keep the case as a labeled example. Nothing changes a rule, threshold or prompt automatically. A proposed change is first run against the saved cases, showing which past outcomes would differ; a named owner of the rules approves it; it gets a version and a start date; and the earlier version can be restored. Wait for a minimum number of corrections before acting on a pattern, and remember that corrections come only from the cases people saw.",
+    test: "Propose a rule change and confirm the report lists the past cases whose outcome would change. Confirm a result made before the change still names the version it was made under.",
   },
 ];
 

@@ -670,7 +670,7 @@ export const RULES: Rule[] = [
     if: "It should draw on reference material",
     then: "Build a reference library the AI reads from.",
     basis: src("notes"),
-    kb: ["F07", "T06"],
+    kb: ["F07", "T06", "V01"],
     when: (a) => ai(a) && knows(a, "reference"),
     apply: (d, _a, why) => {
       addTool(d, "resources", "The documents and data it relies on instead of guessing.", why(`You said ${saidOption("knowledge", "reference")}. Giving the AI the source material is the best defence against made-up details.`));
@@ -1057,7 +1057,7 @@ export const RULES: Rule[] = [
     if: "A mistake could cost money or be hard to undo, at hundreds of runs a day",
     then: "Cap at level 3: approving every item isn't realistic, so define which actions count as high-risk and send only those to a person.",
     basis: src("openai"),
-    kb: ["A02", "A03"],
+    kb: ["A02", "A03", "V03"],
     when: (a) => risk(a, "irreversible") && a.volume === "high",
     apply: (d, a, why) => cap(d, 3, why(`You said ${saidOption("risks", "irreversible")} and ${said(a, "volume")}. Set thresholds (an amount, a type of action) above which a person signs off.`)),
   },
@@ -1077,7 +1077,7 @@ export const RULES: Rule[] = [
     if: "Always",
     then: "List when a person must step in: after repeated failures, and before any high-risk action.",
     basis: src("openai"),
-    kb: ["A02", "F06"],
+    kb: ["A02", "F06", "V02"],
     when: () => true,
     apply: (d, a) => {
       const c = d.autonomy.checkpoints;
@@ -1099,7 +1099,7 @@ export const RULES: Rule[] = [
     if: "AI is used",
     then: "Layer simple, specialised guardrails rather than relying on one: rule-based checks always, plus checks for personal data, unsafe inputs and brand tone where they apply.",
     basis: src("openai", "notes"),
-    kb: ["G01", "G02"],
+    kb: ["G01", "G02", "V01"],
     when: (a, d) => usesAi(a, d),
     apply: (d, a) => {
       const g = d.autonomy.guardrails;
@@ -1405,7 +1405,7 @@ export const RULES: Rule[] = [
     if: "Always",
     then: "Gather real examples first: they define what good looks like and become your test set.",
     basis: src("openai", "notes"),
-    kb: ["G04", "A04"],
+    kb: ["G04", "A04", "V03"],
     when: () => true,
     apply: (d, a) => {
       d.firstSteps.push(
