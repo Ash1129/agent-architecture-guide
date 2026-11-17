@@ -4,6 +4,7 @@
 // what the guide shows. BUILD.md embeds every other file, so pasting that one
 // file is enough.
 
+import { practiceLines, practicesFor } from "./practices";
 import { deliveryContract } from "./delivery";
 import { AUTONOMY, LAST_REVIEWED, TOOLS, TOPOLOGIES } from "./catalog";
 import { costLines, estimateCost } from "./cost";
@@ -317,6 +318,8 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
   );
   if (r.autonomy.guardrails.length) add("Guardrails, layered:", "", ...r.autonomy.guardrails.map((g) => `- ${g}`), "");
 
+  add(...practiceLines(r, bp, a));
+
   add(
     "## Build plan",
     "",
@@ -350,6 +353,7 @@ function buildBrief(r: Recommendation, bp: Blueprint, a: Answers, task: string, 
     "- The test set runs end to end and the results are recorded.",
     ...(r.models.needed ? ["- Each AI step uses the smallest model that still meets the baseline."] : []),
     "- Every safeguard above is in place and has been tested with a failing example.",
+    ...(practicesFor(r, bp, a).length ? ['- Every item under "Build these in from the first version" is built and its test has been run.'] : []),
     "- The owner can repeat the business task independently; they need not understand the internal architecture or edit files to use it.",
     "",
     "## Files",

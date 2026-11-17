@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-10-28, after running a third brief (a B2B lead-scoring and routing system in a CRM) through the guide as three jobs, building the system from its output, and folding in the owner's answers to follow-up questions (items 30 to 39). Items are renumbered as they close; the Done section names what each commit covered.
+Last updated: 2026-11-16, after comparing a first build with the team's final system and adding the build practices to the kit (items 40 to 44).
 
 ## Next up
 
@@ -59,6 +59,15 @@ Last updated: 2026-10-28, after running a third brief (a B2B lead-scoring and ro
 12. **Phone width** for the split page and the system map.
 13. **"How the guide decides" draw.io diagram** predates H6 and AI decisions;
     regenerate it if it's still needed.
+14. **Saved kit text loses sections when re-checked.** The telemetry page's
+    first run showed the example's cached kit dropping its `route`, `tailor` and
+    `check` briefs ("not an agent in this design") and its build notes on read.
+    Find out whether the kit was cached for a different design or the checks
+    changed since, and whether the cache key should include the design.
+15. **No evaluation suite for the AI steps.** `npm run eval:guide` measures the
+    rules only; telemetry shows pass rates in use but not whether a passing
+    answer is good. A fixed set of tasks with graded AI decisions, designs and
+    kit text is still needed.
 
 ## Larger, later
 
@@ -246,8 +255,59 @@ alert both exist; a held queue that is someone's named job; a control chart
 with a minimum group before a weight moves; one approver per team, one
 version at a time, no batch approval; no individual named in a proposal.
 
+## From comparing a first build with the team's final system (2026-11-16)
+
+The system built from the guide's kit for the long, prescriptive brief (items
+23 to 29) was then worked on by a team for three weeks. Comparing the two
+showed what the kit had left as warnings or prompt rules and the team had to
+turn into structure. The general parts are now twelve build practices in
+BUILD.md (`src/lib/practices.ts`, see Done). What that comparison leaves open,
+kept general:
+
+40. **No question for "people talk to it directly".** The conversation
+    practice (P8) is switched on by "customers or partners will see the
+    output" or "decides about a person", which is only a proxy. A question
+    such as "who types into it: staff, or the people the work is about?"
+    would switch it on exactly, and would let the design show an intake step
+    (item 26).
+41. **Practices are in the kit only.** The result page and "How it decides"
+    don't show them, and the design diagram has no place for roles, the
+    correction path or a routing table. Show the list on the Build view, and
+    consider drawing who may act at each person step.
+42. **The AI-written kit text doesn't know about the practices.** `server/kit.ts`
+    could be given the list so its build notes and test cases point at them
+    (awkward-user scripts for P8, a stand-in model that obeys injected text
+    for P4) instead of repeating or missing them.
+43. **Required output form is asked in the kit, not the interview.** P12 tells
+    the builder to ask. The design's last step still assumes a destination
+    ("writes to your software") that the owner never named. Ask in the
+    interview and let the last step follow the answer.
+44. **Alarms need both kinds of test case.** A trigger that fired on a harmless
+    phrase stalled every case of one kind, and one that was too narrow missed
+    the real thing. The kit's test set (`evals/examples.csv`) could carry
+    must-trigger and must-not-trigger rows for every stop condition (item 27).
+
+Items 26, 27 and 28 are partly covered by P8, P2 and P7: the kit now asks for
+them, but the design itself still doesn't draw them.
+
 ## Done
 
+- (the commit after it) **Build practices in the kit.** BUILD.md gains "Build
+  these in from the first version": up to twelve practices, each switched on by
+  a feature of the design (a person who approves, several agents, a loop,
+  personal data, AI steps) and each with the test that proves it: who may do
+  what, approvals re-checked and tied to a version, one correction path,
+  AI replies limited to typed fields, unknown as its own answer, agent
+  contracts, bounded loops and one routing table, the end-user conversation,
+  what each store may hold, repeat submissions and per-case budgets, keys and
+  first run, and the output's required form. They don't change the
+  recommendation or the rules. Tested in `tests/practices.test.ts`.
+- `8ba0bae` **AI telemetry page.** The dev server records each
+  AI request's outcome (first try, Sonnet retry, rules fallback, API error,
+  cache), its calls' tokens and time, and the checks it failed
+  (`server/telemetry.ts`, kept in `ai-cache.nosync/telemetry.jsonl`), and
+  `#/telemetry` shows rates, cost, times and the most-failed checks, linked
+  from the result page. Tested in `tests/telemetry.test.ts`.
 - `e7f0fac` **Advice follows the decided approach.** The
   rules after the Approach group (models M1 to M10, checkpoints and guardrails
   AU9, AU10 and AU14, the simpler start S1 to S5, gotchas G1 to G19, first
