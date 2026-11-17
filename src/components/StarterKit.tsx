@@ -487,7 +487,8 @@ export function StarterKit({
             const done = copied === t.id;
             const tailored = AI_ENABLED && t.id === "n8n";
             const action = (
-              <button type="button" className={tailored ? `${btn.small} w-full justify-center bg-surface px-3 py-1.5 text-[13px]` : "studio-quiet"} onClick={() => runTool(t)}>
+              // The same quiet link as Download all, tailored or not.
+              <button type="button" className="studio-quiet" onClick={() => runTool(t)}>
                 {done ? "Copied" : t.action.label}
                 {done ? <Check size={15} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={15} aria-hidden /> : <DownloadSimple size={15} aria-hidden />}
               </button>
