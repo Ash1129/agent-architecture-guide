@@ -524,7 +524,7 @@ served back (P9), and unknown as its own answer (P5).
 
 ## Done
 
-- `HASH` **Three gaps a document-reading brief showed in the rules.**
+- `683e403` **Three gaps a document-reading brief showed in the rules.**
   Review scope: where a costly mistake at hundreds of runs a day already
   makes approving every item unrealistic (AU7), a decision about a person
   now caps at level 3 instead of 2 (AU12). A person confirms every adverse,
