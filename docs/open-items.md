@@ -348,6 +348,24 @@ data, which covers the screens but not a stand-in for the other system.
 
 ## Done
 
+- `4ede738` **The screens people use.** The starter kit now carries
+  `ui/SCREENS.md` (each point where a person starts, checks, approves or
+  steps in: the screen, who uses it, what it shows, what they can do, and
+  its empty, loading, partial, failed and changed states, with the rules
+  for all screens), `ui/lovable-prompt.md` with `ui/lovable-follow-ups.md`,
+  and `ui/claude-design-prompt.md`, each with a copy button under "what to
+  build". `src/lib/screens.ts` derives them from the recommendation and the
+  answers without an AI call; the AI kit step supplies the task's own words
+  (`screens` in `src/lib/kittext.ts`, checked as one to three plain words).
+  The prompts follow each tool's documentation: Lovable gets one screen on
+  sample data and is asked to ask, with the rest one prompt at a time;
+  Claude Design gets the whole flow as a clickable prototype and takes its
+  look from a design system. Both are capped at 2,400 characters and tested
+  on every path. Six knowledge chunks back it in
+  `knowledge/chunks/16-interfaces-for-people/` (U01 to U06, 47 sources), and
+  G38 tells any design where a person reviews AI output that the screen
+  decides whether the review works. Checked in the app and, with AI on, on
+  a new brief. Tested in `tests/screens.test.ts`.
 - `925c4ab` **Lessons from a built system.** The lead-scoring service built
   from the guide's result was read from its first working version to its
   final form (77 commits) and the general lessons built in. Five knowledge
