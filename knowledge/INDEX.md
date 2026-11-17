@@ -142,3 +142,15 @@ Course materials (tier E): the statistical methods a monitoring, inspection or f
 | Q01 | [Control charts tell noise from a real change](chunks/14-quality-and-reliability/Q01-control-charts-and-run-rules.md) | Limits from the process (x̿ ± 3σ/√n), which chart for which data (X-bar/S, I-MR, p/np, c/u), why three sigma, run rules. |
 | Q02 | [Process capability, Cp and Cpk, once the process is stable](chunks/14-quality-and-reliability/Q02-process-capability.md) | Cp, Cpk, Pp, Ppk; stability first; reading Cpk; which fix first (re-centre, remove drift, tighten); confidence intervals and bootstrap. |
 | Q03 | [Reliability models, system structure and failure ranking](chunks/14-quality-and-reliability/Q03-reliability-and-failure-analysis.md) | F, R, f and hazard; exponential and MTTF; Weibull for wear-out; bathtub; series, parallel and common causes; FMEA and RPN. |
+
+## 15 Lessons from systems built with the guide
+
+First-hand build records (tier E): what changed between the first working version of a system built from the guide's result and its final form. One build so far; the claims say what happened there.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| B01 | [When people act on the output, their minutes are the capacity](chunks/15-lessons-from-builds/B01-peoples-minutes-are-the-capacity.md) | Capacity as people × hours ÷ minutes per item; each AI step priced in minutes returned; the work after the hand-off; read actions from the tool people use, never wait for a click. |
+| B02 | [Rules written for a batch break when the job runs every minute](chunks/15-lessons-from-builds/B02-rules-that-hold-at-any-run-frequency.md) | Timers, no overlap, budgets; shares and caps as running totals; set-aside items out of the candidates; refused writes; stale forms; single-item and rerun tests. |
+| B03 | [An approval works when the approver can judge it, in their own terms](chunks/15-lessons-from-builds/B03-approvals-people-can-give.md) | Login not typed names; what the person saw; a rule-based verdict in the approver's words; automatic sign-off with an off switch; switches that unlock on evidence. |
+| B04 | [Reported numbers have to survive a second look](chunks/15-lessons-from-builds/B04-numbers-that-survive-a-second-look.md) | One role per period and no refit; ranges from a rerunnable command; stated windows and populations; unfinished periods labelled; cost metered; a second reader. |
+| B05 | [Generated text in front of people needs a checker, a fallback and a label](chunks/15-lessons-from-builds/B05-generated-text-in-front-of-people.md) | Code check, template fallback, visible provenance; latency budget; prompt and checker change together; model by reader; tools per step; drafts before sending; the role's words. |

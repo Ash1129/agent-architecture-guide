@@ -1563,6 +1563,104 @@ export const RULES: Rule[] = [
       );
     },
   },
+  // ------------------------------------------------------------ What a built system changed (knowledge chunks B01 to B05)
+  {
+    id: "AU15",
+    group: "Autonomy",
+    if: "A person approves every result (level 1 or 2)",
+    then: "Make the approval one the approver can judge: a recommendation from fixed rules beside it, in the approver's words, with how often it is overruled recorded; the approver's name from a login and what they saw kept with the decision; and a stated record after which the rule decides and a named person keeps an off switch.",
+    basis: design,
+    kb: ["B03", "A03", "A04"],
+    late: true,
+    when: (_a, d) => (d.autonomy.level ?? 4) <= 2,
+    apply: (d) => {
+      d.autonomy.checkpoints.push(
+        "Beside each approval, show a recommendation from fixed rules in the approver's own words, and record how often they overrule it. If they never do, let the rule decide, keep the record, and leave a named person an off switch.",
+        "Take the approver's name from a login, never a typed field, and keep what they saw with the decision.",
+      );
+    },
+  },
+  {
+    id: "G34",
+    group: "Gotchas",
+    if: "It runs daily or more and people review or act on its output (level 3 or below)",
+    then: "Warn that the people's time is the capacity, and that the work after the hand-off is where it goes.",
+    basis: design,
+    kb: ["B01"],
+    late: true,
+    when: (a, d) => a.volume !== "occasional" && (d.autonomy.level ?? 4) <= 3,
+    apply: (d) =>
+      gotcha(
+        d,
+        {
+          id: "G34",
+          priority: 2,
+          title: "People's minutes are the capacity",
+          body: "When people act on what the system produces, the limit is their time. Write capacity as people × hours ÷ minutes per item, and ask what each person does after the hand-off and how long it takes. Judge every AI step by the minutes it gives back. Read what people did from the tool they already work in; a step that waits for a click to say \"done\" will wait.",
+        },
+        design,
+      ),
+  },
+  {
+    id: "G35",
+    group: "Gotchas",
+    if: "It runs without a person starting it and takes actions in your systems",
+    then: "Warn that rules written for one large run behave differently across many small ones.",
+    basis: design,
+    kb: ["B02"],
+    when: (a) => a.trigger !== "manual" && a.systems === "act",
+    apply: (d) =>
+      gotcha(
+        d,
+        {
+          id: "G35",
+          priority: 3,
+          title: "A rule for one big run breaks in many small ones",
+          body: "A share (\"5% go to review\"), a cap (\"at most 50 a run\") or a retry gives different results when the job handles one item every minute. Keep shares and caps as running totals across runs, take anything set aside out of the next run's candidates, and count a write as done only when the other system says so. Test a run with a single item, and the same input twice.",
+        },
+        design,
+      ),
+  },
+  {
+    id: "G36",
+    group: "Gotchas",
+    if: "It should learn from past work",
+    then: "Warn that results measured on what it learned from look better than they are.",
+    basis: design,
+    kb: ["B04", "G04"],
+    when: (a) => knows(a, "memory"),
+    apply: (d) =>
+      gotcha(
+        d,
+        {
+          id: "G36",
+          priority: 2,
+          title: "Test it on what it hasn't seen",
+          body: "A system that learns from past results scores well on those results. Keep the newest period aside for testing, test the version that will run, and report any rate with its dates and the group it covers. Quote simulated or sampled figures as a range from a command someone else can rerun, and have a second person read the report before anyone decides on it.",
+        },
+        design,
+      ),
+  },
+  {
+    id: "G37",
+    group: "Gotchas",
+    if: "AI writes text that customers see, or that feeds an action in your systems",
+    then: "Warn that generated text needs a check in code, a fixed fallback and a label saying which wrote it.",
+    basis: design,
+    kb: ["B05", "G01"],
+    when: (a, d) => usesAi(a, d) && (risk(a, "visible") || a.systems === "act"),
+    apply: (d) =>
+      gotcha(
+        d,
+        {
+          id: "G37",
+          priority: 3,
+          title: "Generated text needs a fallback and a label",
+          body: "For each step that writes words a person reads or sends: a check written in code (no figure or quote that isn't in the record), a fixed template that takes over when the check fails, and a label saying which one wrote it. Set a time budget for any step a person waits on. Start with drafts the person sends themselves.",
+        },
+        design,
+      ),
+  },
 ];
 
 

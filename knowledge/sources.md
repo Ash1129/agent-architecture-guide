@@ -214,3 +214,9 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | ID | Source | Tier | Read |
 | --- | --- | --- | --- |
 | sysen-2026-5300-notes | SYSEN 5300, Systems Engineering and Six Sigma for Design and Operation of Reliable Systems (Cornell University, 2026). Course preparation notes provided by the owner: reliability functions, series and parallel systems, FMEA, control charts and run rules, process capability, bootstrap confidence intervals. Cited by section number (§1 course map to §10 ggplot). | E | 2026-10-16 |
+
+## Lessons from systems built with the guide: records read on 2026-11-16
+
+| ID | Source | Tier | Read |
+| --- | --- | --- | --- |
+| auxocase-2026-build | AuxoCase build record (2026). A lead scoring and routing service built from this guide's three-job result on 27 Oct 2026 and reworked into its final form over 77 commits, 28 Oct to 3 Nov 2026: the git history and documents of github.com/Ash1129/AuxoCase, branch `scheduler-slot-fix-cli-reader`, from commit c9d3fd4 to b34e931. Cited by commit. First-hand record of one system on simulated data; its figures are that build's, not rates to expect elsewhere. | E | 2026-11-16 |
