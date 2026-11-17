@@ -305,6 +305,23 @@ kit section should say when it is added.
 
 ## Done
 
+- `925c4ab` **Lessons from a built system.** The lead-scoring service built
+  from the guide's result was read from its first working version to its
+  final form (77 commits) and the general lessons built in. Five knowledge
+  chunks cite the build record by commit, tier E, in
+  `knowledge/chunks/15-lessons-from-builds/`: B01 people's minutes are the
+  capacity, B02 rules that hold at any run frequency, B03 approvals the
+  approver can judge, B04 numbers that survive a second look, B05 generated
+  text with a check, a fallback and a label. Four gotchas use them: G34
+  (daily or more, with a person reviewing), G35 (unattended and taking
+  actions), G36 (learns from past work) and G37 (AI text customers see, or
+  that feeds an action); AU15 adds two checkpoints to approve-every-result
+  designs. The interview's extra questions now prefer numbers the design
+  depends on (`server/interview.ts`, rule 4): on a new brief it asked how
+  many people review and how long one item takes, and what a clear win looks
+  like, which last time had to be asked by email (item 39). Tested in
+  `tests/rules.test.ts`; the three jobs of the original brief get G34 and
+  G36 on scoring, G35 on routing and AU15 on the approval job.
 - `e7f0fac` **Advice follows the decided approach.** The
   rules after the Approach group (models M1 to M10, checkpoints and guardrails
   AU9, AU10 and AU14, the simpler start S1 to S5, gotchas G1 to G19, first
