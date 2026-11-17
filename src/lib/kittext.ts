@@ -34,13 +34,15 @@ export type KitText = {
   examples?: { input: string; good: string; notes?: string }[];
   /** When the Skill should be used, in one line. */
   skillDescription?: string;
+  /** The task's own words for the screens people use (src/lib/screens.ts). */
+  screens?: { item?: string; items?: string; reviewer?: string; owner?: string };
 };
 
 export type KitResponse = { text: KitText; design: "ai" | "rules"; source: "ai" | "cache"; model?: string; dropped: string[] };
 
 // Hard limits sit a little above what the model is asked for (server/kit.ts), so a
 // near miss isn't thrown away.
-const L = { context: 500, rule: 240, output: 2000, brief: 800, overview: 800, note: 300, ask: 240, title: 100, body: 400, cell: 360, skill: 300 };
+const L = { context: 500, rule: 240, output: 2000, brief: 800, overview: 800, note: 300, ask: 240, title: 100, body: 400, cell: 360, skill: 300, word: 32 };
 const MAX = { rules: 8, notes: 6, asks: 5, watch: 4, examplesMin: 3, examplesMax: 8 };
 
 /** Things the AI may never write: model names (the rules pick models), links, or anything like a key. */
@@ -139,6 +141,19 @@ export function checkKitText(raw: unknown, ctx: KitContext): { text: KitText; dr
       if (ok(`watchOut ${i + 1}`, `${title} ${body}`)) items.push({ title, body, kb: [...new Set(kb)] });
     }
     if (items.length) text.watchOut = items;
+  }
+
+  if (r.screens && typeof r.screens === "object") {
+    // One or two plain words each; anything else keeps the kit's generic word for that slot.
+    const words: NonNullable<KitText["screens"]> = {};
+    for (const slot of ["item", "items", "reviewer", "owner"] as const) {
+      const given = (r.screens as Record<string, unknown>)[slot];
+      if (given === undefined) continue;
+      const v = clean(given, L.word)?.toLowerCase();
+      if (v === undefined || !/^[a-z][a-z' -]*$/.test(v) || v.split(" ").length > 3) dropped.push(`screens.${slot} must be one to three plain words`);
+      else if (ok(`screens.${slot}`, v)) words[slot] = v;
+    }
+    if (Object.keys(words).length) text.screens = words;
   }
 
   if (Array.isArray(r.examples)) {

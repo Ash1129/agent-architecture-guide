@@ -281,6 +281,11 @@ describe("what a built system changed (knowledge chunks B01 to B05)", () => {
     expect(gotchas(invoiceReminders)).not.toContain("G37"); // no AI writes anything
   });
 
+  it("AI output a person reviews is told that the screen decides whether the review works", () => {
+    expect(gotchas(customerSupport)).toContain("G38");
+    expect(gotchas(invoiceReminders)).not.toContain("G38"); // no AI, and nothing is reviewed
+  });
+
   it("an approval of every result comes with a rule-based recommendation and a login", () => {
     const approved = recommend({ ...resumeOptimizer, quality: "no" });
     expect(approved.autonomy.level).toBe(2);

@@ -1,4 +1,4 @@
-import { CaretDown, Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Package, PlayCircle, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
+import { CaretDown, Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Layout, Package, PaintBrush, PlayCircle, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AI_ENABLED } from "../lib/features";
@@ -53,6 +53,8 @@ const TOOL_ICON: Record<KitTool["id"], typeof FlowArrow> = {
   hermes: Robot,
   airflow: TreeStructure,
   langgraph: TreeStructure,
+  lovable: Layout,
+  "claude-design": PaintBrush,
 };
 
 /** Zip a set of files, optionally re-rooted (a .plugin is a zip of the plugin folder itself). */

@@ -36,8 +36,8 @@ describe("starter kit for named designs", () => {
   it("customer support: a paste-ready n8n workflow with the brief built in", () => {
     const { files, tools } = kit(support);
     // MCP lives inside the workflow as a tool node; the playbook lives in the agent's instructions.
-    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "system-prompt.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "evals/ENGINEERING.md", "observability/ENGINEERING.md", "evals/examples.csv", "DELIVERY.md"]);
-    expect(tools.map((t) => [t.id, t.action.label])).toEqual([["n8n", "Copy for n8n"]]);
+    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "system-prompt.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "evals/ENGINEERING.md", "observability/ENGINEERING.md", "evals/examples.csv", "ui/SCREENS.md", "ui/lovable-prompt.md", "ui/lovable-follow-ups.md", "ui/claude-design-prompt.md", "DELIVERY.md"]);
+    expect(tools.map((t) => [t.id, t.action.label])).toEqual([["n8n", "Copy for n8n"], ["lovable", "Copy for Lovable"], ["claude-design", "Copy for Claude Design"]]);
     const agent = JSON.parse(file(files, "n8n/workflow.json")!.content).nodes.find((n: { type: string }) => n.type === "@n8n/n8n-nodes-langchain.agent");
     expect(agent.parameters.options.systemMessage).toBe(file(files, "system-prompt.md")!.content);
     const wf = JSON.parse(file(files, "n8n/workflow.json")!.content);
@@ -51,7 +51,8 @@ describe("starter kit for named designs", () => {
   it("a Claude-based design gets an installable plugin", () => {
     const manual: Answers = { ...sections, trigger: "manual", task: "Tailor resumes to job descriptions" };
     const { files, tools } = kit(manual);
-    expect(tools).toEqual([expect.objectContaining({ id: "claude-plugin", action: { kind: "zip", label: "Download .plugin", prefix: "claude-plugin/", filename: "tailor-resumes-to-job-descriptions.plugin" } })]);
+    expect(tools.filter((t) => t.id === "claude-plugin")).toEqual([expect.objectContaining({ id: "claude-plugin", action: { kind: "zip", label: "Download .plugin", prefix: "claude-plugin/", filename: "tailor-resumes-to-job-descriptions.plugin" } })]);
+    expect(tools.map((t) => t.id)).toEqual(["claude-plugin", "lovable", "claude-design"]);
     expect(JSON.parse(file(files, "claude-plugin/.claude-plugin/plugin.json")!.content).name).toBe("tailor-resumes-to-job-descriptions");
     expect(file(files, "claude-plugin/skills/tailor-resumes-to-job-descriptions/SKILL.md")?.content).toMatch(/^---\nname: tailor-resumes-to-job-descriptions\ndescription: >\n  This skill should be used when/);
   });
@@ -68,7 +69,7 @@ describe("starter kit for named designs", () => {
 
   it("a Hermes design gets settings, persona, skill and a working setup script", () => {
     const { files, tools } = kit(restricted);
-    expect(tools.map((t) => t.id)).toEqual(["n8n", "hermes"]);
+    expect(tools.map((t) => t.id)).toEqual(["n8n", "hermes", "lovable", "claude-design"]);
     expect(file(files, "hermes/config.yaml")!.content).toMatch(/^model: REPLACE-provider\/kimi-k2\.6/m);
     expect(file(files, "hermes/SOUL.md")!.content).toBe(file(files, "system-prompt.md")!.content);
     expect(file(files, "hermes/skills/business/answer-routine-customer-emails/SKILL.md")!.content).toMatch(/\n  hermes:\n    category: business\n/);
@@ -83,7 +84,7 @@ describe("starter kit for named designs", () => {
 
   it("rules-only automation: no model, decision table, n8n with IF branches", () => {
     const { files } = kit(reminders);
-    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "rules/decision-table.csv", "evals/examples.csv", "DELIVERY.md"]);
+    expect(files.map((f) => f.path)).toEqual(["BUILD.md", "n8n/workflow.json", "n8n/ENGINEERING.md", "rules/decision-table.csv", "evals/examples.csv", "ui/SCREENS.md", "ui/lovable-prompt.md", "ui/lovable-follow-ups.md", "ui/claude-design-prompt.md", "DELIVERY.md"]);
     const wf = JSON.parse(file(files, "n8n/workflow.json")!.content);
     expect(wf.nodes.filter((n: { type: string }) => n.type === "n8n-nodes-base.if")).toHaveLength(1);
     expect(wf.active).toBe(false);
