@@ -145,13 +145,37 @@ Course materials (tier E), a statistics handbook (tier C) and one field build (t
 | Q04 | [What a control chart or capability index assumes before its number is trusted](chunks/14-quality-and-reliability/Q04-what-statistical-checks-assume.md) | NIST handbook (tier C): capability needs stability, normal and independent values and enough of them; one-sided indices and their interval; false alarms once in 371 points, once in 92 with run rules; when limits are recalculated; what p and c charts assume. |
 | Q05 | [What building a statistical monitor from a design had to fix](chunks/14-quality-and-reliability/Q05-building-a-statistical-monitor.md) | One field build (tier E): units, unchecked assumptions, a wrong interval, degenerate data, thresholds in two places; window and run-rule slips; population charts removed; the plain limit rule first; graded queue; known-answer tests; modelled values marked; follow-up after disposition. |
 
+## 15 Lessons from systems built with the guide
+
+First-hand build records (tier E): what changed between the first working version of a system built from the guide's result and its final form. One build so far; the claims say what happened there.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| B01 | [When people act on the output, their minutes are the capacity](chunks/15-lessons-from-builds/B01-peoples-minutes-are-the-capacity.md) | Capacity as people × hours ÷ minutes per item; each AI step priced in minutes returned; the work after the hand-off; read actions from the tool people use, never wait for a click. |
+| B02 | [Rules written for a batch break when the job runs every minute](chunks/15-lessons-from-builds/B02-rules-that-hold-at-any-run-frequency.md) | Timers, no overlap, budgets; shares and caps as running totals; set-aside items out of the candidates; refused writes; stale forms; single-item and rerun tests. |
+| B03 | [An approval works when the approver can judge it, in their own terms](chunks/15-lessons-from-builds/B03-approvals-people-can-give.md) | Login not typed names; what the person saw; a rule-based verdict in the approver's words; automatic sign-off with an off switch; switches that unlock on evidence. |
+| B04 | [Reported numbers have to survive a second look](chunks/15-lessons-from-builds/B04-numbers-that-survive-a-second-look.md) | One role per period and no refit; ranges from a rerunnable command; stated windows and populations; unfinished periods labelled; cost metered; a second reader. |
+| B05 | [Generated text in front of people needs a checker, a fallback and a label](chunks/15-lessons-from-builds/B05-generated-text-in-front-of-people.md) | Code check, template fallback, visible provenance; latency budget; prompt and checker change together; model by reader; tools per step; drafts before sending; the role's words. |
+
+## 16 Interfaces for people
+
+The screens people use where they check, approve or act on the system's output: the research behind the starter kit's screens brief (`src/lib/screens.ts`) and what two design tools' own documentation says a prompt to them should hold.
+
+| ID | Chunk | Summary |
+| --- | --- | --- |
+| U01 | [Screens where a person checks AI output](chunks/16-interfaces-for-people/U01-screens-where-a-person-checks-ai-output.md) | The human-AI interaction guidelines that apply to a review screen: say what the step does and how often it is wrong, edit in place, reject as quickly as approve, a reason one click away, a by-hand path, what happens to a correction. |
+| U02 | [Explanations, confidence and over-reliance](chunks/16-interfaces-for-people/U02-explanations-confidence-and-overreliance.md) | Experiments disagree: explanations can raise acceptance of wrong advice unless checking is cheaper than the task; confidence shifts reliance, not accuracy; commit-before-reveal catches more errors but is disliked. Evidence first, verdict beside the buttons. |
+| U03 | [Usability rules for work screens](chunks/16-interfaces-for-people/U03-usability-rules-for-work-screens.md) | Nielsen's ten heuristics (practice, not experiments); the 0.1 s, 1 s and 10 s response limits; progressive disclosure, two levels at most; plain language; error messages; no fixed "maximum number of options". |
+| U04 | [Accessibility, states and tables](chunks/16-interfaces-for-people/U04-accessibility-states-and-tables.md) | The WCAG 2.2 AA thresholds generated screens break (4.5:1 and 3:1 contrast, 24 px targets, keyboard and focus, 320 px reflow, labels); five states per screen; decision dashboards and readable tables. |
+| U05 | [Prompting Lovable](chunks/16-interfaces-for-people/U05-prompting-lovable.md) | A first prompt is one screen told as a short story on sample data with no login; then one change per prompt; data, sign-in and roles come later; look goes in early; stated limits, health and identity data among them. |
+| U06 | [Prompting Claude Design](chunks/16-interfaces-for-people/U06-prompting-claude-design.md) | A brief covers goal, layout, content and audience; one prompt can hold the whole flow, one artboard a screen; screens are clickable only if asked; brand comes from a design system; it hands off to Lovable or Claude Code. |
+
 ## 17 Evidence and verification
 
-Official documentation (tier C) and peer-reviewed papers (tier A): what makes a value read by AI checkable, why a model's own reasons and confidence are not evidence, and how many cases a claim about a rate needs. (Topics 15 and 16 are on the published branch.)
+Official documentation (tier C) and peer-reviewed papers (tier A): what makes a value read by AI checkable, why a model's own reasons and confidence are not evidence, and how many cases a claim about a rate needs.
 
 | ID | Chunk | Summary |
 | --- | --- | --- |
 | V01 | [Values an AI reads from documents - quote, locate, then check in code](chunks/17-evidence-and-verification/V01-values-read-from-documents.md) | Quote first, cite each claim, retract what has no quote; Citations returns guaranteed pointers but not into images, and not with structured output; a pointer is not a correct reading, so check form and totals in code. |
 | V02 | [A model's stated reasons and stated confidence are not measurements](chunks/17-evidence-and-verification/V02-stated-reasons-and-stated-confidence.md) | Explanations omit what really drove the answer (Turpin et al.); stated confidence runs high (Xiong et al.); show the checks that ran, and send work to a person on what code can see. |
 | V03 | [How many cases a target rate needs, and what unreviewed cases hide](chunks/17-evidence-and-verification/V03-enough-cases-and-unreviewed-cases.md) | Zero errors in n cases still allows 3/n; Wilson and exact intervals (NIST); selective labels: outcomes exist only for what people saw (Lakkaraju et al.); sample the lane nobody reviews. |
-

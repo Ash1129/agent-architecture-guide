@@ -1,4 +1,4 @@
-import { CaretDown, Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Package, PlayCircle, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
+import { CaretDown, Check, CircleNotch, Copy, DownloadSimple, Eye, FileCode, FileText, FlowArrow, Layout, Package, PaintBrush, PlayCircle, Robot, Sparkle, Terminal, TreeStructure, X } from "@phosphor-icons/react";
 import { m, useReducedMotion } from "motion/react";
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { AI_ENABLED } from "../lib/features";
@@ -53,6 +53,8 @@ const TOOL_ICON: Record<KitTool["id"], typeof FlowArrow> = {
   hermes: Robot,
   airflow: TreeStructure,
   langgraph: TreeStructure,
+  lovable: Layout,
+  "claude-design": PaintBrush,
 };
 
 /** Zip a set of files, optionally re-rooted (a .plugin is a zip of the plugin folder itself). */
@@ -485,7 +487,8 @@ export function StarterKit({
             const done = copied === t.id;
             const tailored = AI_ENABLED && t.id === "n8n";
             const action = (
-              <button type="button" className={tailored ? `${btn.small} w-full justify-center bg-surface px-3 py-1.5 text-[13px]` : "studio-quiet"} onClick={() => runTool(t)}>
+              // The same quiet link as Download all, tailored or not.
+              <button type="button" className="studio-quiet" onClick={() => runTool(t)}>
                 {done ? "Copied" : t.action.label}
                 {done ? <Check size={15} weight="bold" aria-hidden /> : t.action.kind === "copy" ? <Copy size={15} aria-hidden /> : <DownloadSimple size={15} aria-hidden />}
               </button>
@@ -499,16 +502,17 @@ export function StarterKit({
                     <span className="mb-1.5 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-medium text-accent">Tailored by {tailoring.model}</span>
                   )}
                   {(!tailored || tailoring.state === "done") && <p>{t.how}</p>}
-                  {tailored && <TailorControls tailoring={tailoring} copy={action} onTailor={tailor} waiting={writing === "loading"} />}
+                  {tailored && <TailorControls tailoring={tailoring} copy={null} onTailor={tailor} waiting={writing === "loading"} />}
                 </div>
                 <div className="build-item-actions">
-                  {!tailored && action}
                   {GUIDE_FOR[t.id] && (
                     <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide(GUIDE_FOR[t.id]!.guide)}>
                       {GUIDE_FOR[t.id]!.label}
                       <PlayCircle size={16} aria-hidden />
                     </button>
                   )}
+                  {/* Under the walkthrough link, as Download all is; a tailored workflow's appears once it exists. */}
+                  {(!tailored || tailoring.state === "done") && action}
                 </div>
               </li>
             );
@@ -648,7 +652,7 @@ function TailorControls({
           {tailoring.state === "working" ? "Tailoring to your task. This can take a few minutes." : "Tailor with AI"}
         </button>
       )}
-      {tailoring.state !== "done" && <p className="mt-1 text-[12px] leading-snug text-muted">Sends your task and answers to OpenAI through this site's server.</p>}
+      {tailoring.state !== "done" && <p className="mt-1 text-[12px] leading-snug text-muted">Sends your task and answers to Claude through this site's server.</p>}
       <p role="status" aria-live="polite" className="sr-only">
         {tailoring.state === "working" ? "Tailoring the workflow" : tailoring.state === "done" ? "Tailored workflow ready" : ""}
       </p>

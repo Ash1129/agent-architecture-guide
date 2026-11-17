@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-11-17, after running a brief for a system that reads documents, computes from them and decides through the guide as three jobs (items 54 to 61), with seven more build practices, three researched knowledge chunks and two design-prompt lines. Not yet committed.
+Last updated: 2026-11-17, after merging the published main into the metering branch: its items keep 40 to 53, and the items from the two build comparisons and the document-reading brief follow as 54 to 75. Latest work: a brief for a system that reads documents, computes from them and decides, run through the guide as three jobs (items 68 to 75), with seven more build practices, three researched knowledge chunks and two design-prompt lines. Items are renumbered as they close; the Done section keeps the record.
 
 ## Next up
 
@@ -244,6 +244,9 @@ What it showed, kept general; none of it is a rule about sales or CRMs:
     depends on them. The interview could ask them whenever "memory of past
     work" or a capacity limit is in the answers, and the design's quality
     checklist could carry the stated win as its first measure.
+    *Partly done:* the interview now asks them (Done, "Lessons from a
+    built system"). Still open: the design's quality checklist carrying
+    the stated win as its first measure.
 
 Seen again: the stuck "reading" overlay after an interview retry (item 24;
 reload recovered it), and the requirements options in engineering jargon
@@ -255,6 +258,103 @@ alert both exist; a held queue that is someone's named job; a control chart
 with a minimum group before a weight moves; one approver per team, one
 version at a time, no batch approval; no individual named in a proposal.
 
+## From the final form of the lead-scoring build (2026-11-16)
+
+The system built from the three-job result (items 30 to 39) was reworked into
+its final form over 77 commits. Read end to end, the changes fall into five
+groups, none of them about sales: the people's time is the capacity and most
+of the building went into the work after the hand-off; rules written for one
+large run broke when jobs ran every minute; approvals turned into rule-based
+recommendations in the approver's words, then into an automatic sign-off with
+an off switch; several reported numbers did not survive a second look; and
+every generated text got a code check, a template fallback and a label. Those
+are now knowledge chunks B01 to B05, four gotchas (G34 to G37), an approval
+checkpoint (AU15) and new guidance for the interview's extra questions (see
+Done). What the guide still doesn't do with them:
+
+40. **"People act on the output" isn't an answer the guide has.** G34
+    (people's minutes are the capacity) fires only when a person reviews the
+    output (level 3 or below). A job that hands work to people and runs at
+    level 4, as the routing job did, doesn't get it. Either add the question
+    to the bank, or let a detail answer about who acts on the output reach
+    the rules.
+41. **The split stops at the decision.** The brief's jobs ended at the
+    hand-off; drafting, following up, answering and booking came later and
+    became most of the system. When a job hands work to people, the split
+    could ask whether their follow-on work should be a job of its own.
+42. **Capacity isn't in the cost section.** `src/lib/cost.ts` estimates the
+    running cost of the system. It says nothing about the people's time, the
+    capacity arithmetic (people × hours ÷ minutes per item), or the minutes
+    each AI step returns, which is how the build ended up judging every step.
+43. **No operations table.** G35 warns that rules depend on run frequency.
+    The design and the kit still don't lay out, per job, how often it runs,
+    how long one run may take, what happens on overlap and what a failure
+    stops.
+44. **Who steps in, by role.** The system map counts the points where people
+    step in. The build needed, for each point, which role it is, what that
+    role sees and decides, and its words for it; five roles became three once
+    that was written down.
+    *Partly done:* the kit's screens brief names a reviewer and an owner and
+    what each sees and decides, in the task's words when the AI kit step
+    supplies them (Done, "The screens people use"). Still open: more than
+    two roles, and showing them on the system map.
+45. **No demo mode in the kit.** Showing the build to its stakeholders needed
+    a stand-in for the system of record with buttons for what the other
+    system would do, a clock that could be moved to today, demo accounts per
+    role and a script for each. The kit's first steps don't mention any of it.
+46. **What unlocks the next level isn't generated.** F3 asks the owner to
+    decide what earns more autonomy. The build's concrete form was a switch
+    that is off by default, the count of checked outcomes that unlocks it, a
+    comparison group left alone, and the name of whoever throws it. AU15
+    covers approvals; the general line per design isn't written.
+47. **The cost estimate is never compared with the meter.** The build
+    metered every model call and reported cost per result; its first figures
+    were assumptions. The result's monthly range could be shown beside the
+    metered cost once the telemetry page lands.
+
+The learned-model gap (item 30) stands, and the build's evaluation fixes
+(one role per period, no refit, ranges over seeds) are what that method's
+kit section should say when it is added.
+
+## From adding the screens people use (2026-11-17)
+
+Of the 77 commits that took the lead-scoring build from its first version to
+its final one, 47 were about pages, layout and wording, and the kit had said
+nothing about any of it. The kit now carries a screens brief and a short
+prompt each for Lovable and Claude Design (see Done). Checked against the
+build's final pages, the brief produces its queue, lead page, held queue,
+overview and decisions page. What it does not do:
+
+48. **One brief per job, not per system.** The build ended as one app for
+    three roles across all three jobs. A system split into jobs gets a
+    screens brief in each job's kit; nothing combines them into one app with
+    the roles from every job.
+49. **The screens are only in the kit.** The result page shows the two copy
+    buttons under "what to build" but never shows the screens themselves.
+    A short "who steps in and what they see" section belongs beside the
+    design.
+50. **No "Open in Lovable" link.** Lovable's docs describe a link that opens
+    it with a prompt filled in (it never starts the build). The kit copies
+    the prompt instead; the link's exact form was not read.
+51. **Two lists in the queue.** The build split the queue into items waiting
+    for the person and items the person had acted on and was waiting to hear
+    back about. The brief has one list.
+52. **"Changed since you looked" rests on one build.** No source read covers
+    an item changing while someone reviews it; the rule comes from the build
+    record (B02). It needs its own evidence.
+53. **A03 says more than the experiments support.** A03 advises having the
+    person form a view before seeing the AI's on important decisions. The
+    experiments in U02 support that for a few high-stakes items only: it
+    catches more AI errors, but people also discard correct advice and like
+    the tool less. The brief applies it only where a mistake cannot be undone
+    or the task decides about a person; A03 and AU13 should be reworded to
+    match. Two of U02's layout points (the verdict beside the buttons,
+    confidence in frequency words) follow the authors' warnings, not tested
+    layouts.
+
+The demo mode (item 45) is still open: the Lovable prompt starts on sample
+data, which covers the screens but not a stand-in for the other system.
+
 ## From comparing a first build with the team's final system (2026-11-16)
 
 The system built from the guide's kit for the long, prescriptive brief (items
@@ -264,25 +364,25 @@ turn into structure. The general parts are now twelve build practices in
 BUILD.md (`src/lib/practices.ts`, see Done). What that comparison leaves open,
 kept general:
 
-40. **No question for "people talk to it directly".** The conversation
+54. **No question for "people talk to it directly".** The conversation
     practice (P8) is switched on by "customers or partners will see the
     output" or "decides about a person", which is only a proxy. A question
     such as "who types into it: staff, or the people the work is about?"
     would switch it on exactly, and would let the design show an intake step
     (item 26).
-41. **Practices are in the kit only.** The result page and "How it decides"
+55. **Practices are in the kit only.** The result page and "How it decides"
     don't show them, and the design diagram has no place for roles, the
     correction path or a routing table. Show the list on the Build view, and
     consider drawing who may act at each person step.
-42. **The AI-written kit text doesn't know about the practices.** `server/kit.ts`
+56. **The AI-written kit text doesn't know about the practices.** `server/kit.ts`
     could be given the list so its build notes and test cases point at them
     (awkward-user scripts for P8, a stand-in model that obeys injected text
     for P4) instead of repeating or missing them.
-43. **Required output form is asked in the kit, not the interview.** P12 tells
+57. **Required output form is asked in the kit, not the interview.** P12 tells
     the builder to ask. The design's last step still assumes a destination
     ("writes to your software") that the owner never named. Ask in the
     interview and let the last step follow the answer.
-44. **Alarms need both kinds of test case.** A trigger that fired on a harmless
+58. **Alarms need both kinds of test case.** A trigger that fired on a harmless
     phrase stalled every case of one kind, and one that was too narrow missed
     the real thing. The kit's test set (`evals/examples.csv`) could carry
     must-trigger and must-not-trigger rows for every stop condition (item 27).
@@ -301,16 +401,16 @@ by line. What the team had to add or change is now in the knowledge base
 (Q04, Q05), four build practices (P13 to P16) and three fixes (see Done).
 What that leaves open, kept general; none of it is a rule about utilities:
 
-45. **A fixed stack, host or hand-in list never reaches the kit.** The brief
+59. **A fixed stack, host or hand-in list never reaches the kit.** The brief
     required a named stack, a named host, two or three test datasets, a
     codebook and a public repository, each of them marked. The guide was
     given the task in one line, asked nothing about it, and the builder
     chose a different web framework; the team later wrote a spec, a task
     ledger and an audit of deviations by hand. Same family as items 25 and
-    43. The interview could ask "is anything about how it is built or handed
+    57. The interview could ask "is anything about how it is built or handed
     in already fixed for you?" and the kit could carry the answers as
     acceptance checks.
-46. **Nothing lighter than an orchestrator.** The kit named an orchestrator
+60. **Nothing lighter than an orchestrator.** The kit named an orchestrator
     as the main tool. A full run on 500 units took about 3 seconds; the
     scheduler stayed local and optional, and the hosted copy ran the same
     analysis from a button. For a small fixed pipeline the catalog offers a
@@ -318,11 +418,11 @@ What that leaves open, kept general; none of it is a rule about utilities:
     inside the app". Add that option, with the rule for when dependencies
     between data jobs justify more (`src/lib/catalog.ts`, the TL rules), and
     let the delivery contract's scheduler requirement accept it.
-47. **Hosting is asked as a region, not a place.** The team had to publish to
+61. **Hosting is asked as a region, not a place.** The team had to publish to
     one managed host that serves a web app and runs no scheduler or
     long-lived job. The hosting question covers where data may be processed
     only. Ask whether a host is already chosen and what it can run.
-48. **Words-only AI on a fixed-rules design has no name.** The kit said "Do
+62. **Words-only AI on a fixed-rules design has no name.** The kit said "Do
     not add AI to this system". The owner then asked for plain-language
     summaries, and the team added an optional rewrite of alerts and case
     summaries: off by default, rule-based text always shown, cached,
@@ -331,29 +431,29 @@ What that leaves open, kept general; none of it is a rule about utilities:
     decides the path or the threshold checks"). "Plain automation" forbids it
     and "a workflow with AI steps" overstates it. Owner's call: a named
     variant with its own short safeguard list, or leave the rule strict.
-49. **The three new design limits are instructions, not checks.** The design
+63. **The three new design limits are instructions, not checks.** The design
     prompt now asks a statistical step to name its assumption checks, the
     decision to keep the direct comparison with the limit first, and the
     queue to be graded (`limitsFor`, `server/design.ts`). One live run
     followed all three. `checkDesign` does not verify them, and there is no
     graded set of tasks to say how often they hold (item 15).
-50. **Review time is still sized from runs.** The estimate now says it counts
+64. **Review time is still sized from runs.** The estimate now says it counts
     one result a run (`src/lib/cost.ts`). The kit for this task said "under
     an hour a week"; one run put 119 of 500 units in the queue. A question
     ("how many items does one run check?") would let the estimate and the
     queue practice (P15) use a number.
-51. **The scaffold runs the steps in a line.** The design fanned one start out
+65. **The scaffold runs the steps in a line.** The design fanned one start out
     to four loads and branched at two decisions; the generated DAG chains
     every step after the one before it and drops the branches
     (`airflowDag`, `src/lib/starter.ts`). It now names the steps a person
     does and says the chain does not wait for them; following the design's
     edges is still to do, here and for the other scaffolds.
-52. **One owner, one assistant.** Four people and several coding assistants
+66. **One owner, one assistant.** Four people and several coding assistants
     built at once: a sync overwrote part of the spec, and the team added a
     task ledger with one owner and a runnable "done" check per task.
     BUILD.md is written for one person. The build plan could be split into
     tasks that each own distinct files.
-53. **The build estimate does not say how it is built.** The kit said 3 to 8
+67. **The build estimate does not say how it is built.** The kit said 3 to 8
     working days for a first version; a team with coding assistants had a
     tested first version the same evening and a public copy the next
     morning, then spent longer on review and corrections than on the build.
@@ -386,7 +486,7 @@ today's manual work) and said only made-up data may be used. The guide split
 it into three jobs. What it lacked that holds for any business is now built
 (see Done). What is still open:
 
-54. **"Approve every output" where the volume makes that impossible.** At
+68. **"Approve every output" where the volume makes that impossible.** At
     hundreds of runs a day with money at stake, AU7 caps at level 3 ("send
     only the high-risk ones to a person"); a decision about a person makes
     AU12 cap at level 2. Both fired and the lower won, so the headline, the
@@ -396,42 +496,44 @@ it into three jobs. What it lacked that holds for any business is now built
     kit what may pass and that it is sampled, and the AI design drew a
     spot-check of cleared cases; the level's name, the rules' person step and
     the estimate should say "adverse and unclear results" when both rules fire.
-55. **The owner's own review policy is never read.** The brief said which
+69. **The owner's own review policy is never read.** The brief said which
     cases the system decides and which go to people. The interview has no
     question for it and the adaptive step read it only as risks. Read a
     stated policy into the design, or say why the guide starts stricter
     (item 25 is the same gap for a stated architecture).
-56. **Identity is stripped even where checking identity is the work.** AU12's
+70. **Identity is stripped even where checking identity is the work.** AU12's
     fixed step removes names and addresses before any AI step. A task that
     verifies who someone is, or compares details between sources, needs
     them. P22 says the comparison runs in code and AI steps get only the
     result; the rules' step text and the AI design still say "strip
     identity" without that exception.
-57. **No answer for one developer on a small budget.** The team question
+71. **No answer for one developer on a small budget.** The team question
     offers a small team without developers or a large one with them. The
     second led to an own-hardware estimate and a hosted workflow tool for a
-    brief that named a low-cost web host (items 45 to 47).
-58. **Stated targets and "no real data" do not reach the rules' kit.** The
+    brief that named a low-cost web host (items 59 to 61).
+72. **Stated targets and "no real data" do not reach the rules' kit.** The
     targets survived in the job descriptions, but a kit built without AI
     carries only the job's title, its "Done when" has no numbers, and its
     build plan still asks for 10 to 20 real past examples. P21 asks for the
     targets in general terms; carry the owner's own numbers into "Done when",
     and let "there is no real data" be an answer that changes the plan.
-59. **A learning loop and two screens lost in the split.** The third job was
+73. **A learning loop and two screens lost in the split.** The third job was
     read as "the same steps every time", so "corrections improve the rules
     over time" survived only in its title, and the rule owner's work
     (maintaining the rules, watching accuracy on a dashboard) belongs to no
     job. P23 says how corrections become rule changes; the split should keep
     a named user's work inside a job.
-60. **The new practices are text, not checks.** P17 to P23 are in BUILD.md
+74. **The new practices are text, not checks.** P17 to P23 are in BUILD.md
     and two lines of the design prompt. `checkDesign` does not require a
     checking step after an AI step that reads values, or refuse an AI step
-    that calculates (item 49 is the same gap).
-61. **Three sources read from their abstracts only.** V02 and part of V03
+    that calculates (item 63 is the same gap).
+75. **Three sources read from their abstracts only.** V02 and part of V03
     rest on the abstracts of Turpin et al., Xiong et al. and Eypasch et al.
     Read the full papers, add locations and effect sizes, and check for
-    results on current models. The chunks sit in topic 17 because topics 15
-    and 16 exist only on the published branch; the two branches need merging.
+    results on current models. U02 (what explanations and confidence
+    displays do to reviewers) and V02 (why a model's own reasons and
+    confidence are not evidence) now sit side by side and should cite each
+    other.
 
 Seen again: the split dropped the brief's monthly volume from the second
 job (item 36); the reading overlay stayed over the first question for about
@@ -442,7 +544,7 @@ served back (P9), and unknown as its own answer (P5).
 
 ## Done
 
-- (not yet committed) **What a brief for reading documents and deciding
+- `b7c0c28` **What a brief for reading documents and deciding
   taught.** Knowledge, topic 17, each chunk from sources read on 2026-11-17:
   V01 (values an AI reads carry their source and are checked in code;
   Anthropic's documentation), V02 (a model's stated reasons and confidence
@@ -505,6 +607,41 @@ served back (P9), and unknown as its own answer (P5).
   (`server/telemetry.ts`, kept in `ai-cache.nosync/telemetry.jsonl`), and
   `#/telemetry` shows rates, cost, times and the most-failed checks, linked
   from the result page. Tested in `tests/telemetry.test.ts`.
+- `4ede738` **The screens people use.** The starter kit now carries
+  `ui/SCREENS.md` (each point where a person starts, checks, approves or
+  steps in: the screen, who uses it, what it shows, what they can do, and
+  its empty, loading, partial, failed and changed states, with the rules
+  for all screens), `ui/lovable-prompt.md` with `ui/lovable-follow-ups.md`,
+  and `ui/claude-design-prompt.md`, each with a copy button under "what to
+  build". `src/lib/screens.ts` derives them from the recommendation and the
+  answers without an AI call; the AI kit step supplies the task's own words
+  (`screens` in `src/lib/kittext.ts`, checked as one to three plain words).
+  The prompts follow each tool's documentation: Lovable gets one screen on
+  sample data and is asked to ask, with the rest one prompt at a time;
+  Claude Design gets the whole flow as a clickable prototype and takes its
+  look from a design system. Both are capped at 2,400 characters and tested
+  on every path. Six knowledge chunks back it in
+  `knowledge/chunks/16-interfaces-for-people/` (U01 to U06, 47 sources), and
+  G38 tells any design where a person reviews AI output that the screen
+  decides whether the review works. Checked in the app and, with AI on, on
+  a new brief. Tested in `tests/screens.test.ts`.
+- `925c4ab` **Lessons from a built system.** The lead-scoring service built
+  from the guide's result was read from its first working version to its
+  final form (77 commits) and the general lessons built in. Five knowledge
+  chunks cite the build record by commit, tier E, in
+  `knowledge/chunks/15-lessons-from-builds/`: B01 people's minutes are the
+  capacity, B02 rules that hold at any run frequency, B03 approvals the
+  approver can judge, B04 numbers that survive a second look, B05 generated
+  text with a check, a fallback and a label. Four gotchas use them: G34
+  (daily or more, with a person reviewing), G35 (unattended and taking
+  actions), G36 (learns from past work) and G37 (AI text customers see, or
+  that feeds an action); AU15 adds two checkpoints to approve-every-result
+  designs. The interview's extra questions now prefer numbers the design
+  depends on (`server/interview.ts`, rule 4): on a new brief it asked how
+  many people review and how long one item takes, and what a clear win looks
+  like, which last time had to be asked by email (item 39). Tested in
+  `tests/rules.test.ts`; the three jobs of the original brief get G34 and
+  G36 on scoring, G35 on routing and AU15 on the approval job.
 - `e7f0fac` **Advice follows the decided approach.** The
   rules after the Approach group (models M1 to M10, checkpoints and guardrails
   AU9, AU10 and AU14, the simpler start S1 to S5, gotchas G1 to G19, first

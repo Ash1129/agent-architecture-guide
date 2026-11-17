@@ -30,6 +30,7 @@ import langgraphReview from "../../knowledge/chunks/12-langgraph-engineering/J03
 import aiEvaluations from "../../knowledge/chunks/13-testing-and-observability/O01-evaluations-and-release-gates.md?raw";
 import aiTracing from "../../knowledge/chunks/13-testing-and-observability/O02-tracing-privacy-and-cost.md?raw";
 
+import { buildScreens, claudeDesignPrompt, lovableFollowUps, lovablePrompt, screensMarkdown } from "./screens";
 export type KitFile = {
   path: string;
   lang: "markdown" | "json" | "python" | "csv" | "yaml" | "shell";
@@ -39,7 +40,7 @@ export type KitFile = {
 
 /** A ready-to-use artifact for one external tool, with the one action needed to use it. */
 export type KitTool = {
-  id: "n8n" | "claude-plugin" | "hermes" | "airflow" | "langgraph";
+  id: "n8n" | "claude-plugin" | "hermes" | "airflow" | "langgraph" | "lovable" | "claude-design";
   name: string;
   how: string;
   action:
@@ -181,6 +182,25 @@ export function buildStarterKit(r: Recommendation, bp: Blueprint, raw: Answers, 
     files.push({ path: "observability/ENGINEERING.md", lang: "markdown", purpose: "Privacy-aware tracing, quality and cost checks with Langfuse.", content: engineeringGuide("AI observability", [aiTracing]) });
   }
   files.push({ path: "evals/examples.csv", lang: "csv", purpose: "Your test set: real past cases and what good looked like.", content: examplesCsv(r, text) });
+
+  // The screens people use, and a prompt for each of two tools that can make them.
+  const screens = buildScreens(r, a, text.screens);
+  files.push({ path: "ui/SCREENS.md", lang: "markdown", purpose: "Who steps in, what each screen shows, the one decision made there, and the rules for all of them.", content: screensMarkdown(screens, task) });
+  files.push({ path: "ui/lovable-prompt.md", lang: "markdown", purpose: "Paste into a new Lovable project: the one screen where the decision is made, on sample data.", content: lovablePrompt(screens, r) });
+  files.push({ path: "ui/lovable-follow-ups.md", lang: "markdown", purpose: "The project's standing instructions, then one prompt at a time for the other screens, stored data, sign-in and the real system.", content: lovableFollowUps(screens, r, a) });
+  files.push({ path: "ui/claude-design-prompt.md", lang: "markdown", purpose: "Paste into Claude Design for the visual design of the screens.", content: claudeDesignPrompt(screens, r) });
+  tools.push({
+    id: "lovable",
+    name: "Screens in Lovable",
+    how: "Start a new project in Lovable and paste. It builds the one screen where the decision is made, on sample data. Then follow ui/lovable-follow-ups.md, one prompt at a time.",
+    action: { kind: "copy", label: "Copy for Lovable", path: "ui/lovable-prompt.md" },
+  });
+  tools.push({
+    id: "claude-design",
+    name: "Screens in Claude Design",
+    how: "Start a new design in Claude and paste; attach your design system first if you have one. It draws every screen as a clickable prototype, which can be handed to Lovable or Claude Code to build.",
+    action: { kind: "copy", label: "Copy for Claude Design", path: "ui/claude-design-prompt.md" },
+  });
 
   const delivery = deliveryContract(r, a);
   files.push({ path: "DELIVERY.md", lang: "markdown", purpose: "Required usable product and evidence for a finished build.", content: delivery });
