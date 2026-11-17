@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-11-17, after merging the published main into the metering branch: its items keep 40 to 53, and the items from the two build comparisons and the document-reading brief follow as 54 to 75. Latest work: a brief for a system that reads documents, computes from them and decides, run through the guide as three jobs (items 68 to 75), with seven more build practices, three researched knowledge chunks and two design-prompt lines. Items are renumbered as they close; the Done section keeps the record.
+Last updated: 2026-11-17, after fixing three gaps the document-reading brief showed in the rules: review scope at high volume, identity used for matching, and a team answer for a developer on a small budget. Items 68 to 72 are what that brief leaves open. Items are renumbered as they close; the Done section keeps the record.
 
 ## Next up
 
@@ -484,50 +484,30 @@ clear cases decided without a person and the rest queued. It gave targets
 (time per case, reading accuracy, a catch rate on planted faults, cost against
 today's manual work) and said only made-up data may be used. The guide split
 it into three jobs. What it lacked that holds for any business is now built
-(see Done). What is still open:
+(see Done). Three of the gaps it showed in the rules are fixed (see Done). What is still open:
 
-68. **"Approve every output" where the volume makes that impossible.** At
-    hundreds of runs a day with money at stake, AU7 caps at level 3 ("send
-    only the high-risk ones to a person"); a decision about a person makes
-    AU12 cap at level 2. Both fired and the lower won, so the headline, the
-    last person step ("reviews every result") and the estimate (12 to 346
-    review hours a week) all describe approving everything, while AU12's own
-    text asks only that adverse outcomes are confirmed. P20 now says in the
-    kit what may pass and that it is sampled, and the AI design drew a
-    spot-check of cleared cases; the level's name, the rules' person step and
-    the estimate should say "adverse and unclear results" when both rules fire.
-69. **The owner's own review policy is never read.** The brief said which
+68. **The owner's own review policy is never read.** The brief said which
     cases the system decides and which go to people. The interview has no
     question for it and the adaptive step read it only as risks. Read a
     stated policy into the design, or say why the guide starts stricter
     (item 25 is the same gap for a stated architecture).
-70. **Identity is stripped even where checking identity is the work.** AU12's
-    fixed step removes names and addresses before any AI step. A task that
-    verifies who someone is, or compares details between sources, needs
-    them. P22 says the comparison runs in code and AI steps get only the
-    result; the rules' step text and the AI design still say "strip
-    identity" without that exception.
-71. **No answer for one developer on a small budget.** The team question
-    offers a small team without developers or a large one with them. The
-    second led to an own-hardware estimate and a hosted workflow tool for a
-    brief that named a low-cost web host (items 59 to 61).
-72. **Stated targets and "no real data" do not reach the rules' kit.** The
+69. **Stated targets and "no real data" do not reach the rules' kit.** The
     targets survived in the job descriptions, but a kit built without AI
     carries only the job's title, its "Done when" has no numbers, and its
     build plan still asks for 10 to 20 real past examples. P21 asks for the
     targets in general terms; carry the owner's own numbers into "Done when",
     and let "there is no real data" be an answer that changes the plan.
-73. **A learning loop and two screens lost in the split.** The third job was
+70. **A learning loop and two screens lost in the split.** The third job was
     read as "the same steps every time", so "corrections improve the rules
     over time" survived only in its title, and the rule owner's work
     (maintaining the rules, watching accuracy on a dashboard) belongs to no
     job. P23 says how corrections become rule changes; the split should keep
     a named user's work inside a job.
-74. **The new practices are text, not checks.** P17 to P23 are in BUILD.md
+71. **The new practices are text, not checks.** P17 to P23 are in BUILD.md
     and two lines of the design prompt. `checkDesign` does not require a
     checking step after an AI step that reads values, or refuse an AI step
     that calculates (item 63 is the same gap).
-75. **Three sources read from their abstracts only.** V02 and part of V03
+72. **Three sources read from their abstracts only.** V02 and part of V03
     rest on the abstracts of Turpin et al., Xiong et al. and Eypasch et al.
     Read the full papers, add locations and effect sizes, and check for
     results on current models. U02 (what explanations and confidence
@@ -543,6 +523,26 @@ hash of the input, seeded known-wrong cases, uploads checked and never
 served back (P9), and unknown as its own answer (P5).
 
 ## Done
+
+- `HASH` **Three gaps a document-reading brief showed in the rules.**
+  Review scope: where a costly mistake at hundreds of runs a day already
+  makes approving every item unrealistic (AU7), a decision about a person
+  now caps at level 3 instead of 2 (AU12). A person confirms every adverse,
+  unclear or flagged result; a result with nothing adverse in it passes only
+  when every check has passed, and a random share of those is reviewed. The
+  person step, its labels and the review estimate say so, and AU13's
+  safeguards against rubber-stamping now apply to that review too. Below
+  that volume nothing changes: a person still approves every result.
+  Identity: AU12's guardrail and the evidence-packet step say that where the
+  work is to confirm who someone is or to match details between sources, the
+  comparison runs in code before the strip and only its result goes on; the
+  design prompt asks for that step. Team: a fourth answer, "One developer or
+  a small technical team, keeping costs low" (`solo`), with
+  `hasDevelopers` in `src/lib/questions.ts`. It gets the code-based tools
+  and the evaluation and tracing tools that "developers" got, and none of
+  the own-hardware or self-hosting rules. Tests: `tests/evidence.test.ts`.
+  Not fixed by this: a brief that names its own host or stack still does
+  not reach the kit (items 59 to 61).
 
 - `b7c0c28` **What a brief for reading documents and deciding
   taught.** Knowledge, topic 17, each chunk from sources read on 2026-11-17:

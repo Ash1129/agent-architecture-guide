@@ -147,7 +147,7 @@ function platformLine(r: Recommendation, a: Answers, runs: Range): CostLine {
     };
   }
   if (core === "claude" || core === "cowork") {
-    return a.team === "small"
+    return a.team === "small" || a.team === "solo"
       ? { label: "Claude Pro", perMonth: [20, 20], note: "$20 a month per person ($17 billed annually). Heavy use may need Max, from $100." }
       : { label: "Claude Team", perMonth: [25, 25], note: "$25 a seat a month ($20 billed annually), for each person who uses it." };
   }
@@ -175,6 +175,8 @@ function buildEffort(r: Recommendation, a: Answers, bp: Blueprint): CostEstimate
   const who =
     a.team === "large"
       ? "Your developers or IT team."
+      : a.team === "solo"
+      ? "Your developer, with an AI coding assistant working from BUILD.md."
       : r.approach.id === "automation" || (r.approach.id === "workflow" && visual)
         ? "You or a colleague comfortable with tools like n8n, with an AI coding assistant working from BUILD.md."
         : "A developer, or someone technical with an AI coding assistant working from BUILD.md.";
@@ -216,7 +218,7 @@ export function estimateCost(r: Recommendation, bp: Blueprint, a: Answers): Cost
     level <= 2
       ? `A person checks every result, at ${REVIEW.minutes[0]} to ${REVIEW.minutes[1]} minutes each.`
       : level === 3
-        ? `A person handles the risky ones, assumed to be ${share[0] * 100}% to ${share[1] * 100}% of runs, at ${REVIEW.minutes[0]} to ${REVIEW.minutes[1]} minutes each.`
+        ? `A person ${a.risks?.includes("decides") ? "confirms the adverse, unclear and flagged results and a sample of the rest" : "handles the risky ones"}, assumed to be ${share[0] * 100}% to ${share[1] * 100}% of runs, at ${REVIEW.minutes[0]} to ${REVIEW.minutes[1]} minutes each.`
         : `A person spot-checks ${share[0] * 100}% to ${share[1] * 100}% of results.`;
   // Past a working week, reviewing every result stops being realistic: say so.
   const overloaded = hours[1] > FULL_TIME_HOURS

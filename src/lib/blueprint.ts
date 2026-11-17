@@ -212,6 +212,7 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
   const level = r.autonomy.level;
   const approvalWhy = r.autonomy.why[r.autonomy.why.length - 1]?.text ?? "";
   const gated = r.approach.id === "agent" || r.approach.id === "multi";
+  const decides = !!a.risks?.includes("decides");
 
   if (level <= 2) {
     g.next();
@@ -246,17 +247,20 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
       id: "approve",
       kind: "human",
       track: 0,
-      name: "Sign-off for risky items",
+      name: decides ? "Person confirms adverse results" : "Sign-off for risky items",
       label: "Person approves",
-      what: "Only items that cross an agreed line (an amount, a type of action, a sensitive customer) stop here for a person's sign-off.",
+      gates: decides ? [{ kind: "human", text: "Adverse outcomes confirmed" }] : [],
+      what: decides
+        ? "Every adverse, unclear or flagged result stops here for a named person, with the evidence and the reasons in front of them, one case at a time. A result with nothing adverse in it passes only when every check has passed, and a random share of those is reviewed too."
+        : "Only items that cross an agreed line (an amount, a type of action, a sensitive customer) stop here for a person's sign-off.",
       why: `Autonomy starts at level 3: routine items go through on their own. ${approvalWhy}`,
       passes: "Approved high-risk items. Anything rejected goes back to a person to handle.",
       rules: r.autonomy.why.map((w) => w.ruleId),
     });
-    g.link(frontier, human, "high-risk");
+    g.link(frontier, human, decides ? "adverse" : "high-risk");
     g.next();
     const end = endNode(g, r, a);
-    g.link(frontier, end, "routine");
+    g.link(frontier, end, decides ? "clear" : "routine");
     g.link(human, end, "approved");
     g.link(skips, end);
     return;
@@ -267,7 +271,7 @@ function approvalAndEnd(g: Graph, r: Recommendation, a: Answers, frontier: Draft
     lead.gates = [...(lead.gates ?? []), { kind: "human", text: "Stuck cases go to a person" }];
   }
   if (level === 3 && !gated) {
-    for (const f of frontier) f.gates = [...(f.gates ?? []), { kind: "human", text: "Risky items need sign-off" }];
+    for (const f of frontier) f.gates = [...(f.gates ?? []), { kind: "human", text: decides ? "Adverse results signed off" : "Risky items need sign-off" }];
   }
   g.next();
   const end = endNode(g, r, a);
@@ -292,7 +296,7 @@ function evidenceStep(g: Graph, from: Draft): Draft {
       { kind: "stop", text: "Identity stripped first" },
       { kind: "human", text: "Human review on request" },
     ],
-    what: "A fixed step copies only what the decision may rest on (facts, history, requirements) into a packet, stripping the name, contact details, address, photo, school, age and anything else that stands in for who the person is. AI steps work from the packet only. Anyone who asks for a human review goes to a person.",
+    what: "A fixed step copies only what the decision may rest on (facts, history, requirements) into a packet, stripping the name, contact details, address, photo, school, age and anything else that stands in for who the person is. AI steps work from the packet only. If the work is to confirm who someone is or to match details between sources, code compares them here and the packet carries only the result. Anyone who asks for a human review goes to a person.",
     why: "An instruction to ignore a detail is intent, not a mechanism. A step that removes it is.",
     passes: "The evidence packet. The person's identity is held back for the final record only.",
     rules: ["AU12"],

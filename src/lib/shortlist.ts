@@ -1,5 +1,5 @@
 import { TOOLS, type ToolId } from './catalog';
-import { effectiveAnswers, isComplete, type Answers } from './questions';
+import { effectiveAnswers, hasDevelopers, isComplete, type Answers } from './questions';
 import { recommend, type Recommendation } from './rules';
 
 export type Implementation = {
@@ -30,12 +30,12 @@ type Ctx = { a: Answers; primary: ToolId; agent: boolean; restricted: boolean; a
 const COMPARISONS: { primary: ToolId; alternative: ToolId; when: (c: Ctx) => boolean; reason: (a: Answers) => string }[] = [
   {
     primary: 'n8n', alternative: 'airflow',
-    when: (c) => c.a.team === 'large' && c.a.trigger === 'schedule',
+    when: (c) => hasDevelopers(c.a) && c.a.trigger === 'schedule',
     reason: () => 'A developer-owned scheduled batch workflow can also be implemented as a Python DAG.',
   },
   {
     primary: 'n8n-agent', alternative: 'langgraph',
-    when: (c) => c.a.team === 'large',
+    when: (c) => hasDevelopers(c.a),
     reason: () => 'The same agent can be implemented in code with explicit state and recovery boundaries.',
   },
   {
@@ -56,9 +56,9 @@ const COMPARISONS: { primary: ToolId; alternative: ToolId; when: (c: Ctx) => boo
  */
 const EXCLUSIONS: { when: (tool: ToolId, c: Ctx) => boolean; reason: string }[] = [
   { when: (_t, c) => c.advanced, reason: 'Advanced data-asset requirements need a comparison beyond this catalog; no implementation is cleared yet.' },
-  { when: (t, c) => c.custom && (c.a.team !== 'large' || t !== 'langgraph' || !c.agent), reason: 'This catalog has no assessed implementation of the requested service or sandbox boundary for this option and team.' },
+  { when: (t, c) => c.custom && (!hasDevelopers(c.a) || t !== 'langgraph' || !c.agent), reason: 'This catalog has no assessed implementation of the requested service or sandbox boundary for this option and team.' },
   { when: (t, c) => c.restricted && (t === 'claude' || t === 'cowork'), reason: 'The provider restriction rules exclude this app.' },
-  { when: (t, c) => (t === 'airflow' || t === 'langgraph') && c.a.team !== 'large', reason: 'Requires developer ownership that was not selected.' },
+  { when: (t, c) => (t === 'airflow' || t === 'langgraph') && !hasDevelopers(c.a), reason: 'Requires developer ownership that was not selected.' },
   { when: (t, c) => t === 'airflow' && (c.agent || !(c.a.trigger === 'schedule' || c.a.trigger === 'data')), reason: 'This comparison covers scheduled or dependency-driven fixed batch workflows only.' },
   { when: (t, c) => t === 'n8n' && c.agent, reason: 'A fixed workflow alone does not implement the required agent loop.' },
   { when: (t, c) => ['cowork', 'hermes', 'n8n-agent', 'langgraph'].includes(t) && !c.agent && t !== c.primary, reason: 'Would introduce an agent implementation where the rules do not require one.' },

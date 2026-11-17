@@ -15,7 +15,10 @@ export type Trigger = "manual" | "schedule" | "event" | "data";
 export type Volume = "occasional" | "daily" | "high";
 export type Risk = "visible" | "personal" | "irreversible" | "decides" | "none";
 export type Location = "open" | "residency" | "restricted" | "independence";
-export type Team = "small" | "mid" | "large";
+export type Team = "small" | "mid" | "solo" | "large";
+
+/** Someone on the team can build and run code. Budget is a separate matter: "solo" has the skill without the budget for its own infrastructure. */
+export const hasDevelopers = (a: { team?: Team }) => a.team === "large" || a.team === "solo";
 
 export type Answers = {
   requirements?: ("approval" | "embedded" | "sandbox" | "assets" | "unspecified")[];
@@ -349,7 +352,7 @@ export const QUESTIONS: Question[] = [
     id: "team",
     kind: "single",
     title: "Which best describes your organisation?",
-    why: "Budget and in-house skills decide what is realistic to run. Small teams usually do better paying per use; large ones can justify their own infrastructure.",
+    why: "Budget and in-house skills decide what is realistic to run, and they are separate things. Small teams usually do better paying per use; large ones can justify their own infrastructure; a developer on a small budget can build in code but should not buy hardware.",
     options: [
       {
         value: "small",
@@ -360,6 +363,12 @@ export const QUESTIONS: Question[] = [
         value: "mid",
         label: "A growing business with someone comfortable in no-code tools",
         short: "you have someone comfortable with no-code tools",
+      },
+      {
+        value: "solo",
+        label: "One developer or a small technical team, keeping costs low",
+        hint: "Can build and deploy code, with no budget for its own servers.",
+        short: "you can build in code but are keeping costs low",
       },
       {
         value: "large",

@@ -92,3 +92,50 @@ describe("the knowledge behind them", () => {
     expect(INSTRUCTIONS).toMatch(/not on how sure an AI step says it is/);
   });
 });
+
+// Three gaps the same brief exposed in the rules themselves, fixed for any business.
+describe("what the brief exposed in the rules", () => {
+  const big: Answers = { ...reading };
+  const fewer: Answers = { ...reading, volume: "daily" };
+  const design = (a: Answers) => {
+    const r = recommend(a);
+    return { r, bp: buildBlueprint(r, a) };
+  };
+
+  it("has a person confirm adverse results, not every result, where volume makes approving all of them unrealistic", () => {
+    const { r, bp } = design(big);
+    expect(r.fired).toEqual(expect.arrayContaining(["AU7", "AU12", "AU13"]));
+    expect(r.autonomy.level).toBe(3);
+    const checks = r.autonomy.checkpoints.join(" ");
+    expect(checks).toMatch(/confirms every adverse outcome/);
+    expect(checks).toMatch(/random share of those goes to the same reviewers/);
+    expect(checks).toMatch(/No batch approval/);
+    const text = bp.nodes.map((n) => `${n.name} ${n.what} ${n.gates.map((g) => g.text).join(" ")}`).join(" ");
+    expect(text).toMatch(/adverse/i);
+    expect(text).not.toMatch(/reviews every result/);
+  });
+  it("still has a person approve every result about a person at lower volume", () => {
+    const { r, bp } = design(fewer);
+    expect(r.autonomy.level).toBe(2);
+    expect(r.autonomy.checkpoints.join(" ")).not.toMatch(/random share of those/);
+    expect(bp.nodes.some((n) => n.name === "You approve each result")).toBe(true);
+  });
+  it("lets identifying details be matched in code before they are stripped", () => {
+    const { r, bp } = design(big);
+    expect(r.autonomy.guardrails.join(" ")).toMatch(/only its result \(match, mismatch or cannot tell\) goes on with the case/);
+    expect(bp.nodes.find((n) => n.id === "evidence")!.what).toMatch(/code compares them here and the packet carries only the result/);
+    expect(INSTRUCTIONS).toMatch(/compares those details in code before the strip/);
+  });
+  it("gives a developer on a small budget code-based tools without own hardware", () => {
+    const base: Answers = { task: "Research suppliers", shape: "varies", kinds: "no", roles: "one", quality: "partly", knowledge: ["reference"], systems: "read", trigger: "event", volume: "high", risks: ["none"], location: "open", requirements: ["embedded"] };
+    const solo = recommend({ ...base, team: "solo" });
+    const large = recommend({ ...base, team: "large" });
+    const small = recommend({ ...base, team: "small" });
+    expect(solo.tools.map((t) => t.tool)).toContain("langgraph");
+    expect(small.tools.map((t) => t.tool)).not.toContain("langgraph");
+    expect(solo.tools.map((t) => t.tool)).toEqual(expect.arrayContaining(["promptfoo", "langfuse"]));
+    for (const id of ["H2", "H4", "H6"]) expect(solo.fired).not.toContain(id);
+    expect(large.fired).toContain("H4");
+    expect(solo.hosting.title).toBe("Cloud, pay as you go");
+  });
+});

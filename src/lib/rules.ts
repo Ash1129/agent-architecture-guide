@@ -15,6 +15,7 @@ import {
   type Knowledge,
   type Risk,
   effectiveAnswers,
+  hasDevelopers,
   isComplete,
   said,
   saidOption,
@@ -400,7 +401,7 @@ export const RULES: Rule[] = [
     if: "An agent must be embedded in a service or execute generated code, and developers are available",
     then: "Use LangGraph for explicit state and execution boundaries, even for one agent.",
     basis: design, kb: ["J01", "J02", "J03"],
-    when: (a) => agentic(a) && a.team === "large" && !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
+    when: (a) => agentic(a) && hasDevelopers(a) && !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
     apply: (d, _a, why) => addTool(d, "langgraph", "Developers implement the agent as a service with explicit state, recovery and controlled tool execution.", why("Your execution requirements need a custom service boundary. One agent can need this architecture without adding specialist agents. LangGraph does not supply a secure code sandbox by itself."), true),
   },
   {
@@ -410,7 +411,7 @@ export const RULES: Rule[] = [
     then: "Run it on Apache Airflow.",
     basis: src("selfhosting", "notes"),
     kb: ["L02"],
-    when: (a) => !agentic(a) && a.trigger === "data" && a.team === "large",
+    when: (a) => !agentic(a) && a.trigger === "data" && hasDevelopers(a),
     apply: (d, a, why) => {
       addTool(
         d,
@@ -432,7 +433,7 @@ export const RULES: Rule[] = [
     kb: ["L01", "L02"],
     when: (a) =>
       !agentic(a) &&
-      !(a.trigger === "data" && a.team === "large") &&
+      !(a.trigger === "data" && hasDevelopers(a)) &&
       !(a.shape === "judgement" && a.trigger === "manual"),
     apply: (d, a, why) => {
       const role =
@@ -475,7 +476,7 @@ export const RULES: Rule[] = [
     then: "Build a custom agent workflow in LangGraph, with explicit state and handoffs.",
     basis: design,
     kb: ["J01", "J02", "J03"],
-    when: (a, d) => !core(d) && multi(a) && a.team === "large" && !knows(a, "memory"),
+    when: (a, d) => !core(d) && multi(a) && hasDevelopers(a) && !knows(a, "memory"),
     apply: (d, _a, why) => addTool(d, "langgraph",
       "Your developers implement the coordinator, specialist handoffs, state and review points in code.",
       why("You have developers and several agent roles to coordinate. Explicit state and transitions make their handoffs testable. Start with one agent and add specialists only where evaluation supports them."), true),
@@ -567,7 +568,7 @@ export const RULES: Rule[] = [
     then: "Keep the upstream data jobs in Apache Airflow, and have the last job hand off to the agent.",
     basis: src("selfhosting"),
     kb: ["L02", "L06"],
-    when: (a) => agentic(a) && a.trigger === "data" && a.team === "large",
+    when: (a) => agentic(a) && a.trigger === "data" && hasDevelopers(a),
     apply: (d, a, why) => {
       addTool(
         d,
@@ -720,7 +721,7 @@ export const RULES: Rule[] = [
     then: "Add repeatable evaluations with Promptfoo and privacy-aware tracing with Langfuse.",
     basis: design,
     kb: ["O01", "O02"],
-    when: (a) => ai(a) && a.team === "large",
+    when: (a) => ai(a) && hasDevelopers(a),
     apply: (d, _a, why) => {
       addTool(d, "promptfoo", "Tests examples and failure cases before changing the AI system.", why("A development team can turn acceptance criteria into repeatable regression checks."));
       addTool(d, "langfuse", "Traces AI runs, with sensitive content filtered before export.", why("Trace evidence helps the team diagnose failures and compare quality, latency and cost."));
@@ -807,7 +808,7 @@ export const RULES: Rule[] = [
         title: "Cloud, pay as you go",
         body: "No hardware to buy and nothing to maintain. You pay per use, which suits a new system whose volume is still uncertain.",
         why: why(
-          a.team === "small"
+          a.team === "small" || a.team === "solo"
             ? `You said ${said(a, "team")}. Upfront hardware would be your biggest cost, so the cloud avoids it.`
             : "Start in the cloud and revisit if volume grows to hundreds of runs a day.",
         ),
@@ -1473,25 +1474,40 @@ export const RULES: Rule[] = [
     then: "Make execution requirements and implementation ownership explicit.",
     basis: design, kb: ["G01", "G04"],
     when: (a) => !!a.requirements?.some(x => x === "embedded" || x === "sandbox"),
-    apply: (d, a) => { gotcha(d, { id: "G32", priority: 1, title: "Design the execution boundary", body: "A framework alone does not provide a secure sandbox. Define authentication, per-request isolation, persistent recovery state, schema and value validation, timeouts and retry limits. For generated code, restrict filesystem and network access, keep credentials outside the sandbox and limit compute. The starter does not implement these production controls." + (a.team !== "large" ? " Arrange developer ownership before using this as an embedded service; the suggested assistant is only a prototype." : "") }, design); },
+    apply: (d, a) => { gotcha(d, { id: "G32", priority: 1, title: "Design the execution boundary", body: "A framework alone does not provide a secure sandbox. Define authentication, per-request isolation, persistent recovery state, schema and value validation, timeouts and retry limits. For generated code, restrict filesystem and network access, keep credentials outside the sandbox and limit compute. The starter does not implement these production controls." + (!hasDevelopers(a) ? " Arrange developer ownership before using this as an embedded service; the suggested assistant is only a prototype." : "") }, design); },
   },
   // ------------------------------------------------------------ Decisions about people, and reviews that mean something
   {
     id: "AU12",
     group: "Autonomy",
     if: "It decides or recommends something about a person",
-    then: "Cap autonomy at level 2. A person confirms every adverse outcome with the evidence and reasons in front of them, before the person affected hears of it; anyone affected can ask for a review by a person; identifying details are stripped before any AI step; outcomes are compared across groups; versions are pinned once tested.",
+    then: "Cap autonomy at level 2, or at level 3 where a costly mistake at hundreds of runs a day makes approving every result unrealistic. A person confirms every adverse outcome with the evidence and reasons in front of them, before the person affected hears of it; anyone affected can ask for a review by a person; identifying details are stripped before any AI step judges the case; outcomes are compared across groups; versions are pinned once tested.",
     basis: design,
     kb: ["A02", "A03", "D04", "G03"],
     when: (a) => risk(a, "decides"),
-    apply: (d, _a, why) => {
-      cap(d, 2, why(`You said ${saidOption("risks", "decides")}. Nothing adverse reaches the person affected until a person has confirmed it.`));
+    apply: (d, a, why) => {
+      // Where AU7 already says nobody can approve every item, the person's work is the adverse and unclear results, not all of them.
+      const tiered = risk(a, "irreversible") && a.volume === "high";
+      cap(
+        d,
+        tiered ? 3 : 2,
+        why(
+          tiered
+            ? `You said ${saidOption("risks", "decides")}, and ${said(a, "volume")}. Nobody can approve every result at that volume, so a person confirms every adverse, unclear or flagged one before the person affected hears of it, and the rest pass only when every check has passed.`
+            : `You said ${saidOption("risks", "decides")}. Nothing adverse reaches the person affected until a person has confirmed it.`,
+        ),
+      );
+      if (tiered)
+        d.autonomy.checkpoints.push(
+          "A result with nothing adverse in it passes without a person only when every check in code has passed. A random share of those goes to the same reviewers, unmarked, so the results nobody looks at are still measured.",
+        );
       d.autonomy.checkpoints.push(
         "A named person confirms every adverse outcome (a rejection, a decline, a lower offer) with the evidence and the reasons in front of them, before the person affected hears of it.",
         "Anyone affected can ask for a review by a person, and gets one.",
       );
       d.autonomy.guardrails.push(
-        "A fixed step strips details that stand in for who the person is (name, contact details, address, school, age, photo, gaps in dates) before any AI step sees the case; one of those details is used only with a documented, tested reason.",
+        "A fixed step strips details that stand in for who the person is (name, contact details, address, school, age, photo, gaps in dates) before any AI step judges the case; one of those details is used only with a documented, tested reason.",
+        "Where the work itself is to confirm who someone is, or to match details between sources, that comparison runs in code before the details are stripped, and only its result (match, mismatch or cannot tell) goes on with the case.",
         "Compare outcomes across groups before launch and regularly after; a widening gap stops the system until it is explained.",
         "Pin the model, prompt and rubric versions once tested; any change re-runs the outcome checks (and the audit, where one was required) before it goes live.",
       );
@@ -1534,12 +1550,12 @@ export const RULES: Rule[] = [
   {
     id: "AU13",
     group: "Autonomy",
-    if: "A person approves every result (level 1 or 2)",
+    if: "A person approves every result (level 1 or 2), or confirms the adverse outcomes of decisions about people",
     then: "Design the review so it can't become a rubber stamp: the checklist beside the source, one case at a time with no batch approval, and override rate, time per review and seeded known-wrong cases tracked.",
     basis: design,
     kb: ["A03"],
     late: true,
-    when: (_a, d) => (d.autonomy.level ?? 4) <= 2,
+    when: (a, d) => (d.autonomy.level ?? 4) <= 2 || risk(a, "decides"),
     apply: (d) => {
       d.autonomy.checkpoints.push(
         "The reviewer sees the checklist or requirements beside the source material and any item marked insufficient evidence, and approves, changes or rejects one case at a time. No batch approval.",
