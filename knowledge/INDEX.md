@@ -135,10 +135,12 @@ Official documentation (tier C), with guide recommendations distinguished from d
 
 ## 14 Quality control and reliability
 
-Course materials (tier E): the statistical methods a monitoring, inspection or failure-prevention task runs without AI.
+Course materials (tier E), a statistics handbook (tier C) and one field build (tier E): the statistical methods a monitoring, inspection or failure-prevention task runs without AI, what they assume, and what a build of one had to fix.
 
 | ID | Chunk | Summary |
 | --- | --- | --- |
 | Q01 | [Control charts tell noise from a real change](chunks/14-quality-and-reliability/Q01-control-charts-and-run-rules.md) | Limits from the process (x̿ ± 3σ/√n), which chart for which data (X-bar/S, I-MR, p/np, c/u), why three sigma, run rules. |
 | Q02 | [Process capability, Cp and Cpk, once the process is stable](chunks/14-quality-and-reliability/Q02-process-capability.md) | Cp, Cpk, Pp, Ppk; stability first; reading Cpk; which fix first (re-centre, remove drift, tighten); confidence intervals and bootstrap. |
 | Q03 | [Reliability models, system structure and failure ranking](chunks/14-quality-and-reliability/Q03-reliability-and-failure-analysis.md) | F, R, f and hazard; exponential and MTTF; Weibull for wear-out; bathtub; series, parallel and common causes; FMEA and RPN. |
+| Q04 | [What a control chart or capability index assumes before its number is trusted](chunks/14-quality-and-reliability/Q04-what-statistical-checks-assume.md) | NIST handbook (tier C): capability needs stability, normal and independent values and enough of them; one-sided indices and their interval; false alarms once in 371 points, once in 92 with run rules; when limits are recalculated; what p and c charts assume. |
+| Q05 | [What building a statistical monitor from a design had to fix](chunks/14-quality-and-reliability/Q05-building-a-statistical-monitor.md) | One field build (tier E): units, unchecked assumptions, a wrong interval, degenerate data, thresholds in two places; window and run-rule slips; population charts removed; the plain limit rule first; graded queue; known-answer tests; modelled values marked; follow-up after disposition. |

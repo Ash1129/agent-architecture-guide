@@ -4,7 +4,7 @@
 // rules on its steps count double, chunks behind any other rule that fired
 // count once. P01, the catalogue of workflow patterns, is always included
 // because every design is built from those patterns. The quality-control and
-// reliability chunks (Q01 to Q03) are reserved for designs without AI, and for
+// reliability chunks (Q01 to Q05) are reserved for designs without AI, and for
 // any task whose own words are about measurements, defects or failures.
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -26,9 +26,9 @@ export const AIRFLOW_ENGINEERING = ["R01", "R02", "R03"];
 export const HERMES_ENGINEERING = ["H01", "H02", "H03"];
 export const LANGGRAPH_ENGINEERING = ["J01", "J02", "J03"];
 export const AI_QUALITY = ["O01", "O02"];
-/** The statistical methods a monitoring, inspection or failure task runs without AI: control charts, capability, reliability. */
-export const QUALITY_METHODS = ["Q01", "Q02", "Q03"];
-const RETRIEVAL_VERSION = "quality-methods-5";
+/** The statistical methods a monitoring, inspection or failure task runs without AI (control charts, capability, reliability), what they assume, and what a build of one had to fix. */
+export const QUALITY_METHODS = ["Q01", "Q02", "Q03", "Q04", "Q05"];
+const RETRIEVAL_VERSION = "quality-methods-6";
 
 const QUALITY_WORDS =
   /\b(monitor\w*|quality|defect\w*|reliab\w*|fail\w*|fault\w*|inspect\w*|yield|downtime|outage\w*|toleranc\w*|specification\w*|capacit\w*|overload\w*|maintenance|calibrat\w*|sensor\w*|measurement\w*|control chart\w*|six sigma|breakdown\w*|wear)\b/i;

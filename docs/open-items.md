@@ -4,7 +4,7 @@ What's still open in the Blueprint app (the Agent Architecture Guide). Kept up
 to date as work lands: items move to **Done** with their commit, and new gaps
 are added as they're found.
 
-Last updated: 2026-11-16, after comparing a first build with the team's final system and adding the build practices to the kit (items 40 to 44).
+Last updated: 2026-11-16, after comparing a first build with the team's final system and adding the build practices to the kit (items 40 to 44). Also on 2026-11-16: a second comparison, of the transformer-monitoring kit with the system a team built from it (items 45 to 53), with four more build practices, two knowledge chunks and three fixes.
 
 ## Next up
 
@@ -290,8 +290,119 @@ kept general:
 Items 26, 27 and 28 are partly covered by P8, P2 and P7: the kit now asks for
 them, but the design itself still doesn't draw them.
 
+## From comparing the transformer-monitoring kit with the system built from it (2026-11-16)
+
+The no-AI kit for "log transformer loads and monitor capacity against limits"
+(a scheduled pipeline with a control chart, a capability index, a projection
+and a decision table) was built into a working tool by a team of four in a
+24-hour sprint, then reviewed twice for its statistics. The repository keeps
+the kit's BUILD.md beside the finished code, so the two can be compared line
+by line. What the team had to add or change is now in the knowledge base
+(Q04, Q05), four build practices (P13 to P16) and three fixes (see Done).
+What that leaves open, kept general; none of it is a rule about utilities:
+
+45. **A fixed stack, host or hand-in list never reaches the kit.** The brief
+    required a named stack, a named host, two or three test datasets, a
+    codebook and a public repository, each of them marked. The guide was
+    given the task in one line, asked nothing about it, and the builder
+    chose a different web framework; the team later wrote a spec, a task
+    ledger and an audit of deviations by hand. Same family as items 25 and
+    43. The interview could ask "is anything about how it is built or handed
+    in already fixed for you?" and the kit could carry the answers as
+    acceptance checks.
+46. **Nothing lighter than an orchestrator.** The kit named an orchestrator
+    as the main tool. A full run on 500 units took about 3 seconds; the
+    scheduler stayed local and optional, and the hosted copy ran the same
+    analysis from a button. For a small fixed pipeline the catalog offers a
+    workflow tool or an orchestrator and nothing like "a script on a timer
+    inside the app". Add that option, with the rule for when dependencies
+    between data jobs justify more (`src/lib/catalog.ts`, the TL rules), and
+    let the delivery contract's scheduler requirement accept it.
+47. **Hosting is asked as a region, not a place.** The team had to publish to
+    one managed host that serves a web app and runs no scheduler or
+    long-lived job. The hosting question covers where data may be processed
+    only. Ask whether a host is already chosen and what it can run.
+48. **Words-only AI on a fixed-rules design has no name.** The kit said "Do
+    not add AI to this system". The owner then asked for plain-language
+    summaries, and the team added an optional rewrite of alerts and case
+    summaries: off by default, rule-based text always shown, cached,
+    guard-checked, never read by a decision. A re-run of the same task on
+    2026-11-16 produced that shape as the AI's own decision ("the AI never
+    decides the path or the threshold checks"). "Plain automation" forbids it
+    and "a workflow with AI steps" overstates it. Owner's call: a named
+    variant with its own short safeguard list, or leave the rule strict.
+49. **The three new design limits are instructions, not checks.** The design
+    prompt now asks a statistical step to name its assumption checks, the
+    decision to keep the direct comparison with the limit first, and the
+    queue to be graded (`limitsFor`, `server/design.ts`). One live run
+    followed all three. `checkDesign` does not verify them, and there is no
+    graded set of tasks to say how often they hold (item 15).
+50. **Review time is still sized from runs.** The estimate now says it counts
+    one result a run (`src/lib/cost.ts`). The kit for this task said "under
+    an hour a week"; one run put 119 of 500 units in the queue. A question
+    ("how many items does one run check?") would let the estimate and the
+    queue practice (P15) use a number.
+51. **The scaffold runs the steps in a line.** The design fanned one start out
+    to four loads and branched at two decisions; the generated DAG chains
+    every step after the one before it and drops the branches
+    (`airflowDag`, `src/lib/starter.ts`). It now names the steps a person
+    does and says the chain does not wait for them; following the design's
+    edges is still to do, here and for the other scaffolds.
+52. **One owner, one assistant.** Four people and several coding assistants
+    built at once: a sync overwrote part of the spec, and the team added a
+    task ledger with one owner and a runnable "done" check per task.
+    BUILD.md is written for one person. The build plan could be split into
+    tasks that each own distinct files.
+53. **The build estimate does not say how it is built.** The kit said 3 to 8
+    working days for a first version; a team with coding assistants had a
+    tested first version the same evening and a public copy the next
+    morning, then spent longer on review and corrections than on the build.
+    State the assumption behind the estimate, and count review of the
+    methods as its own line.
+
+Seen again: the rules' own designs cannot pick a statistical method (item 4),
+so P13 never applies on the published site; the scaffold's two placeholder
+upstream jobs did not exist (the builder wrote a feed-readiness check
+instead). What held up without change: limits from history and never from
+the rating; no capability index for an unstable pattern; a run that stops
+with no partial report when a feed is missing or belongs to another period;
+reruns that replace a period's result and keep every attempt; an approval
+enforced in the backend, not the page; a disposition that stops counting
+when the inputs under it change; seeded known-wrong cases and review
+metrics; and the honest DEMO ONLY status in the delivery report. What was
+wasted: the kit's AI-only safeguards in a design with no AI (a check for
+hidden instructions in meter data, a personal-data filter), which the
+builder dutifully built; `e7f0fac` has since stopped those appearing.
+
 ## Done
 
+- (not yet committed) **What a build of a statistical monitor taught.**
+  Knowledge: Q04 (what a control chart or capability index assumes; from the
+  NIST e-Handbook, read 2026-11-16) and Q05 (what one team's build had to
+  fix; tier E), both reserved in retrieval with Q01 to Q03
+  (`QUALITY_METHODS`, `server/knowledge.ts`). Design: three more limits in
+  the design prompt (assumption checks named, the direct comparison with a
+  limit kept as the first rule, cases for a person graded with the rule that
+  placed them) and the catalog's control chart, capability and reliability
+  entries say what each needs first (`src/lib/models.ts`). Kit: four more
+  build practices in `src/lib/practices.ts`: P13 hand-worked answers,
+  degenerate input, units and a methods review for any step that computes a
+  statistic; P14 one settings file, the plain limit first and a case for
+  every outcome wherever the design decides; P15 a graded queue with
+  evidence, a layout that fits the items and follow-up after the decision
+  wherever a person steps in; P16 every figure labeled measured, calculated,
+  modelled or sample, and saved results that keep their version. The Airflow
+  scaffold takes its timetable from how often the owner said it runs
+  (`airflowSchedule`), says what to do when the upstream data is not an
+  Airflow job, and names the steps a person does. Fixes: when an AI decision
+  changes where the system runs, the fired hosting rule follows it, so the
+  hardware estimate and the hosting warnings no longer describe the rules'
+  pick (the kit had said "in-region cloud" and "$2,000 of own hardware"
+  together); the review estimate says it counts one result a run for
+  scheduled and data-triggered work. Tests: `tests/field-build.test.ts`,
+  one case in `tests/decision.test.ts`. One live run of the same task then
+  drafted a design with the rating check first, a stated baseline, the
+  index withheld until its checks pass, a graded queue and follow-up.
 - (the commit after it) **Build practices in the kit.** BUILD.md gains "Build
   these in from the first version": up to twelve practices, each switched on by
   a feature of the design (a person who approves, several agents, a loop,

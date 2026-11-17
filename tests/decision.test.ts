@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { memoryCache } from "../server/cache";
 import { decidedRecommendation, handleDecide } from "../server/decide";
 import { buildBlueprint } from "../src/lib/blueprint";
+import { estimateCost } from "../src/lib/cost";
 import { type Decision, checkDecision } from "../src/lib/decision";
 import type { Answers } from "../src/lib/questions";
 import { recommend } from "../src/lib/rules";
@@ -164,6 +165,22 @@ describe("a recommendation built on an AI decision", () => {
     const router = bp.nodes.find((n) => n.engine?.kind === "model" && n.engine.role === "router")!;
     expect(router.engine!.kind === "model" && router.engine!.model).toBe("haiku");
     expect(router.engine!.kind === "model" && router.engine!.why).toMatch(/Chosen by AI/);
+  });
+
+  it("lets the hardware estimate and the hosting warnings follow the decided hosting", () => {
+    // Rules: data must stay in the region and there is an IT team, so host it yourself (H2).
+    const owner = { ...support, location: "residency", team: "large" } as Answers;
+    const own = recommend(owner);
+    expect(own.fired).toContain("H2");
+    expect(estimateCost(own, buildBlueprint(own, owner), owner).hardware).toBeDefined();
+    // The AI keeps the data in the region with a cloud provider instead.
+    const moved = checkDecision(aiDecision({ hosting: "in-region", models: { router: "openSmall", worker: "openLarge", checker: "openLarge" } }), owner, chunks);
+    expect(moved.problems).toEqual([]);
+    const inRegion = recommend(owner, moved.decision as Decision);
+    expect(inRegion.fired).toContain("H3");
+    expect(inRegion.fired).not.toContain("H2");
+    expect(estimateCost(inRegion, buildBlueprint(inRegion, owner), owner).hardware).toBeUndefined();
+    expect(inRegion.gotchas.map((g) => g.id)).toEqual(expect.not.arrayContaining(own.gotchas.filter((g) => /hardware|Local is cheaper/i.test(g.title)).map((g) => g.id)));
   });
 
   it("can't exceed the cap even if handed a higher level", () => {

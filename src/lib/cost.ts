@@ -222,7 +222,9 @@ export function estimateCost(r: Recommendation, bp: Blueprint, a: Answers): Cost
   const overloaded = hours[1] > FULL_TIME_HOURS
     ? ` At the top of that range it's more than one person full time, so plan who does it, or let routine results through once testing shows they're reliable and review only the risky ones.`
     : "";
-  const review = level <= 3 || bp.nodes.some((n) => n.kind === "human") ? { hoursPerWeek: hours, note: who + overloaded } : null;
+  // The figure counts one result a run. A scheduled or data-triggered run often checks many items and queues several.
+  const perRunNote = level <= 3 && batch ? " This counts one result a run; where one run checks many items, multiply by the number it sends to review." : "";
+  const review = level <= 3 || bp.nodes.some((n) => n.kind === "human") ? { hoursPerWeek: hours, note: who + perRunNote + overloaded } : null;
 
   const monthly = add(models && !includedInPlan ? models.perMonth : [0, 0], platform.perMonth ?? [0, 0]);
   return { runsPerMonth: runs, models, platform, hardware, review, build: buildEffort(r, a, bp), monthly };

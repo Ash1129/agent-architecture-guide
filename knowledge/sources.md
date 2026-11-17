@@ -209,8 +209,10 @@ D practitioner/vendor blog, E course materials and team notes (see README.md).
 | langfuse-2026-overview | Official product documentation. https://langfuse.com/docs | C | 2026-10-10 |
 | langfuse-2026-masking | Official product documentation. https://langfuse.com/docs/observability/features/masking | C | 2026-10-10 |
 
-## Quality control and reliability: course materials read on 2026-10-16
+## Quality control and reliability: course materials read on 2026-10-16, a handbook and a field build read on 2026-11-16
 
 | ID | Source | Tier | Read |
 | --- | --- | --- | --- |
 | sysen-2026-5300-notes | SYSEN 5300, Systems Engineering and Six Sigma for Design and Operation of Reliable Systems (Cornell University, 2026). Course preparation notes provided by the owner: reliability functions, series and parallel systems, FMEA, control charts and run rules, process capability, bootstrap confidence intervals. Cited by section number (§1 course map to §10 ggplot). | E | 2026-10-16 |
+| nist-2012-ehandbook-pmc | NIST/SEMATECH. (2012 revision). e-Handbook of Statistical Methods, chapter 6: Process or Product Monitoring and Control. https://www.itl.nist.gov/div898/handbook/ Read: §6.1.6 What is Process Capability? (pmc/section1/pmc16.htm), §6.3.2 What are Variables Control Charts? (pmc/section3/pmc32.htm), §6.3.2.2 Individuals Control Charts (pmc322.htm), §6.3.3.1 Counts Control Charts (pmc331.htm), §6.3.3.2 Proportions Control Charts (pmc332.htm). A government handbook, filed as an official guide. | C | 2026-11-16 |
+| splitsync-2026-capacity-monitor | SplitSync team. (2026). Transformer Capacity Monitor (Tompkins County): a quality-control hackathon project built from this guide's kit. https://github.com/Ash1129/MAE5930, folder transformer-capacity-monitor, at commit 7008463. Read: README.md, SPEC.md, METHODS.md, DELIVERY-REPORT.md, TEMPLATE-AUDIT.md, README-DEVELOPER.md, DEPLOY.md, rules/decision-table.csv, rules/playbook.json, evals/ and the commit history. Synthetic data only: evidence of what a build had to fix, not field validation. | E | 2026-11-16 |

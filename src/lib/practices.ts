@@ -6,13 +6,16 @@
 // a prompt. They come from comparing systems built from the guide's kits with
 // what those systems looked like after weeks of team work, keeping only what
 // applies to any business. Each one applies when the design has the feature it
-// is about (a person who approves, several agents, a loop, personal data), and
-// each names a test that would fail without it.
+// is about (a person who approves, several agents, a loop, personal data, a
+// step that computes a statistic, a decision), and each names a test that would
+// fail without it. P1 to P12 came from a multi-agent system that talks to the
+// public; P13 to P16 from a scheduled monitor with no AI in its decisions.
 //
 // They are written into BUILD.md (src/lib/starter.ts) and nowhere else: they
 // do not change the recommendation, the design or the rules that fired.
 
 import type { Blueprint } from "./blueprint";
+import { ALGORITHMS } from "./models";
 import type { Answers } from "./questions";
 import type { Recommendation } from "./rules";
 
@@ -37,6 +40,12 @@ export function hasPersonStep({ r, bp, a }: Ctx): boolean {
 /** Work can be sent back or repeated somewhere in the design. */
 export function hasLoop({ bp }: Ctx): boolean {
   return bp.edges.some((e) => e.style === "loop");
+}
+
+/** A step computes a statistic (a chart, an index, a lifetime model, a risk ranking). */
+export function hasCalculation({ bp }: Ctx): boolean {
+  const names: string[] = [ALGORITHMS.spc.name, ALGORITHMS.capability.name, ALGORITHMS.reliability.name, ALGORITHMS.rpn.name];
+  return bp.nodes.some((n) => n.engine?.kind === "algorithm" && names.includes(n.engine.name));
 }
 
 const ALL: (Practice & { when: (c: Ctx) => boolean })[] = [
@@ -135,6 +144,38 @@ const ALL: (Practice & { when: (c: Ctx) => boolean })[] = [
     build:
       "Ask the owner what form the finished work must take (an official template, an import file, an entry in a system of record) before building the last step, and check that every field it needs is collected earlier. Mark anything not yet approved as a draft, keep each value's source attached when exporting, leave uncollected fields blank, and say plainly that changes made to an exported copy do not flow back.",
     test: "Produce the output for a complete case and an incomplete one, and compare both with the required form.",
+  },
+  {
+    id: "P13",
+    title: "Test each calculation against an answer worked by hand",
+    when: hasCalculation,
+    build:
+      "Example cases show how the system behaves; they do not show that a formula is right. For every number a step computes (a limit, an index, a rate, a projection), keep a small case worked by hand with the number it must give. Check the units of everything that is added or compared, and convert in one named place. Before a number is reported, check what its method assumes: enough history in a stated baseline that ends before the period being judged, a stable pattern, values that are independent and distributed as the method needs. A case that fails a check goes to a person marked as not established. Have someone other than the builder review the methods, and record what they found.",
+    test: "Run each hand-worked case and get its number exactly. Feed constant values, a single point and missing or non-numeric values, and get a named status, never a number or a crash. Where an interval is reported, check by simulation that it covers the true value as often as it claims.",
+  },
+  {
+    id: "P14",
+    title: "Thresholds in one place, a case for every outcome",
+    when: ({ bp }) => bp.nodes.some((n) => n.kind === "decision"),
+    build:
+      "Keep every threshold, window and timetable in one settings file that the rules, the scheduler and the documents all read; a rule refers to a setting by name and never repeats its value. Where the task compares something with a limit that someone else set, keep that direct comparison as the first rule, whatever a score or statistic adds after it. The last row of every decision is \"otherwise\", so no case leaves without an outcome.",
+    test: "Change one setting and confirm the rule, the timetable and the report all follow. For every row of every decision, run a labeled case that reaches it, the last row included.",
+  },
+  {
+    id: "P15",
+    title: "A queue a person can work through",
+    when: hasPersonStep,
+    build:
+      "Size the queue from one realistic run, not from the number of runs: a run that checks hundreds of items can send dozens to a person. Grade what waits by urgency and show the worst first, each case with its evidence and the rule or reason that put it there, laid out the way the reviewer looks for it: on a map when the items have locations, on a timeline when timing matters, in a ranked list otherwise. Let them search and filter by reason. Decide what happens after their decision: where work follows, record the next action, its owner and a due date, apart from the sign-off, and keep it visible until it is closed.",
+    test: "Run a period that flags a quarter of the items. Confirm the most urgent case is first, each case names its rule, and a case decided earlier with work still open is still in view.",
+  },
+  {
+    id: "P16",
+    title: "Say what is measured, modelled or made up",
+    when: () => true,
+    build:
+      "Label every figure a person sees as measured, calculated by a stated rule, modelled from assumptions, or sample data. A modelled or sample figure never feeds a decision. Where the data a method needs does not exist (no failure records for a lifetime model, no outcomes for a prediction), say so and leave the method out. When rules or settings change, a saved result keeps the version it was made with and says so; it is not silently recalculated or shown as current.",
+    test: "Search every decision's inputs for a modelled or sample value. Change a setting, reopen a saved result and confirm it names the version it was made under.",
   },
 ];
 

@@ -26,7 +26,7 @@ npm run preview    # serve the production build locally
 | `src/components/ArchitectureMap.tsx` | Draws a blueprint as keyboard-focusable steps with measured connections; left to right when there's room, top to bottom on narrow screens. |
 | `src/lib/models.ts` | Which model (or which non-AI method) runs each step, and why. |
 | `src/lib/starter.ts` | The starter kit: `BUILD.md` for an AI coding assistant, plus the n8n workflow, Skill, system prompt, MCP config, Airflow DAG and test set that fit the design. |
-| `src/lib/practices.ts` | Build practices written into `BUILD.md`: how to make each safeguard hold in code (roles, re-checked approvals, one correction path, typed AI replies, unknown values, agent contracts, bounded loops, the end-user conversation, data stores, keys, output form), each with its test. Each applies only when the design has the feature it is about. |
+| `src/lib/practices.ts` | Build practices written into `BUILD.md`: how to make each safeguard hold in code (roles, re-checked approvals, one correction path, typed AI replies, unknown values, agent contracts, bounded loops, the end-user conversation, data stores, keys, output form, hand-worked answers for calculations, one settings file, a review queue a person can work through, labeled figures), each with its test. Each applies only when the design has the feature it is about. |
 | `src/lib/share.ts` | Encoding answers into share links, and the plain-text summary. |
 | `src/lib/process.ts` | A process of several jobs: checking the AI's split, its link, and saved processes. |
 | `src/lib/exportxml.ts` | The draw.io export: one design (recommended and simpler), or a whole process. |

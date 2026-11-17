@@ -1672,6 +1672,9 @@ export function recommend(raw: Answers, decision?: Decision): Recommendation {
       const rules = d.hosting?.title;
       const chosen = hostingOption(decision.hosting, a);
       d.hosting = { ...chosen, why: ai("hosting", rules && rules !== chosen.title ? `"${rules}"` : undefined) };
+      // What fired drives the hardware estimate and the hosting gotchas, so it follows the decided hosting, not the rules' pick.
+      const hostingRules = RULES.filter((x) => x.group === "Hosting").map((x) => x.id);
+      d.fired = [...d.fired.filter((id) => !hostingRules.includes(id)), ...HOSTING_RULES[decision.hosting]];
     } else if (group === "Models") {
       d.models.needed = decision.approach !== "automation";
       if (!d.models.needed) d.models = { needed: false, capabilities: [], process: [], examples: "" };
