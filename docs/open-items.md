@@ -376,7 +376,7 @@ builder dutifully built; `e7f0fac` has since stopped those appearing.
 
 ## Done
 
-- (not yet committed) **What a build of a statistical monitor taught.**
+- `fc8d8c6` **What a build of a statistical monitor taught.**
   Knowledge: Q04 (what a control chart or capability index assumes; from the
   NIST e-Handbook, read 2026-11-16) and Q05 (what one team's build had to
   fix; tier E), both reserved in retrieval with Q01 to Q03
@@ -403,7 +403,7 @@ builder dutifully built; `e7f0fac` has since stopped those appearing.
   one case in `tests/decision.test.ts`. One live run of the same task then
   drafted a design with the rating check first, a stated baseline, the
   index withheld until its checks pass, a graded queue and follow-up.
-- (the commit after it) **Build practices in the kit.** BUILD.md gains "Build
+- `1b7058c` **Build practices in the kit.** BUILD.md gains "Build
   these in from the first version": up to twelve practices, each switched on by
   a feature of the design (a person who approves, several agents, a loop,
   personal data, AI steps) and each with the test that proves it: who may do
