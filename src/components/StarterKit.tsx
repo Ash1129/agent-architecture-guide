@@ -502,16 +502,17 @@ export function StarterKit({
                     <span className="mb-1.5 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-medium text-accent">Tailored by {tailoring.model}</span>
                   )}
                   {(!tailored || tailoring.state === "done") && <p>{t.how}</p>}
-                  {tailored && <TailorControls tailoring={tailoring} copy={action} onTailor={tailor} waiting={writing === "loading"} />}
+                  {tailored && <TailorControls tailoring={tailoring} copy={null} onTailor={tailor} waiting={writing === "loading"} />}
                 </div>
                 <div className="build-item-actions">
-                  {!tailored && action}
                   {GUIDE_FOR[t.id] && (
                     <button type="button" className="studio-quiet" aria-haspopup="dialog" onClick={() => setGuide(GUIDE_FOR[t.id]!.guide)}>
                       {GUIDE_FOR[t.id]!.label}
                       <PlayCircle size={16} aria-hidden />
                     </button>
                   )}
+                  {/* Under the walkthrough link, as Download all is; a tailored workflow's appears once it exists. */}
+                  {(!tailored || tailoring.state === "done") && action}
                 </div>
               </li>
             );
@@ -651,7 +652,7 @@ function TailorControls({
           {tailoring.state === "working" ? "Tailoring to your task. This can take a few minutes." : "Tailor with AI"}
         </button>
       )}
-      {tailoring.state !== "done" && <p className="mt-1 text-[12px] leading-snug text-muted">Sends your task and answers to OpenAI through this site's server.</p>}
+      {tailoring.state !== "done" && <p className="mt-1 text-[12px] leading-snug text-muted">Sends your task and answers to Claude through this site's server.</p>}
       <p role="status" aria-live="polite" className="sr-only">
         {tailoring.state === "working" ? "Tailoring the workflow" : tailoring.state === "done" ? "Tailored workflow ready" : ""}
       </p>
