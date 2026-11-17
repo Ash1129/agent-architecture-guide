@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Footer, Nav } from "./components/Shell";
 import { BrandIntro, shouldPlayIntro } from "./components/Brand";
 import { BuildOverlay } from "./components/BuildOverlay";
@@ -23,6 +24,7 @@ import { decodeAnswers, resultCode } from "./lib/share";
 import { loadAnswers, loadDescribed, saveAnswers, saveDescribed } from "./lib/storage";
 import { type HistoryEntry, findByCode, loadHistory, loadSessionId, newSessionId, saveSessionId, upsertHistory } from "./lib/history";
 import { AI_ENABLED } from "./lib/features";
+import { pageOf, routeOnly } from "./lib/analytics";
 import { type Detail, type InterviewResponse, MAX_DESCRIPTION, MAX_TASK_TITLE, fillFromPlan, keepsOwnWords, taskTitle } from "./lib/interview";
 import {
   type Process,
@@ -308,6 +310,8 @@ export default function App() {
 
   // Page title, scroll position and focus on navigation.
   const routeKey = route.name === "how" ? `how/${route.section ?? ""}` : route.name;
+  // The page this route is counted as by Web Analytics (see src/lib/analytics.ts).
+  const page = pageOf(route);
   useEffect(() => {
     document.title = TITLES[route.name];
     if (route.name === "how" && route.section) {
@@ -624,6 +628,8 @@ export default function App() {
         )}
       </div>
       {!inGuide && !studio && <Footer />}
+      {/* Anonymous page views on the published site only: one per route, never the hash query that carries the answers. */}
+      {import.meta.env.PROD && <Analytics route={page.route} path={page.path} beforeSend={routeOnly} />}
       {handover && route.name === "result" && <BuildOverlay onDone={endHandover} />}
       {intro !== "done" && <BrandIntro onReveal={revealAfterIntro} onDone={endIntro} />}
     </div>

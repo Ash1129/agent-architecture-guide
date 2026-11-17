@@ -72,7 +72,7 @@ export function History({
         <div>
           <h1 className="text-[1.875rem] font-semibold tracking-tight text-ink sm:text-[2.25rem]">History</h1>
           <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-muted">
-            Every result you reach is saved here automatically, in this browser only.{AI_ENABLED ? "" : " Nothing is sent anywhere."}
+            Every result you reach is saved here automatically, in this browser only.{AI_ENABLED ? "" : " Nothing saved here is sent anywhere."}
           </p>
         </div>
         {entries.length + systems.length > 0 &&

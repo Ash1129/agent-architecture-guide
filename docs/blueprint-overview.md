@@ -46,7 +46,7 @@ The research behind every choice lives in `knowledge/`: **55 chunks across 13 to
 - **Honest about evidence.** Estimates are ranges with their assumptions; the guide's own judgement calls are labelled as such; benchmark reports say what they don't prove.
 - **Safe by default.** Required human approvals, autonomy caps and stop rules are carried through the design, the kit and the workflow, and the delivery contract asks builders for honest READY, DEMO ONLY or BLOCKED reports.
 - **Fails gracefully.** If an AI step can't pass its checks, the rules' version is shown instead, and the page says so.
-- **Two versions.** The local version uses AI as described above. The published site has no AI at all: it decides by the rules alone, sends nothing anywhere, and keeps answers inside the share link.
+- **Two versions.** The local version uses AI as described above. The published site has no AI at all: it decides by the rules alone, keeps answers inside the share link, and sends nothing anywhere except an anonymous page-view count (Vercel Web Analytics: no cookies, only the page route, never the answers).
 
 ## Under the hood
 
