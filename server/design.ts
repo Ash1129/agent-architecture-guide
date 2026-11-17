@@ -16,6 +16,7 @@ import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
 import { type Complete, OUTPUT_LIMIT, RUNAWAY_NOTE, claudeComplete, extractJson, firstDraft } from "./ai";
 import { modelFor } from "./models";
+import { noteProblems } from "./telemetry";
 import { decidedRecommendation, decisionTag } from "./decide";
 
 export type DesignEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
@@ -145,6 +146,7 @@ async function draftDesign(answers: Answers, env: ReadyEnv, complete?: Complete)
       }
       // Rejections are logged on the dev server so failures can be diagnosed.
       console.warn(`[design] "${answers.task}" draft ${attempt + 1} rejected:\n${problems.map((x) => `  - ${x}`).join("\n")}`);
+      noteProblems(problems);
       if (attempt === 1) return { status: 502, body: { error: "The AI's design didn't pass the guide's checks, so the rules' design is shown.", problems: problems.slice(0, 8) } };
       // A first reply that never finished is asked for again from scratch.
       text = failure

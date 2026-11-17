@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import type { IncomingMessage } from "node:http";
 import { resolveModels } from "./server/models.ts";
+import { clearTelemetry, configureTelemetry, records, summarize, track } from "./server/telemetry.ts";
 
 /**
  * Serves the AI endpoints during local development, reading the Anthropic key
@@ -15,6 +16,8 @@ import { resolveModels } from "./server/models.ts";
  *   POST /api/kit        writes the task-specific text of the starter kit
  *   POST /api/tailor     tailors the n8n workflow to a finished design
  * Both share one cache of earlier results in ai-cache.nosync/.
+ *   GET  /api/telemetry  what each step's requests cost and how they ended (server/telemetry.ts)
+ *   DELETE /api/telemetry forgets those records
  */
 function aiApi(): Plugin {
   const readBody = (req: IncomingMessage) =>
@@ -36,6 +39,21 @@ function aiApi(): Plugin {
       // The key, the workspace it belongs to (needed when the key isn't scoped to one) and the models.
       const claude = { apiKey: env.ANTHROPIC_API_KEY, workspaceId: env.ANTHROPIC_WORKSPACE_ID || undefined, ...models };
       const cachePath = `${process.cwd()}/ai-cache.nosync/cache.json`;
+      // Every AI request's outcome, calls and tokens, for the telemetry page; kept beside the cache, never in git.
+      configureTelemetry(`${process.cwd()}/ai-cache.nosync/telemetry.jsonl`);
+      server.middlewares.use("/api/telemetry", (req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-store");
+        if (req.method === "DELETE") {
+          clearTelemetry();
+          res.end(JSON.stringify({ cleared: true }));
+        } else if (req.method === "GET") {
+          res.end(JSON.stringify(summarize(records())));
+        } else {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: "Use GET or DELETE." }));
+        }
+      });
       // Revenium metering is optional: on only when REVENIUM_METERING_API_KEY is set (see server/metering.ts).
       const metering = server
         .ssrLoadModule("/server/metering.ts")
@@ -95,7 +113,7 @@ function aiApi(): Plugin {
           // answer the browser, not crash the dev server with an unhandled rejection.
           try {
             await metering;
-            const out = await handle(body);
+            const out = await track(path.replace("/api/", ""), () => handle(body));
             res.statusCode = out.status;
             res.end(JSON.stringify(out.body));
           } catch (e) {

@@ -1,8 +1,9 @@
-import { CheckCircle, CircleNotch, ClockCounterClockwise, Code, GitBranch, Moon, Scales, Sun, TreeStructure } from "@phosphor-icons/react";
+import { ChartBar, CheckCircle, CircleNotch, ClockCounterClockwise, Code, GitBranch, Moon, Scales, Sun, TreeStructure } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { type ResultView, href } from "../lib/router";
 import { BrandMark } from "./Brand";
 import { useMenuBar } from "./Shell";
+import { AI_ENABLED } from "../lib/features";
 import { type ThemePref, loadTheme, saveTheme } from "../lib/storage";
 
 // The result workspace's frame ("blueprint, your solution studio"): a sidebar
@@ -129,6 +130,14 @@ export function StudioShell({
               </span>
               <span className="rail-label">How it decides</span>
             </a>
+            {AI_ENABLED && (
+              <a href={href({ name: "telemetry" })} title={tip("AI telemetry")}>
+                <span className="avatar">
+                  <ChartBar size={16} aria-hidden />
+                </span>
+                <span className="rail-label">AI telemetry</span>
+              </a>
+            )}
             <button
               type="button"
               title={tip(nextTheme === "dark" ? "Dark theme" : "Light theme")}

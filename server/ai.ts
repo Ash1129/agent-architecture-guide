@@ -3,6 +3,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { meteringTag } from "./metering";
 import { type Attempt, type ModelChoice, modelFor } from "./models";
+import { noteProblems, recordCall } from "./telemetry";
 
 export type { Attempt } from "./models";
 
@@ -66,8 +67,28 @@ export function runawayReport(task: string, message: Pick<Anthropic.Message, "mo
 export function claudeComplete(env: ClaudeEnv): Complete {
   const client = new Anthropic(clientOptions(env));
   return async (instructions, input, attempt = "first") => {
-    // Streamed, so a long reply never runs into an HTTP timeout.
-    const message = await client.messages.stream(messageParams(env, instructions, input, attempt)).finalMessage();
+    const params = messageParams(env, instructions, input, attempt);
+    const started = Date.now();
+    let message: Anthropic.Message;
+    try {
+      // Streamed, so a long reply never runs into an HTTP timeout.
+      message = await client.messages.stream(params).finalMessage();
+    } catch (e) {
+      recordCall({ model: params.model, attempt, ms: Date.now() - started, input: 0, output: 0, cacheRead: 0, cacheWrite: 0, stop: "error" });
+      throw e;
+    }
+    // Tokens and time for the local telemetry page (server/telemetry.ts); never the prompt or the reply.
+    const u = message.usage;
+    recordCall({
+      model: message.model,
+      attempt,
+      ms: Date.now() - started,
+      input: u.input_tokens,
+      output: u.output_tokens,
+      cacheRead: u.cache_read_input_tokens ?? 0,
+      cacheWrite: u.cache_creation_input_tokens ?? 0,
+      stop: message.stop_reason ?? "unknown",
+    });
     if (message.stop_reason === "refusal") throw new Error("The model declined this request.");
     if (message.stop_reason === "max_tokens") {
       console.warn(runawayReport(env.task ?? "complete", message));
@@ -104,6 +125,7 @@ export async function withEscalation<T>(step: string, tryAt: (attempt: Attempt) 
   } catch (e) {
     if (isApiFailure(e)) throw e;
     console.warn(`[${step}] first answer rejected, retrying on the escalation model: ${(e as Error).message}`);
+    noteProblems([(e as Error).message]);
     return { value: await tryAt("retry"), attempt: "retry" };
   }
 }
@@ -119,6 +141,7 @@ export async function firstDraft(step: string, run: Complete, instructions: stri
   } catch (e) {
     if (isApiFailure(e)) throw e;
     console.warn(`[${step}] first answer didn't finish, retrying on the escalation model: ${(e as Error).message}`);
+    noteProblems([(e as Error).message]);
     return { text: "", failure: (e as Error).message };
   }
 }

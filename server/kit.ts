@@ -17,6 +17,7 @@ import { buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
 import { type Complete, extractJson, claudeComplete, withEscalation } from "./ai";
 import { modelFor } from "./models";
+import { noteProblems } from "./telemetry";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
 import { type Chunk, MAX_CHUNKS, knowledgeFingerprint, selectChunks, taskText } from "./knowledge";
@@ -74,7 +75,10 @@ const kitKey = (answers: Answers, bp: Blueprint, model: string) => `${KIT_VERSIO
 function assemble(raw: unknown, answers: Answers, c: ReturnType<typeof contextFor>): { text: KitText; dropped: string[] } | undefined {
   const { text, dropped } = checkKitText(raw, c.ctx);
   const problems = kitProblems(c.r, c.bp, answers, buildStarterKit(c.r, c.bp, answers, text));
-  if (problems.length || dropped.length) console.warn(`[kit] "${answers.task}": ${[...dropped.map((x) => `dropped ${x}`), ...problems].join("; ")}`);
+  if (problems.length || dropped.length) {
+    console.warn(`[kit] "${answers.task}": ${[...dropped.map((x) => `dropped ${x}`), ...problems].join("; ")}`);
+    noteProblems([...dropped.map((x) => `dropped ${x}`), ...problems]);
+  }
   return problems.length ? undefined : { text, dropped };
 }
 

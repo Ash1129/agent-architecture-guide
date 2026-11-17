@@ -24,6 +24,7 @@ import { type Cache, singleFlight } from "./cache";
 import { type Chunk, knowledgeFingerprint, loadChunks, selectChunks, taskText } from "./knowledge";
 import { type Complete, OUTPUT_LIMIT, RUNAWAY_NOTE, claudeComplete, extractJson, firstDraft } from "./ai";
 import { modelFor } from "./models";
+import { noteProblems } from "./telemetry";
 
 export type DecideEnv = { apiKey?: string; model?: string; escalationModel?: string; workspaceId?: string; cache?: Cache };
 type ReadyEnv = DecideEnv & { apiKey: string; model: string };
@@ -187,6 +188,7 @@ async function decide(answers: Answers, env: ReadyEnv, complete?: Complete): Pro
         return { status: 200, body: { decision, source: "ai", model: modelFor(env, attempt === 0 ? "first" : "retry") } satisfies DecisionResponse };
       }
       console.warn(`[decide] "${answers.task}" decision ${attempt + 1} rejected:\n${problems.map((x) => `  - ${x}`).join("\n")}`);
+      noteProblems(problems);
       if (attempt === 1) return { status: 502, body: { error: "The AI's decision broke the guide's limits, so the rules' recommendation is shown.", problems: problems.slice(0, 8) } };
       // A first reply that never finished is asked for again from scratch.
       text = failure

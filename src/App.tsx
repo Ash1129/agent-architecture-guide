@@ -6,6 +6,7 @@ import { SurveyFrame } from "./components/StudioShell";
 import { Details, Guide, Review } from "./pages/Guide";
 import { History } from "./pages/History";
 import { HowItWorks } from "./pages/HowItWorks";
+import { Telemetry } from "./pages/Telemetry";
 import { Landing } from "./pages/Landing";
 import { ProcessMap } from "./pages/Process";
 import { Result } from "./pages/Result";
@@ -58,6 +59,7 @@ const TITLES: Record<Route["name"], string> = {
   result: "Your result | Agent Architecture Guide",
   how: "How it decides | Agent Architecture Guide",
   history: "History | Agent Architecture Guide",
+  telemetry: "AI telemetry | Agent Architecture Guide",
 };
 
 /** The finished example behind "Explore an example" on the start page. */
@@ -593,6 +595,7 @@ export default function App() {
           />
         )}
         {route.name === "how" && <HowItWorks cta={cta} />}
+        {route.name === "telemetry" && <Telemetry />}
         {route.name === "history" && (
           <History
             entries={history}

@@ -159,6 +159,13 @@ export function Footer() {
               Design choices
             </a>
           </li>
+          {AI_ENABLED && (
+            <li>
+              <a className="text-muted underline-offset-4 hover:text-ink hover:underline" href={href({ name: "telemetry" })}>
+                AI telemetry
+              </a>
+            </li>
+          )}
           <li className="text-muted">
             No account, no tracking. Your answers stay in your browser{AI_ENABLED ? " unless you choose Tailor with AI" : ""}.
           </li>

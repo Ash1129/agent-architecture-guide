@@ -20,7 +20,9 @@ export type Route =
   | { name: "process"; code?: string }
   | { name: "result"; code?: string; view?: ResultView }
   | { name: "how"; section?: string }
-  | { name: "history" };
+  | { name: "history" }
+  /** How the AI steps did on this dev server: outcomes, failed checks, tokens and cost. */
+  | { name: "telemetry" };
 
 export function parseHash(hash: string): Route {
   const [path, query = ""] = hash.replace(/^#/, "").split("?");
@@ -41,6 +43,7 @@ export function parseHash(hash: string): Route {
   if (parts[0] === "process") return { name: "process", code: new URLSearchParams(query).get("p") ?? undefined };
   if (parts[0] === "how") return { name: "how", section: parts[1] };
   if (parts[0] === "history") return { name: "history" };
+  if (parts[0] === "telemetry") return { name: "telemetry" };
   return { name: "home" };
 }
 
@@ -66,6 +69,8 @@ export function href(route: Route): string {
       return route.section ? `#/how/${route.section}` : "#/how";
     case "history":
       return "#/history";
+    case "telemetry":
+      return "#/telemetry";
   }
 }
 

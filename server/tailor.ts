@@ -14,6 +14,7 @@ import { MODEL_API_ID, buildStarterKit } from "../src/lib/starter";
 import { fingerprint } from "../src/lib/tailored";
 import { CALL_TIMEOUT_MS, type Complete, OUTPUT_LIMIT, RUNAWAY_NOTE, claudeComplete, extractJson, firstDraft } from "./ai";
 import { modelFor, startingModels } from "./models";
+import { noteProblems } from "./telemetry";
 import { type Cache, singleFlight } from "./cache";
 import { cachedDesign } from "./design";
 import { cachedKitText } from "./kit";
@@ -195,6 +196,7 @@ export async function handleTailor(body: unknown, env: TailorEnv, complete?: Com
           env.cache?.put("tailor", { key, label: answers.task, value: wf });
           return { status: 200, body: { workflow: wf, model: modelFor(models, attempt === 0 ? "first" : "retry") } };
         }
+        noteProblems(problems);
         if (attempt === 1) {
           return { status: 502, body: { error: "The AI's workflow didn't pass the checks. Try again.", problems: problems.slice(0, 8) } };
         }

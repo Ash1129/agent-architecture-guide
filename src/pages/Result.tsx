@@ -303,7 +303,10 @@ function DecisionNote({
             <Sparkle size={14} weight="fill" aria-hidden className="mr-1.5 inline align-[-2px] text-accent" />
             Decided by AI{decision.source === "cache" ? " (saved from an earlier run)" : ""} from the knowledge base, weighing quality, cost and speed, within the guide's limits.{" "}
             {diffs.length ? "Where it differs from the rules:" : "It agrees with the rules on every main choice."}{" "}
-            {toggle(ai && core(ai) !== core(rules) ? `See the rules' version, built in ${core(rules)}` : "See the rules' version", true)}
+            {toggle(ai && core(ai) !== core(rules) ? `See the rules' version, built in ${core(rules)}` : "See the rules' version", true)}{" "}
+            <a href={href({ name: "telemetry" })} className="underline underline-offset-4 hover:text-ink">
+              How the AI steps are doing
+            </a>
           </p>
           {diffs.length > 0 && (
             <ul className="mt-1.5 list-disc space-y-0.5 pl-5">
